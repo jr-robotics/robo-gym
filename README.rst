@@ -8,7 +8,7 @@ The toolkit is build upon `OpenAI Gym <https://gym.openai.com>`_.
 A paper describing robo-gym is currently submitted for IROS 2020. A video showcasing the toolkit's
 capabilities and additional info can be found on our `website <https://sites.google.com/view/robo-gym>`_.
 
-`See the News section <https://github.com/jr-robotics/robo-gym#id9>`_
+`See the News section <https://github.com/jr-robotics/robo-gym#news>`_
 
 .. contents:: **Contents of this document**
    :depth: 2
