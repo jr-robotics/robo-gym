@@ -37,7 +37,7 @@ The *Robot Server Side* and the *Environment Side* can run on the same PC or on 
 connected via network.
 Given the different Python version requirements when running the *Robot Server Side*
 and the *Environment Side* on the same PC, it is necessary to create two isolated
-Python virtual environments.
+Python virtual environments. See the following section for further details.
 
 
 Installation
@@ -45,7 +45,7 @@ Installation
 
 Environment Side
 ----------------
-
+**Requirements:** robo-gym requires Python >= 3.5
 
 robo-gym is provided as a package on the PyPI repository. You can install it with:
 
@@ -64,11 +64,15 @@ If you prefer you can also install it from source:
 
 Robot Server Side
 -----------------
+**Requirements:** the installation requires a PC with Ubuntu 16.04.
 
-First install `robo-gym-robot-servers <https://github.com/jr-robotics/robo-gym-robot-servers>`_
+The Robot Server Side can be installed on the same machine running the Environment Side
+and/or on other multiple machines.
+
+1. Install `robo-gym-robot-servers <https://github.com/jr-robotics/robo-gym-robot-servers>`_
 following the instructions in the repository's README.
 
-After that install `robo-gym-server-modules <https://github.com/jr-robotics/robo-gym-server-modules>`_
+2. Install `robo-gym-server-modules <https://github.com/jr-robotics/robo-gym-server-modules>`_
 for the system-wide Python 2.7 with:
 
 .. code-block:: shell
@@ -76,10 +80,14 @@ for the system-wide Python 2.7 with:
   pip install robo-gym-server-modules
 
 
+Managing Multiple Python Versions
+---------------------------------
 
+`Here <docs/managing_multiple_python_vers.md>`_ you can find some additional information
+on how to deal with multiple Python versions on the same machine.
 
-Environments
-============
+How to use
+==========
 
 The environments provided with robo-gym can be used in the same way of any other
 OpenAI Gym environment. To get started is enough to run:
@@ -100,14 +108,53 @@ robot and the scenario and version to be run with the real robot.
 Simulated environments have a name ending with *Sim* whereas real robot environments
 have a name ending with *Rob*.
 
-When making a simulated environment the ip address of the server manager needs to
-be passed as an argument.
+Simulated Environments
+----------------------
+
+Before making a simulated environment it is necessary to start the Server Manager.
+Depending on the type of installation and setup that you chose the Server Manager
+could be running on the same machine where you are calling ``env.make()`` or on
+another machine connected via network.
+
+The commands to control the Server Manager are:
+
+- ``start-server-manager`` starts the Server Manager in the background
+- ``attach-to-server-manager`` attaches the console to the Server Manager tmux session allowing to visualize the status of the Server Manager
+- ``Ctrl+B, D`` detaches the console from the Server Manager tmux session
+- ``kill-all-robot-servers`` kills all the running Robot Servers and the Server Manager
+- ``kill-server-manager`` kills the Server Manager
+
+To start the Server Manager it is necessary to make sure that
+ROS and the robo-gym workspace are sourced with:
+
+.. code-block:: shell
+
+  source /opt/ros/kinetic/setup.bash
+  source ~/robogym_ws/devel/setup.bash
+
+It is then sufficient to run ``start-server-manager`` in the same shell.
+
+The IP address of the machine on which the Server Manager is running has to
+be passed as an argument to ``env.make``, if the Server Manager is running on the
+same machine use ``ip='localhost'``.
+
+By default the simulated environments are started in headless mode, without any graphical interface.
+
+To start a simulated environment with **GUI** use the optional *gui* argument:
+
+.. code-block:: python
+
+  env = gym.make('EnvironmentNameSim-v0', ip='<server_manager_address>', gui=True)
+
+Real Robot Environments
+-----------------------
 
 When making a real robot environment the Robot Server needs to be started manually,
 once this is started, its address has to be provided as an argument to the ``env.make()``
 method call.
 
-
+Environments
+============
 
 Mobile Robots
 -------------
@@ -136,6 +183,8 @@ In addition, the agent receives a large positive reward for reaching the goal
 and a large negative reward when crossing the external boundaries of the map.
 
 ``'ObstacleAvoidanceMir100Sim-v0'``, ``'ObstacleAvoidanceMir100Rob-v0'``
+
+.. image:: https://user-images.githubusercontent.com/36470989/79962530-70bbdc80-8488-11ea-8999-d6db38e4264a.gif
 
 In this environment, the task of the mobile robot is to reach a target position
 without touching the obstacles on the way.
@@ -172,6 +221,8 @@ Universal Robots UR10
 ~~~~~~~~~~~~~~~~~~~~~
 
 ``'EndEffectorPositioningUR10Sim-v0'``, ``'EndEffectorPositioningUR10Rob-v0'``
+
+.. image:: https://user-images.githubusercontent.com/36470989/79962368-3ce0b700-8488-11ea-83ac-c9e8995c2957.gif
 
 The goal in this environment is for the robotic arm to reach a target position with its end effector.
 
@@ -211,8 +262,17 @@ Examples
 
 Examples and tutorials will be added soon!
 
+Contributing
+============
+
+New environments and new robots and sensors implementations are welcome!
+
+More details and guides on how to contribute will be added soon!
+
+If you encounter troubles running robo-gym or if you have questions please submit a new issue.
+
 News
 ====
 
 - 2020-04-15 (v0.1.0)
-  + robo-gym first release it's here!
+  + robo-gym first release is here!
