@@ -1,0 +1,5 @@
+#!/bin/bash
+
+docker run -it \
+    --net=host \
+    joanneumrobotics/robo-gym-robot-server-side:0.1.0-standard

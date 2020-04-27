@@ -64,10 +64,45 @@ If you prefer you can also install it from source:
 
 Robot Server Side
 -----------------
-**Requirements:** the installation requires a PC with Ubuntu 16.04.
 
 The Robot Server Side can be installed on the same machine running the Environment Side
 and/or on other multiple machines.
+
+For the Robot Server Side there are two types of installation.
+
+Simplified Installation
+~~~~~~~~~~~~~~~~~~~~~~~
+
+The Simplified Installation is intended for the users that want to use the provided
+simulated environments as they come. The whole Robot Server Side is provided as
+a Docker Container including Server Manager, Robot Servers, Command Handlers and
+Simulated Robots allowing to get the standard robo-gym environments running with
+minimal effort.
+
+At the moment the Simplified Installation cannot be used with the Real Robots.
+
+1. Install Docker following the `official documentation <https://docs.docker.com/get-docker/>`_.
+
+2. Execute the following command to pull and and start the Docker container provided:
+
+.. code-block:: shell
+
+  run-rs-side-standard
+
+The command is installed with the robo-gym installation, so make sure you have installed
+robo-gym (Environment Side) before you try this out.
+
+
+**NOTE**: At the moment the Simplified Installation does not support the visualization of the environments.
+The gui option is not working.
+
+Standard Installation
+~~~~~~~~~~~~~~~~~~~~~
+**Requirements:** The Standard Installation requires a PC with Ubuntu 16.04.
+
+The Standard Installation is intended to be used with Real Robots,
+for one or multiple Simulated Robots and for development purposes.
+
 
 1. Install `robo-gym-robot-servers <https://github.com/jr-robotics/robo-gym-robot-servers>`_
 following the instructions in the repository's README.
@@ -273,6 +308,10 @@ If you encounter troubles running robo-gym or if you have questions please submi
 
 News
 ====
+- 2020-04-27 (v0.1.1)
+
+  + added Simplified Installation option for Robot Server Side
 
 - 2020-04-15 (v0.1.0)
+
   + robo-gym first release is here!
