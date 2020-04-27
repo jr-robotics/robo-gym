@@ -1,7 +1,7 @@
 import setuptools
 
 setuptools.setup(name='robo-gym',
-      version='0.1.0',
+      version='0.1.1',
       description='robo-gym: an open source toolkit for Distributed Deep Reinforcement Learning on real and simulated robots.',
       url='https://github.com/jr-robotics/robo-gym',
       author="Matteo Lucchi, Friedemann Zindler",
@@ -20,4 +20,5 @@ setuptools.setup(name='robo-gym',
       'numpy'
       ],
       python_requires='>=3.5',
+      scripts = ['bin/run-rs-side-standard']
 )
