@@ -17,7 +17,7 @@ Basics
 ======
 
 The robo-gym framework is composed of several building blocks.
-Detailed information on them is given in the paper.
+Detailed information on them is given `here <docs/the_framework.md>`_.
 
 .. image:: https://user-images.githubusercontent.com/36470989/79330117-4498dc80-7f19-11ea-9de4-bed4f6390f3a.jpg
    :alt: robo-gym framework
