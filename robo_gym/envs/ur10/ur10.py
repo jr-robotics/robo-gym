@@ -63,19 +63,22 @@ class UR10Env(gym.Env):
         rs_state[0:6] = self.ur10.get_random_workspace_pose()
 
         # Set initial state of the Robot Server
-        assert self.client.set_state(copy.deepcopy(rs_state.tolist()))
+        if not self.client.set_state(copy.deepcopy(rs_state.tolist())):
+            raise RobotServerError("set_state")
 
         # Get Robot Server state
         rs_state = copy.deepcopy(np.nan_to_num(np.array(self.client.get_state())))
 
         # Check if the length of the Robot Server state received is correct
-        assert len(rs_state)== self._get_robot_server_state_len(), "Robot Server state received has wrong length"
+        if not len(rs_state)== self._get_robot_server_state_len():
+            raise InvalidStateError("Robot Server state received has wrong length")
 
         # Convert the initial state from Robot Server format to environment format
         self.state = self._robot_server_state_to_env_state(rs_state)
 
         # Check if the environment state is contained in the observation space
-        assert self.observation_space.contains(self.state), "state is not contained in observation space"
+        if not self.observation_space.contains(self.state):
+            raise InvalidStateError()
 
         return self.state
 
@@ -93,7 +96,8 @@ class UR10Env(gym.Env):
         # Convert action indexing from ur10 to ros
         rs_action = self.ur10._ur_10_joint_list_to_ros_joint_list(rs_action)
         # Send action to Robot Server
-        assert self.client.send_action(rs_action.tolist())
+        if not self.client.send_action(rs_action.tolist()):
+            raise RobotServerError("send_action")
 
         # Get state from Robot Server
         rs_state = self.client.get_state()
@@ -101,7 +105,8 @@ class UR10Env(gym.Env):
         self.state = self._robot_server_state_to_env_state(rs_state)
 
         # Check if the environment state is contained in the observation space
-        assert self.observation_space.contains(self.state), "state is not contained in observation space"
+        if not self.observation_space.contains(self.state):
+            raise InvalidStateError()
 
         # Assign reward
         reward = 0
