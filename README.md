@@ -1,35 +1,47 @@
+<img align="left" width="60" height="60" src="https://user-images.githubusercontent.com/36470989/81711567-15bc4a80-9474-11ea-8499-7adcd6ec96a7.png" alt="robo-gym logo">
 
-|logo| robo-gym
-***************
-
-.. |logo| image:: https://user-images.githubusercontent.com/36470989/81711567-15bc4a80-9474-11ea-8499-7adcd6ec96a7.png
+# robo-gym
 
 **robo-gym is an open source toolkit for Distributed Deep Reinforcement Learning on real and simulated robots.**
-The toolkit is built upon `OpenAI Gym <https://gym.openai.com>`_.
+The toolkit is built upon [OpenAI Gym](https://gym.openai.com).
 
-|obstavoid| |eepos|
+![](https://user-images.githubusercontent.com/36470989/81711550-11902d00-9474-11ea-8a04-d31da59e8266.gif) ![](https://user-images.githubusercontent.com/36470989/81711381-e73e6f80-9473-11ea-880e-1b0ff50e15ff.gif)
 
-.. |obstavoid| image:: https://user-images.githubusercontent.com/36470989/81711550-11902d00-9474-11ea-8a04-d31da59e8266.gif
-
-.. |eepos| image:: https://user-images.githubusercontent.com/36470989/81711381-e73e6f80-9473-11ea-880e-1b0ff50e15ff.gif
 
 A paper describing robo-gym is currently submitted for IROS 2020. A video showcasing the toolkit's
-capabilities and additional info can be found on our `website <https://sites.google.com/view/robo-gym>`_.
+capabilities and additional info can be found on our [website](https://sites.google.com/view/robo-gym)
 
-`See the News section <https://github.com/jr-robotics/robo-gym#news>`_
+[See the News section](#news)
 
-.. contents:: **Contents of this document**
-   :depth: 2
+## Table of Contents
 
-Basics
-======
+- [Basics](#basics)
+- [Installation](#installation)
+  - [Environment Side](#environment-side)
+  - [Robot Server Side](#robot-server-side)
+     - [Simplified Installation](#simplified-installation)
+     - [Standard Installation](#standard-installation)
+  - [Managing Multiple Python Versions](#managing-multiple-python-versions)
+- [How to use](#how-to-use)
+  - [Simulated Environments](#simulated-environments)
+  - [Real Robot Environments](#real-robot-environments)
+- [Environments](#environments)
+  - [Mobile Robots](#mobile-robots)
+    - [Mobile Industrial Robots Mir100](#mobile-industrial-robots-mir-100)
+  - [Robot Arms](#robot-arms)
+    - [Universal Robots UR10](#universal-robots-ur10)
+- [Examples](#examples)
+- [Contributing](#contributing)
+- [News](#news)
+
+
+## Basics
+[back to top](#robo-gym)
 
 The robo-gym framework is composed of several building blocks.
-Detailed information on them is given `here <docs/the_framework.md>`_.
+Detailed information on them is given [here](docs/the_framework.md).
 
-.. image:: https://user-images.githubusercontent.com/36470989/79330117-4498dc80-7f19-11ea-9de4-bed4f6390f3a.jpg
-   :alt: robo-gym framework
-
+![robo-gym framework](https://user-images.githubusercontent.com/36470989/79330117-4498dc80-7f19-11ea-9de4-bed4f6390f3a.jpg)
 
 The framework can be subdivided in two main parts:
 
@@ -48,38 +60,34 @@ and the *Environment Side* on the same PC, it is necessary to create two isolate
 Python virtual environments. See the following section for further details.
 
 
-Installation
-============
+## Installation
+[back to top](#robo-gym)
 
-Environment Side
-----------------
+### Environment Side
 **Requirements:** robo-gym requires Python >= 3.5
 
 robo-gym is provided as a package on the PyPI repository. You can install it with:
 
-.. code-block:: shell
-
-  pip install robo-gym
+```bash
+pip install robo-gym
+```
 
 If you prefer you can also install it from source:
 
-.. code-block:: shell
+```bash
+git clone https://github.com/jr-robotics/robo-gym.git
+cd robo-gym
+pip install .
+```
 
-  git clone https://github.com/jr-robotics/robo-gym.git
-  cd robo-gym
-  pip install .
-
-
-Robot Server Side
------------------
+### Robot Server Side
 
 The Robot Server Side can be installed on the same machine running the Environment Side
 and/or on other multiple machines.
 
 For the Robot Server Side there are two types of installation.
 
-Simplified Installation
-~~~~~~~~~~~~~~~~~~~~~~~
+#### Simplified Installation
 
 The Simplified Installation is intended for the users that want to use the provided
 simulated environments as they come. The whole Robot Server Side is provided as
@@ -89,13 +97,13 @@ minimal effort.
 
 At the moment the Simplified Installation cannot be used with the Real Robots.
 
-1. Install Docker following the `official documentation <https://docs.docker.com/get-docker/>`_.
+1. Install Docker following the [official documentation](https://docs.docker.com/get-docker/).
 
 2. Execute the following command to pull and and start the Docker container provided:
 
-.. code-block:: shell
-
-  run-rs-side-standard
+```bash
+run-rs-side-standard
+```
 
 The command is installed with the robo-gym installation, so make sure you have installed
 robo-gym (Environment Side) before you try this out.
@@ -104,55 +112,53 @@ robo-gym (Environment Side) before you try this out.
 **NOTE**: At the moment the Simplified Installation does not support the visualization of the environments.
 The gui option is not working.
 
-Standard Installation
-~~~~~~~~~~~~~~~~~~~~~
+#### Standard Installation
+
 **Requirements:** The Standard Installation requires a PC with Ubuntu 16.04.
 
 The Standard Installation is intended to be used with Real Robots,
 for one or multiple Simulated Robots and for development purposes.
 
 
-1. Install `robo-gym-robot-servers <https://github.com/jr-robotics/robo-gym-robot-servers>`_
+1. Install [robo-gym-robot-servers](https://github.com/jr-robotics/robo-gym-robot-servers)
 following the instructions in the repository's README.
 
-2. Install `robo-gym-server-modules <https://github.com/jr-robotics/robo-gym-server-modules>`_
+2. Install [robo-gym-server-modules](https://github.com/jr-robotics/robo-gym-server-modules)
 for the system-wide Python 2.7 with:
 
-.. code-block:: shell
+```bash
+pip install robo-gym-server-modules
+```
 
-  pip install robo-gym-server-modules
 
+### Managing Multiple Python Versions
 
-Managing Multiple Python Versions
----------------------------------
-
-`Here <docs/managing_multiple_python_vers.md>`_ you can find some additional information
+[Here](docs/managing_multiple_python_vers.md) you can find some additional information
 on how to deal with multiple Python versions on the same machine.
 
-How to use
-==========
+## How to use
+[back to top](#robo-gym)
 
 The environments provided with robo-gym can be used in the same way of any other
 OpenAI Gym environment. To get started is enough to run:
 
-.. code-block:: python
+```python
+import gym, robo_gym
 
-  import gym, robo_gym
+# for a simulated robot environment
+env = gym.make('EnvironmentNameSim-v0', ip='<server_manager_address>')
+# for a real robot environment
+env = gym.make('EnvironmentNameRob-v0', rs_address='<robot_server_address>')
 
-  # for a simulated robot environment
-  env = gym.make('EnvironmentNameSim-v0', ip='<server_manager_address>')
-  # for a real robot environment
-  env = gym.make('EnvironmentNameRob-v0', rs_address='<robot_server_address>')
-
-  env.reset()
+env.reset()
+```
 
 Each environment comes with a version to be run with a simulated version of the
 robot and the scenario and version to be run with the real robot.
 Simulated environments have a name ending with *Sim* whereas real robot environments
 have a name ending with *Rob*.
 
-Simulated Environments
-----------------------
+### Simulated Environments
 
 Before making a simulated environment it is necessary to start the Server Manager.
 Depending on the type of installation and setup that you chose the Server Manager
@@ -170,10 +176,10 @@ The commands to control the Server Manager are:
 To start the Server Manager it is necessary to make sure that
 ROS and the robo-gym workspace are sourced with:
 
-.. code-block:: shell
-
-  source /opt/ros/kinetic/setup.bash
-  source ~/robogym_ws/devel/setup.bash
+```bash
+source /opt/ros/kinetic/setup.bash
+source ~/robogym_ws/devel/setup.bash
+```
 
 It is then sufficient to run ``start-server-manager`` in the same shell.
 
@@ -185,41 +191,38 @@ By default the simulated environments are started in headless mode, without any 
 
 To start a simulated environment with **GUI** use the optional *gui* argument:
 
-.. code-block:: python
+```python
+env = gym.make('EnvironmentNameSim-v0', ip='<server_manager_address>', gui=True)
+```
 
-  env = gym.make('EnvironmentNameSim-v0', ip='<server_manager_address>', gui=True)
-
-Additional commands for Simulated Environments
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Additional commands for Simulated Environments
 
 The Simulation wrapper provides some extra functionalities to the Simulated Environments.
 
 **restart simulation**
 
-.. code-block:: python
-
-  env.restart_sim()
+```python
+env.restart_sim()
+```
 
 **kill simulation**
 
-.. code-block:: python
+```python
+env.kill_sim()
+```
 
-  env.kill_sim()
-
-Real Robot Environments
------------------------
+### Real Robot Environments
 
 When making a real robot environment the Robot Server needs to be started manually,
 once this is started, its address has to be provided as an argument to the ``env.make()``
 method call.
 
-Environments
-============
+## Environments
+[back to top](#robo-gym)
 
-Mobile Robots
--------------
-Mobile Industrial Robots Mir100
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### Mobile Robots
+[back to top](#robo-gym)
+#### Mobile Industrial Robots Mir100
 
 ``'NoObstacleNavigationMir100Sim-v0'``,  ``'NoObstacleNavigationMir100Rob-v0'``
 
@@ -244,7 +247,7 @@ and a large negative reward when crossing the external boundaries of the map.
 
 ``'ObstacleAvoidanceMir100Sim-v0'``, ``'ObstacleAvoidanceMir100Rob-v0'``
 
-.. image:: https://user-images.githubusercontent.com/36470989/79962530-70bbdc80-8488-11ea-8999-d6db38e4264a.gif
+![](https://user-images.githubusercontent.com/36470989/79962530-70bbdc80-8488-11ea-8999-d6db38e4264a.gif)
 
 In this environment, the task of the mobile robot is to reach a target position
 without touching the obstacles on the way.
@@ -275,14 +278,13 @@ negative reward is collected for moving away.
 In addition, the agent receives a large positive reward for reaching the goal
 and a large negative reward in case of collision.
 
-Robot Arms
-----------
-Universal Robots UR10
-~~~~~~~~~~~~~~~~~~~~~
+### Robot Arms
+[back to top](#robo-gym)
+#### Universal Robots UR10
 
 ``'EndEffectorPositioningUR10Sim-v0'``, ``'EndEffectorPositioningUR10Rob-v0'``
 
-.. image:: https://user-images.githubusercontent.com/36470989/79962368-3ce0b700-8488-11ea-83ac-c9e8995c2957.gif
+![](https://user-images.githubusercontent.com/36470989/79962368-3ce0b700-8488-11ea-83ac-c9e8995c2957.gif)
 
 The goal in this environment is for the robotic arm to reach a target position with its end effector.
 
@@ -317,13 +319,13 @@ A penalty is given for high variation in the robot's joint velocities.
 Both self collisions and collisions with the ground are taken into account and
 punished with a negative reward and termination of the episode.
 
-Examples
-========
+## Examples
+[back to top](#robo-gym)
 
 Examples and tutorials will be added soon!
 
-Contributing
-============
+## Contributing
+[back to top](#robo-gym)
 
 New environments and new robots and sensors implementations are welcome!
 
@@ -331,12 +333,11 @@ More details and guides on how to contribute will be added soon!
 
 If you encounter troubles running robo-gym or if you have questions please submit a new issue.
 
-News
-====
-- 2020-04-27 (v0.1.1)
+## News
+[back to top](#robo-gym)
 
+- 2020-04-27 (v0.1.1)
   + added Simplified Installation option for Robot Server Side
 
 - 2020-04-15 (v0.1.0)
-
   + robo-gym first release is here!
