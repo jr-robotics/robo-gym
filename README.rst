@@ -2,19 +2,16 @@
 |logo| robo-gym
 ***************
 
-.. |logo| image:: https://user-images.githubusercontent.com/36470989/81690225-4c399b80-945b-11ea-8ee7-b1d1012d58e3.png
-   :width: 70
+.. |logo| image:: https://user-images.githubusercontent.com/36470989/81711567-15bc4a80-9474-11ea-8499-7adcd6ec96a7.png
 
 **robo-gym is an open source toolkit for Distributed Deep Reinforcement Learning on real and simulated robots.**
 The toolkit is built upon `OpenAI Gym <https://gym.openai.com>`_.
 
-|pic1| |pic2|
+|obstavoid| |eepos|
 
-.. |pic1| image:: https://user-images.githubusercontent.com/36470989/79962530-70bbdc80-8488-11ea-8999-d6db38e4264a.gif
-   :width: 200
+.. |obstavoid| image:: https://user-images.githubusercontent.com/36470989/81711550-11902d00-9474-11ea-8a04-d31da59e8266.gif
 
-.. |pic2| image:: https://user-images.githubusercontent.com/36470989/79962368-3ce0b700-8488-11ea-83ac-c9e8995c2957.gif
-   :width: 200
+.. |eepos| image:: https://user-images.githubusercontent.com/36470989/81711381-e73e6f80-9473-11ea-880e-1b0ff50e15ff.gif
 
 A paper describing robo-gym is currently submitted for IROS 2020. A video showcasing the toolkit's
 capabilities and additional info can be found on our `website <https://sites.google.com/view/robo-gym>`_.
