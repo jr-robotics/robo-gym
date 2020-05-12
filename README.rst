@@ -189,6 +189,23 @@ To start a simulated environment with **GUI** use the optional *gui* argument:
 
   env = gym.make('EnvironmentNameSim-v0', ip='<server_manager_address>', gui=True)
 
+Additional commands for Simulated Environments
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The Simulation wrapper provides some extra functionalities to the Simulated Environments.
+
+**restart simulation**
+
+.. code-block:: python
+
+  env.restart_sim()
+
+**kill simulation**
+
+.. code-block:: python
+
+  env.kill_sim()
+
 Real Robot Environments
 -----------------------
 
