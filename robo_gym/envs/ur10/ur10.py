@@ -6,6 +6,7 @@ import gym
 from gym import spaces
 from gym.utils import seeding
 from robo_gym.utils import utils, ur_utils
+from robo_gym.utils.exceptions import InvalidStateError, RobotServerError
 import robo_gym_server_modules.robot_server.client as rs_client
 from robo_gym.envs.simulation_wrapper import Simulation
 
