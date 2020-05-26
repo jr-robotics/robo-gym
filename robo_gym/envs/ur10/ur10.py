@@ -28,9 +28,11 @@ class UR10Env(gym.Env):
     """
     real_robot = False
 
-    def __init__(self, rs_address=None, **kwargs):
+    def __init__(self, rs_address=None, max_episode_steps=500, **kwargs):
 
         self.ur10 = ur_utils.UR10()
+        self.max_episode_steps = max_episode_steps
+        self.elapsed_steps = 0
         self.observation_space = self._get_observation_space()
         self.action_space = spaces.Box(low=np.full((6), -1.0), high=np.full((6), 1.0), dtype=np.float32)
         self.seed()
@@ -49,6 +51,8 @@ class UR10Env(gym.Env):
         return [seed]
 
     def reset(self):
+        self.elapsed_steps = 0
+
         self.last_action = None
         self.prev_base_reward = None
 
@@ -87,6 +91,8 @@ class UR10Env(gym.Env):
         return 0, False
 
     def step(self, action):
+        self.elapsed_steps += 1
+
         # Check if the action is within the action space
         assert self.action_space.contains(action), "%r (%s) invalid" % (action, type(action))
 
@@ -261,6 +267,10 @@ class EndEffectorPositioningUR10(UR10Env):
             reward = -200
             done = True
             info['final_status'] = 'collision'
+        
+        if self.elapsed_steps >= self.max_episode_steps:
+            done = True
+            info['final_status'] = 'max_steps_exceeded'
 
         return reward, done, info
 
@@ -313,6 +323,10 @@ class EndEffectorPositioningAntiShakeUR10(UR10Env):
             reward = -200
             done = True
             info['final_status'] = 'collision'
+        
+        if self.elapsed_steps >= self.max_episode_steps:
+            done = True
+            info['final_status'] = 'max_steps_exceeded'
 
         return reward, done, info
 
