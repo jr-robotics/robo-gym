@@ -32,9 +32,11 @@ class Mir100Env(gym.Env):
     real_robot = False
     laser_len = 1022
 
-    def __init__(self, rs_address=None, **kwargs):
+    def __init__(self, rs_address=None, max_episode_steps=500, **kwargs):
 
         self.mir100 = mir100_utils.Mir100()
+        self.max_episode_steps = max_episode_steps
+        self.elapsed_steps = 0
         self.observation_space = self._get_observation_space()
         self.action_space = spaces.Box(low=np.full((2), -1.0), high=np.full((2), 1.0), dtype=np.float32)
         self.seed()
@@ -58,6 +60,8 @@ class Mir100Env(gym.Env):
         return [seed]
 
     def reset(self):
+        self.elapsed_steps = 0
+
         self.prev_base_reward = None
         self.steps_in_goal = 0
 
@@ -97,6 +101,8 @@ class Mir100Env(gym.Env):
         return 0, False, {}
 
     def step(self, action):
+        self.elapsed_steps += 1
+
         # Check if the action is within the action space
         assert self.action_space.contains(action), "%r (%s) invalid" % (action, type(action))
 
@@ -375,6 +381,10 @@ class NoObstacleNavigationMir100(Mir100Env):
             done = True
             info['final_status'] = 'success'
 
+        if self.elapsed_steps >= self.max_episode_steps:
+            done = True
+            info['final_status'] = 'max_steps_exceeded'
+
         return reward, done, info
 
 class NoObstacleNavigationMir100Sim(NoObstacleNavigationMir100, Simulation):
@@ -391,6 +401,8 @@ class ObstacleAvoidanceMir100(Mir100Env):
     laser_len = 16
 
     def reset(self):
+        self.elapsed_steps = 0
+
         self.prev_base_reward = None
         self.steps_in_goal = 0
 
@@ -483,6 +495,10 @@ class ObstacleAvoidanceMir100(Mir100Env):
             reward = 100
             done = True
             info['final_status'] = 'success'
+        
+        if self.elapsed_steps >= self.max_episode_steps:
+            done = True
+            info['final_status'] = 'max_steps_exceeded'
 
         return reward, done, info
 
