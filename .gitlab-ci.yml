@@ -1,0 +1,18 @@
+image: python:3.6-slim-buster
+
+stages:
+  - deploy
+
+before_script:
+   - pip3 install twine
+   - python3 setup.py sdist
+
+deploy_production:
+  stage: deploy
+  variables:
+    TWINE_USERNAME: $PYPI_USERNAME
+    TWINE_PASSWORD: $PYPI_PASSWORD
+  script:
+    - twine upload --repository-url https://upload.pypi.org/legacy/ dist/*
+  only:
+    - tags
