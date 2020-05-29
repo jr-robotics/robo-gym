@@ -2,13 +2,21 @@
 
 # robo-gym
 
-**robo-gym is an open source toolkit for Distributed Deep Reinforcement Learning on real and simulated robots.**
-The toolkit is built upon [OpenAI Gym](https://gym.openai.com).
+**robo-gym is an open source toolkit for distributed reinforcement learning on real and simulated robots.**
 
 ![](https://user-images.githubusercontent.com/36470989/81711550-11902d00-9474-11ea-8a04-d31da59e8266.gif) ![](https://user-images.githubusercontent.com/36470989/81711381-e73e6f80-9473-11ea-880e-1b0ff50e15ff.gif)
 
+``robo-gym`` provides a collection of reinforcement learning environments involving robotic tasks applicable in both simulation and real world robotics. Additionally, we provide the tools to facilitate the creation of new environments featuring different robots and sensors.
 
-A paper describing robo-gym is currently submitted for IROS 2020. A video showcasing the toolkit's
+Main features :
+- [OpenAI Gym](https://gym.openai.com) interface for all the the environments 
+- **simulated** and **real** robots interchangeability, which enables a seamless transfer from training in simulation to application on the real robot.
+- built-in **distributed** capabilities, which enable the use of distributed algorithms and distributed hardware
+- based only on **open source** software, which allows to develop applications on own hardware and without incurring in cloud services fees or software licensing costs
+- integration of 2 commercially available **industrial robots**: MiR 100, UR 10 (more to come)
+- it has been successfully deployed to train a DRL algorithm to solve two different tasks in simulation that was able to solve the tasks on the real robots as well, without any further training in the real world
+
+A paper describing robo-gym is currently under review for IROS 2020. A video showcasing the toolkit's
 capabilities and additional info can be found on our [website](https://sites.google.com/view/robo-gym)
 
 [See the News section](#news)
