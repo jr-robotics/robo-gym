@@ -9,7 +9,7 @@
 ``robo-gym`` provides a collection of reinforcement learning environments involving robotic tasks applicable in both simulation and real world robotics. Additionally, we provide the tools to facilitate the creation of new environments featuring different robots and sensors.
 
 Main features :
-- [OpenAI Gym](https://gym.openai.com) interface for all the the environments 
+- [OpenAI Gym](https://gym.openai.com) interface for all the the environments
 - **simulated** and **real** robots interchangeability, which enables a seamless transfer from training in simulation to application on the real robot.
 - built-in **distributed** capabilities, which enable the use of distributed algorithms and distributed hardware
 - based only on **open source** software, which allows to develop applications on own hardware and without incurring in cloud services fees or software licensing costs
@@ -344,9 +344,9 @@ If you encounter troubles running robo-gym or if you have questions please submi
 ## News
 [back to top](#robo-gym)
 
-- 2020-06-02 (v0.1.2)
+- 2020-06-02 (v0.1.7)
   + improved documentation
-  + added exception handling feature to simulated environments 
+  + added exception handling feature to simulated environments
 
 - 2020-04-27 (v0.1.1)
   + added Simplified Installation option for Robot Server Side
