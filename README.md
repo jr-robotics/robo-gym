@@ -344,6 +344,10 @@ If you encounter troubles running robo-gym or if you have questions please submi
 ## News
 [back to top](#robo-gym)
 
+- 2020-06-02 (v0.1.2)
+  + improved documentation
+  + added exception handling feature to simulated environments 
+
 - 2020-04-27 (v0.1.1)
   + added Simplified Installation option for Robot Server Side
 
