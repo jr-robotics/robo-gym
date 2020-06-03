@@ -207,16 +207,38 @@ env = gym.make('EnvironmentNameSim-v0', ip='<server_manager_address>', gui=True)
 
 The Simulation wrapper provides some extra functionalities to the Simulated Environments.
 
-**restart simulation**
+##### restart simulation
 
 ```python
 env.restart_sim()
 ```
 
-**kill simulation**
+##### kill simulation
 
 ```python
 env.kill_sim()
+```
+
+##### Exception Handling Wrapper
+
+The Exception Handling Wrapper comes in handy when training on simulated environments.
+The wrapper implements reaction strategies to common exceptions raised during training.
+If one of the know exceptions is raised it tries to restart the Robot Server and the Simulation
+to recover the system. If the exceptions happen during the reset of the environment the Robot Server
+is simply restarted in the background, whereas, if exceptions happen during the execution of an
+environment step the environment returns:
+
+```python
+return self.env.observation_space.sample(), 0, True, {"Exception":True, "ExceptionType": <Exception_type>}
+```
+Adding the wrapper to any simulated environment is very easy: 
+
+```python
+import gym, robo_gym
+from robo_gym.wrappers.exception_handling import ExceptionHandling
+
+env = gym.make('EnvironmentNameSim-v0', ip='<server_manager_address>')
+env = ExceptionHandling(env)
 ```
 
 ### Real Robot Environments
