@@ -438,6 +438,10 @@ class ObstacleAvoidanceMir100(Mir100Env):
         # Convert the initial state from Robot Server format to environment format
         self.state = self._robot_server_state_to_env_state(rs_state)
 
+        # Check if the environment state is contained in the observation space
+        if not self.observation_space.contains(self.state):
+            raise InvalidStateError()
+            
         return self.state
 
     def _reward(self, rs_state, action):
