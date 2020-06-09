@@ -83,7 +83,7 @@ class UR10Env(gym.Env):
         if ee_target_pose:
             assert len(ee_target_pose) == 6
         else:
-            ee_target_pose = self.ur10.get_random_workspace_pose()
+            ee_target_pose = self._get_target_pose()
 
         rs_state[0:6] = ee_target_pose
 
@@ -199,6 +199,16 @@ class UR10Env(gym.Env):
         joint_positions = np.random.default_rng().uniform(low=low, high=high)
 
         return joint_positions
+
+    def _get_target_pose(self):
+        """Generate target End Effector pose.
+
+        Returns:
+            np.array: [x,y,z,alpha,theta,gamma] pose.
+
+        """
+
+        return self.ur10.get_random_workspace_pose()
 
     def _robot_server_state_to_env_state(self, rs_state):
         """Transform state from Robot Server to environment format.
