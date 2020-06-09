@@ -59,7 +59,17 @@ class Mir100Env(gym.Env):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
-    def reset(self):
+    def reset(self, start_pose = None, target_pose = None):
+        """Environment reset.
+
+        Args:
+            start_pose (list[3] or np.array[3]): [x,y,yaw] initial robot position.
+            target_pose (list[3] or np.array[3]): [x,y,yaw] target robot position.
+
+        Returns:
+            np.array: Environment state.
+
+        """
         self.elapsed_steps = 0
 
         self.prev_base_reward = None
@@ -70,12 +80,19 @@ class Mir100Env(gym.Env):
         rs_state = np.zeros(self._get_robot_server_state_len())
 
         # Set Robot starting position
-        start_pose = self._get_start_pose()
+        if start_pose:
+            assert len(start_pose)==3
+        else:
+            start_pose = self._get_start_pose()
+
         rs_state[3:6] = start_pose
 
-        # Generate target position
-        target = self._get_target(start_pose)
-        rs_state[0:3] = target
+        # Set target position
+        if target_pose:
+            assert len(target_pose)==3
+        else:
+            target_pose = self._get_target(start_pose)
+        rs_state[0:3] = target_pose
 
         # Set initial state of the Robot Server
         if not self.client.set_state(copy.deepcopy(rs_state.tolist())):
@@ -400,7 +417,17 @@ class NoObstacleNavigationMir100Rob(NoObstacleNavigationMir100):
 class ObstacleAvoidanceMir100(Mir100Env):
     laser_len = 16
 
-    def reset(self):
+    def reset(self, start_pose = None, target_pose = None):
+        """Environment reset.
+
+        Args:
+            start_pose (list[3] or np.array[3]): [x,y,yaw] initial robot position.
+            target_pose (list[3] or np.array[3]): [x,y,yaw] target robot position.
+
+        Returns:
+            np.array: Environment state.
+
+        """
         self.elapsed_steps = 0
 
         self.prev_base_reward = None
@@ -411,12 +438,19 @@ class ObstacleAvoidanceMir100(Mir100Env):
         rs_state = np.zeros(self._get_robot_server_state_len())
 
         # Set Robot starting position
-        start_pose = self._get_start_pose()
+        if start_pose:
+            assert len(start_pose)==3
+        else:
+            start_pose = self._get_start_pose()
+
         rs_state[3:6] = start_pose
 
-        # Generate target position
-        target = self._get_target(start_pose)
-        rs_state[0:3] = target
+        # Set target position
+        if target_pose:
+            assert len(target_pose)==3
+        else:
+            target_pose = self._get_target(start_pose)
+        rs_state[0:3] = target_pose
 
         # Generate obstacles positions
         self._generate_obstacles_positions()
@@ -441,7 +475,7 @@ class ObstacleAvoidanceMir100(Mir100Env):
         # Check if the environment state is contained in the observation space
         if not self.observation_space.contains(self.state):
             raise InvalidStateError()
-            
+
         return self.state
 
     def _reward(self, rs_state, action):
@@ -499,7 +533,7 @@ class ObstacleAvoidanceMir100(Mir100Env):
             reward = 100
             done = True
             info['final_status'] = 'success'
-        
+
         if self.elapsed_steps >= self.max_episode_steps:
             done = True
             info['final_status'] = 'max_steps_exceeded'
