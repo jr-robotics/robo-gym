@@ -167,6 +167,7 @@ def test_downsample_list_to_len():
     sample_list = [i for i in range(input_length)]
     output_len = 501 # 999
     output_len = 349
+    output_len = 101
 
     downsampled_list = downsample_list_to_len(data=sample_list, output_len=output_len)
 
