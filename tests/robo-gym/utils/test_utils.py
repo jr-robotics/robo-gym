@@ -21,8 +21,48 @@ import pytest
 from robo_gym.utils import utils
 
 
-## cartesian_to_polar_2d ##
+test_normalize_angle_rad = [
+    (7.123, 0.8398),
+    (0.8398, 0.8398),
+    (-2.47, -2.47),
+    (-47.47, 2.795)
 
+]
+@pytest.mark.parametrize('a, expected_a', test_normalize_angle_rad)
+def test_normalize_angle_rad(a, expected_a):
+    normalized_a = utils.normalize_angle_rad(a)
+    assert abs(expected_a - normalized_a) < 0.01
+
+
+
+test_inside_circle = [
+    (5.47, 3.51, 6, 8, 5.23, True),
+    (5.11, 2.23, 6, 8, 5.23, False),
+    (5.69, 2.78, 6, 8, 5.23, True)
+]
+@pytest.mark.parametrize('x, y, center_x, center_y, radius, expected_result', test_inside_circle)
+def test_point_inside_circle(x, y, center_x, center_y, radius, expected_result):
+    is_inside = utils.point_inside_circle(x, y, center_x, center_y, radius)
+    assert is_inside == expected_result
+
+
+test_rotate_points = [
+    (3.13, 5.83, 0.785398, -1.91, 6.34),
+    (4, 3, -2.14675498, 0.34, -4.99),
+    (1, 3, -0.0, 1, 3),
+
+]
+@pytest.mark.parametrize('x, y, theta, expected_x, expected_y', test_rotate_points)
+def test_rotate_point(x, y, theta, expected_x, expected_y):
+    new_x, new_y = utils.rotate_point(x, y, theta)
+
+    print(new_x, new_y)
+
+    assert abs(new_x - expected_x) < 0.01
+    assert abs(new_y - expected_y) < 0.01
+
+
+## cartesian_to_polar_2d ##
 def test_cartesian_to_polar_2d_default_origin():
     target_x = 3
     target_y = 4
@@ -84,7 +124,6 @@ def test_cartesian_to_polar_3d_set_origin():
 
 
 test_downsample = [2, 4, 5, 6, 7, 8, 9, 10, 13, 15, 24, 51, 100, 101, 200, 201, 349, 501]
-
 @pytest.mark.parametrize('target_length', test_downsample)
 def test_downsample_list_to_len(target_length):
     input_length = 1000
