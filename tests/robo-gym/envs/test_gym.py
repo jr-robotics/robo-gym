@@ -12,6 +12,7 @@ envs = [
 
 
 @pytest.mark.parametrize('env_name', envs)
+@pytest.mark.filterwarnings('ignore:UserWarning')
 def test_env_initialization(env_name):
     env = gym.make(env_name, ip='robot-servers')
 

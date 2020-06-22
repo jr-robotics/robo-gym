@@ -11,6 +11,7 @@ test_ur_reset = [
 ]
 
 @pytest.mark.parametrize('env_name, initial_joint_positions', test_ur_reset)
+@pytest.mark.filterwarnings('ignore:UserWarning')
 def test_ur_reset_init_joints(env_name, initial_joint_positions):
     env = gym.make(env_name, ip='robot-servers')
 
@@ -28,6 +29,7 @@ test_ur_reset_ee = [
 ]
 
 @pytest.mark.parametrize('env_name, initial_joint_positions, ee_target_pose', test_ur_reset_ee)
+@pytest.mark.filterwarnings('ignore:UserWarning')
 def test_ur_reset_init_ee_pose_equals_target(env_name, initial_joint_positions, ee_target_pose):
     env = gym.make(env_name, ip='robot-servers')
 
