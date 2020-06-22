@@ -120,7 +120,7 @@ def downsample_list_to_len(data, output_len):
     assert output_len > 0
     assert output_len <= len(data)
 
-    temp = np.linspace(0, len(data), num=output_len)
+    temp = np.linspace(0, len(data)-1, num=output_len)
     temp = [int(round(x)) for x in temp]
 
     assert len(temp) == len(set(temp))
