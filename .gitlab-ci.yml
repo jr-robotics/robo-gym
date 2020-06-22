@@ -1,13 +1,31 @@
-image: python:3.6-slim-buster
+
 
 stages:
+  - test
   - deploy
 
-before_script:
-   - pip3 install twine
-   - python3 setup.py sdist
+test_environments:
+  image: docker:18.09
+  before_script:
+  - apk add docker-compose
+  services:
+    - docker:18.09-dind
+  tags:
+    - docker-executor
+  stage: test
+  script:
+    - docker-compose -f docker-compose-test-melodic.yml up -d
+    - docker exec robo-gym pytest
+    - docker-compose -f docker-compose-test-melodic.yml down
+
+
+
 
 deploy_production:
+  image: python:3.6-slim-buster
+  before_script:
+     - pip3 install twine
+     - python3 setup.py sdist
   stage: deploy
   variables:
     TWINE_USERNAME: $PYPI_USERNAME
