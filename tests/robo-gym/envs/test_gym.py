@@ -1,0 +1,27 @@
+import warnings
+warnings.simplefilter("ignore", UserWarning)
+import gym
+import pytest
+
+import robo_gym
+
+envs = [
+    'NoObstacleNavigationMir100Sim-v0', 
+    'ObstacleAvoidanceMir100Sim-v0', 
+    'EndEffectorPositioningUR10Sim-v0', 
+    'EndEffectorPositioningAntiShakeUR10Sim-v0'
+]
+
+
+@pytest.mark.parametrize('env_name', envs)
+def test_env_initialization(env_name):
+    env = gym.make(env_name, ip='robot-servers')
+
+    env.reset()
+    done = False
+    for i in range(5):
+        if not done:
+            action = env.action_space.sample()
+            observation, reward, done, info = env.step(action)
+
+    assert env.observation_space.contains(observation)
