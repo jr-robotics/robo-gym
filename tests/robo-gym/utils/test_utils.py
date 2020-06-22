@@ -1,26 +1,9 @@
-'''This is just a prototypical setup for getting used to pytest'''
-
-'''List of best practices:
-        - test function need to start with the keyword 'test'
-        - test function names should give and indication what is being tested -> preferably long test function names
-
-'''
-'''
-    Open questions:
-        How do we want to compare floating point numbers?
-            1. assert abs(X-Y) < 0.001
-            2. assertAlmostEqual from unittest (works similar), but i dont think we are supposed to mix the two
-        
-        How do we want to test function like cartesian_to_polar in general?
-            - Testing one precomputed value set?
-            - Multiple precomputed value sets? How many?
-            - Other ideas for functions such as the ones in utils?
-'''
-
+#!/usr/bin/env python3
 import pytest
 from robo_gym.utils import utils
 
 
+### normalize_angle_rad ###
 test_normalize_angle_rad = [
     (7.123, 0.8398),
     (0.8398, 0.8398),
@@ -34,7 +17,7 @@ def test_normalize_angle_rad(a, expected_a):
     assert abs(expected_a - normalized_a) < 0.01
 
 
-
+### point_inside_circle ###
 test_inside_circle = [
     (5.47, 3.51, 6, 8, 5.23, True),
     (5.11, 2.23, 6, 8, 5.23, False),
@@ -45,7 +28,7 @@ def test_point_inside_circle(x, y, center_x, center_y, radius, expected_result):
     is_inside = utils.point_inside_circle(x, y, center_x, center_y, radius)
     assert is_inside == expected_result
 
-
+### rotate_point ###
 test_rotate_points = [
     (3.13, 5.83, 0.785398, -1.91, 6.34),
     (4, 3, -2.14675498, 0.34, -4.99),
@@ -62,7 +45,7 @@ def test_rotate_point(x, y, theta, expected_x, expected_y):
     assert abs(new_y - expected_y) < 0.01
 
 
-## cartesian_to_polar_2d ##
+### cartesian_to_polar_2d ###
 def test_cartesian_to_polar_2d_default_origin():
     target_x = 3
     target_y = 4
@@ -92,8 +75,6 @@ test_equal_points = [
 ]
 @pytest.mark.parametrize('p1, p2, expected_r, expected_theta', test_equal_points)
 def test_cartesian_to_polar_2d_equal_points(p1, p2, expected_r, expected_theta):
-    target_x = 0
-    target_y = 0
 
     polar_r, polar_theta = utils.cartesian_to_polar_2d(x_target=p1[0], y_target=p1[1], x_origin=p2[0], y_origin=p2[1])
     
@@ -101,7 +82,7 @@ def test_cartesian_to_polar_2d_equal_points(p1, p2, expected_r, expected_theta):
     assert abs(polar_theta - expected_theta) < 0.001
 
 
-## cartesian_to_polar_3d ##
+### cartesian_to_polar_3d ###
 def test_cartesian_to_polar_3d_default_origin():
     target = [9, 4, 5]
 
@@ -122,8 +103,10 @@ def test_cartesian_to_polar_3d_set_origin():
     assert abs(phi - (-0.949419)) < 0.01
     assert abs(theta - 1.424401) < 0.01
 
-
-test_downsample = [2, 4, 5, 6, 7, 8, 9, 10, 13, 15, 24, 51, 100, 101, 200, 201, 349, 501]
+### downsample_list_to_len ###
+test_downsample = [
+    2, 4, 5, 6, 7, 8, 9, 10, 13, 15, 24, 51, 100, 101, 200, 201, 349, 501
+]
 @pytest.mark.parametrize('target_length', test_downsample)
 def test_downsample_list_to_len(target_length):
     input_length = 1000
