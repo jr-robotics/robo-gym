@@ -50,7 +50,17 @@ class UR10Env(gym.Env):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
-    def reset(self):
+    def reset(self, initial_joint_positions = None, ee_target_pose = None):
+        """Environment reset.
+
+        Args:
+            initial_joint_positions (list[6] or np.array[6]): robot joint positions in radians.
+            ee_target_pose (list[6] or np.array[6]): [x,y,z,r,p,y] target end effector pose.
+
+        Returns:
+            np.array: Environment state.
+
+        """
         self.elapsed_steps = 0
 
         self.last_action = None
@@ -61,11 +71,21 @@ class UR10Env(gym.Env):
         rs_state = np.zeros(self._get_robot_server_state_len())
 
         # Set initial robot joint positions
-        ur10_initial_joint_positions = self._get_initial_joint_positions()
+        if initial_joint_positions:
+            assert len(initial_joint_positions) == 6
+            ur10_initial_joint_positions = initial_joint_positions
+        else:
+            ur10_initial_joint_positions = self._get_initial_joint_positions()
+
         rs_state[6:12] = self.ur10._ur_10_joint_list_to_ros_joint_list(ur10_initial_joint_positions)
 
-        # Generate target End Effector pose
-        rs_state[0:6] = self.ur10.get_random_workspace_pose()
+        # Set target End Effector pose
+        if ee_target_pose:
+            assert len(ee_target_pose) == 6
+        else:
+            ee_target_pose = self._get_target_pose()
+
+        rs_state[0:6] = ee_target_pose
 
         # Set initial state of the Robot Server
         if not self.client.set_state(copy.deepcopy(rs_state.tolist())):
@@ -180,6 +200,16 @@ class UR10Env(gym.Env):
 
         return joint_positions
 
+    def _get_target_pose(self):
+        """Generate target End Effector pose.
+
+        Returns:
+            np.array: [x,y,z,alpha,theta,gamma] pose.
+
+        """
+
+        return self.ur10.get_random_workspace_pose()
+
     def _robot_server_state_to_env_state(self, rs_state):
         """Transform state from Robot Server to environment format.
 
@@ -267,7 +297,7 @@ class EndEffectorPositioningUR10(UR10Env):
             reward = -200
             done = True
             info['final_status'] = 'collision'
-        
+
         if self.elapsed_steps >= self.max_episode_steps:
             done = True
             info['final_status'] = 'max_steps_exceeded'
@@ -323,7 +353,7 @@ class EndEffectorPositioningAntiShakeUR10(UR10Env):
             reward = -200
             done = True
             info['final_status'] = 'collision'
-        
+
         if self.elapsed_steps >= self.max_episode_steps:
             done = True
             info['final_status'] = 'max_steps_exceeded'
