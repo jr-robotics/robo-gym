@@ -1,0 +1,22 @@
+version: '3'
+
+services:
+  robot-servers:
+    container_name: robot-servers
+    build:
+      context: ./robot-server-side-docker/
+      dockerfile: melodic.Dockerfile
+    command: bash -c "start-server-manager && tail -f /dev/null" #This starts the server manager and hangs
+    restart: always
+
+  robo-gym:
+    container_name: robo-gym
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    entrypoint: tail -f /dev/null
+    depends_on:
+      - robot-servers
+  #   stdin_open: true
+  #   tty: true
