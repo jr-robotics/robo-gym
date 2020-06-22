@@ -1,5 +1,3 @@
-import warnings
-warnings.simplefilter("ignore", UserWarning)
 import gym
 import pytest
 
