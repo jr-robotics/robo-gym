@@ -117,9 +117,16 @@ def downsample_list_to_len(data, output_len):
 
     """
 
-    assert output_len>0
+    assert output_len > 0
+    assert output_len <= len(data)
 
-    downsample_rate = math.ceil(len(data)/output_len)
-    d_data = data[::downsample_rate]
+    temp = np.linspace(0, len(data)-1, num=output_len)
+    temp = [int(round(x)) for x in temp]
 
-    return d_data
+    assert len(temp) == len(set(temp))
+
+    ds_data = []
+    for index in temp:
+        ds_data.append(data[index])
+
+    return ds_data

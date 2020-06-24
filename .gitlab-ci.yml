@@ -1,13 +1,89 @@
-image: python:3.6-slim-buster
+
 
 stages:
+  - test
   - deploy
 
-before_script:
-   - pip3 install twine
-   - python3 setup.py sdist
+test_environments_with_rs_master:
+  image: docker:18.09
+  before_script:
+  - apk add docker-compose
+  services:
+    - docker:18.09-dind
+  tags:
+    - docker-executor
+  stage: test
+  script:
+    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
+    - docker pull robotics-git.joanneum.at:4567/robo-gym/robot-servers/master:latest
+    - docker tag robotics-git.joanneum.at:4567/robo-gym/robot-servers/master:latest robot-servers
+    - docker-compose -f docker-compose-test-melodic.yml up -d
+    - docker exec robo-gym pytest
+    - docker-compose -f docker-compose-test-melodic.yml down
+  except:
+    - capsize*
+
+test_environments_with_rs_develop:
+  image: docker:18.09
+  before_script:
+  - apk add docker-compose
+  services:
+    - docker:18.09-dind
+  tags:
+    - docker-executor
+  stage: test
+  script:
+    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
+    - docker pull robotics-git.joanneum.at:4567/robo-gym/robot-servers/develop:latest
+    - docker tag robotics-git.joanneum.at:4567/robo-gym/robot-servers/develop:latest robot-servers
+    - docker-compose -f docker-compose-test-melodic.yml up -d
+    - docker exec robo-gym pytest
+    - docker-compose -f docker-compose-test-melodic.yml down
+  when: manual
+
+capsize_test_environments_with_rs_master:
+  image: docker:18.09
+  before_script:
+  - apk add docker-compose
+  services:
+    - docker:18.09-dind
+  tags:
+    - docker-executor
+  stage: test
+  script:
+    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
+    - docker pull robotics-git.joanneum.at:4567/robo-gym/robot-servers/capsize_master:latest
+    - docker tag robotics-git.joanneum.at:4567/robo-gym/robot-servers/capsize_master:latest robot-servers
+    - docker-compose -f docker-compose-test-melodic.yml up -d
+    - docker exec robo-gym pytest
+    - docker-compose -f docker-compose-test-melodic.yml down
+  only:
+    - capsize*
+
+capsize_test_environments_with_rs_develop:
+  image: docker:18.09
+  before_script:
+  - apk add docker-compose
+  services:
+    - docker:18.09-dind
+  tags:
+    - docker-executor
+  stage: test
+  script:
+    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
+    - docker pull robotics-git.joanneum.at:4567/robo-gym/robot-servers/capsize_develop:latest
+    - docker tag robotics-git.joanneum.at:4567/robo-gym/robot-servers/capsize_develop:latest robot-servers
+    - docker-compose -f docker-compose-test-melodic.yml up -d
+    - docker exec robo-gym pytest
+    - docker-compose -f docker-compose-test-melodic.yml down
+  when: manual
+
 
 deploy_production:
+  image: python:3.6-slim-buster
+  before_script:
+     - pip3 install twine
+     - python3 setup.py sdist
   stage: deploy
   variables:
     TWINE_USERNAME: $PYPI_USERNAME
