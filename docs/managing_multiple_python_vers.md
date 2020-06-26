@@ -5,8 +5,7 @@ To manage multiple Python versions on the same machine we suggest to use [pyenv]
 
 [Here](https://realpython.com/intro-to-pyenv/) there is a great article on pyenv.
 
-Follow the instructions on the offical pyenv github repository or in the article
-to install pyenv on your machine.
+We recommend using [pyenv-installer](https://github.com/pyenv/pyenv-installer) to install pyenv on your machine.
 
 Once pyenv is installed you can check the python versions available with:
 
