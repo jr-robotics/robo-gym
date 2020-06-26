@@ -231,7 +231,7 @@ environment step the environment returns:
 ```python
 return self.env.observation_space.sample(), 0, True, {"Exception":True, "ExceptionType": <Exception_type>}
 ```
-Adding the wrapper to any simulated environment is very easy: 
+Adding the wrapper to any simulated environment is very easy:
 
 ```python
 import gym, robo_gym
@@ -349,6 +349,11 @@ A penalty is given for high variation in the robot's joint velocities.
 Both self collisions and collisions with the ground are taken into account and
 punished with a negative reward and termination of the episode.
 
+### Create your own Environments
+
+Thanks to the modularity of robo-gym it is fairly simple to create new Environments,
+a guide on this is provided [here](docs/creating_environments.md)
+
 ## Examples
 [back to top](#robo-gym)
 
@@ -361,7 +366,7 @@ New environments and new robots and sensors implementations are welcome!
 
 More details and guides on how to contribute will be added soon!
 
-If you encounter troubles running robo-gym or if you have questions please submit a new issue.
+If you encounter troubles running robo-gym or if you have questions please submit a new [issue](https://github.com/jr-robotics/robo-gym/issues/new/).
 
 ## News
 [back to top](#robo-gym)
