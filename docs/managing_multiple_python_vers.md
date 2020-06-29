@@ -46,5 +46,5 @@ You should see in your shell something like:
 
 This means that you are now within the virtual environment.
 This is the virtual environment in which you should perform the Environment Side
-installation. When you run :code:`pip install robo-gym` the robo-gym package will
+installation. When you run `pip install robo-gym` the robo-gym package will
 be installed in the virtual environment.
