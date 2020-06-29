@@ -44,6 +44,7 @@ capabilities and additional info can be found on our [website](https://sites.goo
     - [Mobile Industrial Robots Mir100](#mobile-industrial-robots-mir100)
   - [Robot Arms](#robot-arms)
     - [Universal Robots UR10](#universal-robots-ur10)
+  - [Create your own Environments](#create-your-own-environments)
 - [Examples](#examples)
 - [Contributing](#contributing)
 - [News](#news)
@@ -143,6 +144,20 @@ for the system-wide Python 2.7 with:
 ```bash
 pip install robo-gym-server-modules
 ```
+<!-- omit in toc -->
+##### Test the installation
+
+To test the installation of *robo-gym-server-modules* try to run:  `kill-server-manager` . 
+
+You should see something like: `error connecting to /tmp/tmux-1000/default (No such file or directory)`
+
+If you get: `kill-server-manager: command not found` it is most probably because your `$PATH` is not set correctly, to fix the problem add:
+
+```bash
+export PATH="/home/<your_username>/.local/bin:$PATH"
+```
+
+to your `.bashrc` file. 
 
 
 ### Managing Multiple Python Versions
