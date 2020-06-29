@@ -10,23 +10,29 @@ We recommend using [pyenv-installer](https://github.com/pyenv/pyenv-installer) t
 Once pyenv is installed you can check the python versions available with:
 
 ```
-  pyenv versions
+pyenv versions
 ```
 
 If this is the first time that you use pyenv you the previous command should return:
 
 ```
-  * system (set by /home/username/.pyenv/version)
+* system (set by /home/username/.pyenv/version)
 ```
 Which shows that the only python installation available is the system default python.
 
 The Standard Installation of the Robot Server Side has to be performed on
 the system default python which should be python 2.7.
 
-To create a virtual environment in which to install and run robo-gym use:
+The Environment Side installation requires Python >= 3.5, let's first install a suitable python version (e.g. 3.6.10) with:
 
 ```
-  pyenv virtualenv 3.6.10 robo-gym
+pyenv install 3.6.10
+```
+
+Now we can create a virtual environment in which to install and run robo-gym:
+
+```
+pyenv virtualenv 3.6.10 robo-gym
 ```
 
 Where 3.6.10 is the desired python version and robo-gym is the name of the virtual
@@ -35,13 +41,13 @@ environment.
 To activate the virtual environment use:
 
 ```
-  pyenv activate robo-gym
+pyenv activate robo-gym
 ```
 
 You should see in your shell something like:
 
 ```
-  (robo-gym) user@machine:$
+(robo-gym) user@machine:$
 ```
 
 This means that you are now within the virtual environment.
