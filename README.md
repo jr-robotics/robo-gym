@@ -129,7 +129,7 @@ The gui option is not working.
 
 #### Standard Installation
 
-**Requirements:** The Standard Installation requires a PC with Ubuntu 16.04.
+**Requirements:** The Standard Installation requires Ubuntu 16.04 or 18.04.
 
 The Standard Installation is intended to be used with Real Robots,
 for one or multiple Simulated Robots and for development purposes.
@@ -206,7 +206,10 @@ To start the Server Manager it is necessary to make sure that
 ROS and the robo-gym workspace are sourced with:
 
 ```bash
-source /opt/ros/kinetic/setup.bash
+# Source ROS Melodic
+source /opt/ros/melodic/setup.bash
+# Source ROS Kinetic
+# source /opt/ros/kinetic/setup.bash
 source ~/robogym_ws/devel/setup.bash
 ```
 
