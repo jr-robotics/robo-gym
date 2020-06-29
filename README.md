@@ -1,6 +1,7 @@
 <img align="left" width="60" height="60" src="https://user-images.githubusercontent.com/36470989/81711567-15bc4a80-9474-11ea-8499-7adcd6ec96a7.png" alt="robo-gym logo">
 
-# robo-gym
+<!-- omit in toc -->
+# robo-gym 
 
 **robo-gym is an open source toolkit for distributed reinforcement learning on real and simulated robots.**
 
@@ -21,21 +22,26 @@ capabilities and additional info can be found on our [website](https://sites.goo
 
 [See the News section](#news)
 
+<!-- omit in toc -->
 ## Table of Contents
 
 - [Basics](#basics)
 - [Installation](#installation)
   - [Environment Side](#environment-side)
   - [Robot Server Side](#robot-server-side)
-     - [Simplified Installation](#simplified-installation)
-     - [Standard Installation](#standard-installation)
+    - [Simplified Installation](#simplified-installation)
+    - [Standard Installation](#standard-installation)
   - [Managing Multiple Python Versions](#managing-multiple-python-versions)
 - [How to use](#how-to-use)
   - [Simulated Environments](#simulated-environments)
+    - [Additional commands for Simulated Environments](#additional-commands-for-simulated-environments)
+      - [restart simulation](#restart-simulation)
+      - [kill simulation](#kill-simulation)
+      - [Exception Handling Wrapper](#exception-handling-wrapper)
   - [Real Robot Environments](#real-robot-environments)
 - [Environments](#environments)
   - [Mobile Robots](#mobile-robots)
-    - [Mobile Industrial Robots Mir100](#mobile-industrial-robots-mir-100)
+    - [Mobile Industrial Robots Mir100](#mobile-industrial-robots-mir100)
   - [Robot Arms](#robot-arms)
     - [Universal Robots UR10](#universal-robots-ur10)
 - [Examples](#examples)
