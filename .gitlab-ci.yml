@@ -21,7 +21,7 @@ test_environments_with_rs_master:
     - docker exec robo-gym pytest
     - docker-compose -f docker-compose-test-melodic.yml down
   except:
-    - capsize*
+    - /^capsize.*$/
 
 test_environments_with_rs_develop:
   image: docker:18.09
@@ -58,7 +58,7 @@ capsize_test_environments_with_rs_master:
     - docker exec robo-gym pytest
     - docker-compose -f docker-compose-test-melodic.yml down
   only:
-    - capsize*
+    - /^capsize.*$/
 
 capsize_test_environments_with_rs_develop:
   image: docker:18.09
