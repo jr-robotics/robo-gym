@@ -17,7 +17,7 @@ Main features :
 - integration of 2 commercially available **industrial robots**: MiR 100, UR 10 (more to come)
 - it has been successfully deployed to train a DRL algorithm to solve two different tasks in simulation that was able to solve the tasks on the real robots as well, without any further training in the real world
 
-A paper describing robo-gym is currently under review for IROS 2020. A video showcasing the toolkit's
+A [paper](https://arxiv.org/abs/2007.02753) describing robo-gym has been accepted for IROS 2020. A video showcasing the toolkit's
 capabilities and additional info can be found on our [website](https://sites.google.com/view/robo-gym)
 
 [See the News section](#news)
@@ -54,7 +54,7 @@ capabilities and additional info can be found on our [website](https://sites.goo
 [back to top](#robo-gym)
 
 The robo-gym framework is composed of several building blocks.
-Detailed information on them is given [here](docs/the_framework.md).
+Detailed information on them is given [here](docs/the_framework.md) and in the [paper](https://arxiv.org/abs/2007.02753).
 
 ![robo-gym framework](https://user-images.githubusercontent.com/36470989/79330117-4498dc80-7f19-11ea-9de4-bed4f6390f3a.jpg)
 
@@ -395,6 +395,8 @@ If you encounter troubles running robo-gym or if you have questions please submi
 ## News
 [back to top](#robo-gym)
 
+- 2020-07-07
+  + The robo-gym has been accepted for IROS 2020 !
 - 2020-06-02 (v0.1.7)
   + improved documentation
   + added exception handling feature to simulated environments
