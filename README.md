@@ -396,7 +396,7 @@ If you encounter troubles running robo-gym or if you have questions please submi
 [back to top](#robo-gym)
 
 - 2020-07-07
-  + The robo-gym has been accepted for IROS 2020 !
+  + The robo-gym paper has been accepted for IROS 2020 !
 - 2020-06-02 (v0.1.7)
   + improved documentation
   + added exception handling feature to simulated environments
