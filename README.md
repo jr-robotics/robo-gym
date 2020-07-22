@@ -20,6 +20,8 @@ Main features :
 A [paper](https://arxiv.org/abs/2007.02753) describing robo-gym has been accepted for IROS 2020. A video showcasing the toolkit's
 capabilities and additional info can be found on our [website](https://sites.google.com/view/robo-gym)
 
+**NOTE**: We are continuously working to improve and expand robo-gym. If you are interested in reproducing the results obtained in the IROS 2020 paper please refer to v.0.1.0 for all the 3 repositories involved in the framework: [robo-gym](https://github.com/jr-robotics/robo-gym/tree/v0.1.0), [robo-gym-robot-servers](https://github.com/jr-robotics/robo-gym-robot-servers/tree/v0.1.0), [robo-gym-server-modules](https://github.com/jr-robotics/robo-gym-server-modules/tree/v0.1.0).
+
 [See the News section](#news)
 
 <!-- omit in toc -->
@@ -46,6 +48,7 @@ capabilities and additional info can be found on our [website](https://sites.goo
     - [Universal Robots UR10](#universal-robots-ur10)
   - [Create your own Environments](#create-your-own-environments)
 - [Examples](#examples)
+  - [Random Agent MiR100 Simulation Environment](#random-agent-mir100-simulation-environment)
 - [Contributing](#contributing)
 - [News](#news)
 
