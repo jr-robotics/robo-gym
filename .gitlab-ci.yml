@@ -85,7 +85,6 @@ capsize_test_environments_with_rs_develop:
     - docker-compose -f docker-compose-test-melodic.yml down
   when: manual
 
-
 deploy_production:
   image: python:3.6-slim-buster
   before_script:
