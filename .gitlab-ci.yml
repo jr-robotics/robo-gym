@@ -1,8 +1,15 @@
-
-
 stages:
   - test
   - deploy
+
+variables:
+  ROBOT_SERVERS_IMAGE: "robotics-git.joanneum.at:4567/robo-gym/robot-servers/master:latest"
+
+echo_robot_server_image:
+  stage: test
+  script:
+    - echo "$ROBOT_SERVERS_IMAGE"  
+  
 
 test_environments_with_rs_master:
   image: docker:18.09
@@ -15,8 +22,8 @@ test_environments_with_rs_master:
   stage: test
   script:
     - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
-    - docker pull robotics-git.joanneum.at:4567/robo-gym/robot-servers/master:latest
-    - docker tag robotics-git.joanneum.at:4567/robo-gym/robot-servers/master:latest robot-servers
+    - docker pull $ROBOT_SERVERS_IMAGE
+    - docker tag $ROBOT_SERVERS_IMAGE robot-servers
     - docker-compose -f docker-compose-test-melodic.yml up -d
     - docker exec robo-gym pytest
     - docker-compose -f docker-compose-test-melodic.yml down
