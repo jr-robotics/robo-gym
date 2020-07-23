@@ -11,7 +11,7 @@ echo_robot_server_image:
     - echo "$ROBOT_SERVERS_IMAGE"  
   
 
-test_environments_with_rs_master:
+test_environments:
   image: docker:18.09
   before_script:
   - apk add docker-compose
