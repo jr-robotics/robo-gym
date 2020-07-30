@@ -20,6 +20,6 @@ def test_collision_detection(env_name):
     done = False
     while not done:
         action = [1,1,1,1,1,1]
-        _, _, _, info = env.step(action)
+        _, _, done, info = env.step(action)
 
     assert info['final_status'] == 'collision'
