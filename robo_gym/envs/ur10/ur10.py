@@ -361,7 +361,9 @@ class EndEffectorPositioningAntiShakeUR10(UR10Env):
         return reward, done, info
 
 class EndEffectorPositioningUR10Sim(EndEffectorPositioningUR10, Simulation):
-    cmd = "roslaunch ur_robot_server ur10_sim_robot_server.launch max_velocity_scale_factor:=0.5"
+    cmd = "roslaunch ur_robot_server ur10_sim_robot_server.launch \
+        max_velocity_scale_factor:=0.5 \
+        action_cycle_rate:=25"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
         EndEffectorPositioningUR10.__init__(self, rs_address=self.robot_server_ip, **kwargs)
@@ -370,7 +372,9 @@ class EndEffectorPositioningUR10Rob(EndEffectorPositioningUR10):
     real_robot = True
 
 class EndEffectorPositioningAntiShakeUR10Sim(EndEffectorPositioningAntiShakeUR10, Simulation):
-    cmd = "roslaunch ur_robot_server ur10_sim_robot_server.launch max_velocity_scale_factor:=0.5"
+    cmd = "roslaunch ur_robot_server ur10_sim_robot_server.launch \
+        max_velocity_scale_factor:=0.5 \
+        action_cycle_rate:=25"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
         EndEffectorPositioningAntiShakeUR10.__init__(self, rs_address=self.robot_server_ip, **kwargs)
