@@ -254,7 +254,7 @@ class UR10Env(gym.Env):
         # Target coordinates range
         target_range = np.full(3, np.inf)
         # Joint positions range tolerance
-        vel_tolerance = np.full(6,0.3)
+        vel_tolerance = np.full(6,0.5)
         # Joint velocities range used to determine if there is an error in the sensor readings
         max_joint_velocities = np.add(self.ur10.get_max_joint_velocities(), vel_tolerance)
         min_joint_velocities = np.subtract(self.ur10.get_min_joint_velocities(), vel_tolerance)
