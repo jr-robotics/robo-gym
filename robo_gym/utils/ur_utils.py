@@ -42,9 +42,10 @@ class UR10():
                    {'theta':0, 'a':0,       'd':0.1157,     'alpha': -np.pi/2},
                    {'theta':0, 'a':0,       'd':0.0922,     'alpha': 0}]
 
-        self.max_joint_positions = np.array([3.14,6.28,6.28,6.28,6.28,6.28])
+        # Indexes go from shoulder pan joint to end effector
+        self.max_joint_positions = np.array([6.28,6.28,3.14,6.28,6.28,6.28])
         self.min_joint_positions = - self.max_joint_positions
-        self.max_joint_velocities = np.array([np.inf] * 6)
+        self.max_joint_velocities = np.array([2.10,2.10,3.14,3.14,3.14,3.14])
         self.min_joint_velocities = - self.max_joint_velocities
 
 
