@@ -85,24 +85,23 @@ def cartesian_to_polar_2d(x_target, y_target, x_origin = 0, y_origin = 0):
 
     return polar_r, polar_theta
 
-def cartesian_to_polar_3d(target, origin = [0,0,0]):
+def cartesian_to_polar_3d(cartesian_coordinates):
     """Transform 3D cartesian coordinates to 3D polar coordinates.
 
     Args:
-        target (list): [x,y,z] coordinates of target point.
-        origin (list): [x,y,z] coordinates of origin of polar system. Defaults to [0,0,0].
+        cartesian_coordinates (list): [x,y,z] coordinates of target point.
 
     Returns:
-        list: [r,phi,theta] polar coordinates of target point.
+        list: [r,phi,theta] polar coordinates of point.
 
     """
 
-    delta_x = target[0] - origin[0]
-    delta_y = target[1] - origin[1]
-    delta_z = target[2] - origin[2]
-    r =  np.sqrt(delta_x**2+delta_y**2+delta_z**2)
-    phi = np.arctan2(delta_y,delta_x)
-    theta = np.arccos(delta_z/r)
+    x = cartesian_coordinates[0]
+    y = cartesian_coordinates[1]
+    z = cartesian_coordinates[2]
+    r =  np.sqrt(x**2+y**2+z**2)
+    phi = np.arctan2(y,x)
+    theta = np.arccos(z/r)
 
     return [r,phi,theta]
 
