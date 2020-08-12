@@ -84,25 +84,14 @@ def test_cartesian_to_polar_2d_equal_points(p1, p2, expected_r, expected_theta):
 
 
 ### cartesian_to_polar_3d ###
-def test_cartesian_to_polar_3d_default_origin():
-    target = [9, 4, 5]
+def test_cartesian_to_polar_3d():
+    cartesian_coordinates = [9, 4, 5]
 
-    r, phi, theta = utils.cartesian_to_polar_3d(target=target)
+    r, phi, theta = utils.cartesian_to_polar_3d(cartesian_coordinates=cartesian_coordinates)
     
     assert abs(r - 11.045361017187) < 0.01
     assert abs(phi - 0.41822432957) < 0.01
     assert abs(theta - 1.1010291108682) < 0.01
-
-
-def test_cartesian_to_polar_3d_set_origin():
-    target = [9.12, 4.32, 5.72]
-    origin = [3.12, 12.7, 4.2]
-
-    r, phi, theta = utils.cartesian_to_polar_3d(target=target, origin=origin)
-    
-    assert abs(r - 10.418) < 0.01
-    assert abs(phi - (-0.949419)) < 0.01
-    assert abs(theta - 1.424401) < 0.01
 
 ### downsample_list_to_len ###
 test_downsample = [
