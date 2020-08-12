@@ -2,6 +2,7 @@
 
 import math
 import numpy as np
+from scipy.spatial.transform import Rotation as R
 
 def normalize_angle_rad(a):
     """Normalize angle (in radians) to +-pi
@@ -130,3 +131,27 @@ def downsample_list_to_len(data, output_len):
         ds_data.append(data[index])
 
     return ds_data
+
+def change_reference_frame(point, translation, quaternion):
+    """Transform a point from one reference frame to another, given
+        the translation vector between the two frames and the quaternion
+        between  the two frames.
+
+    Args:
+        point (array_like,shape(3,)): x,y,z coordinates of the point in the original frame
+        translation (array_like,shape(3,)): translation vector from the original frame to the new frame 
+        quaternion (array_like,shape(4,)): quaternion from the original frame to the new frame
+
+    Returns:
+        ndarray,shape(3,): x,y,z coordinates of the point in the new frame.
+        
+    """
+
+    # Apply translation
+    translated_point = np.subtract(np.array(point),np.array(translation))
+
+    #Apply rotation
+    r = R.from_quat(quaternion)
+    rotated_point = r.apply(translated_point)
+
+    return rotated_point

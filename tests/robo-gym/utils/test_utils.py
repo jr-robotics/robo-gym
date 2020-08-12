@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import pytest
 from robo_gym.utils import utils
+import numpy as np
 
 
 ### normalize_angle_rad ###
@@ -115,3 +116,20 @@ def test_downsample_list_to_len(target_length):
     downsampled_list = utils.downsample_list_to_len(data=sample_list, output_len=target_length)
 
     assert len(downsampled_list) == target_length
+
+### change_reference_frame ###
+def test_translation_change_reference_frame():
+
+    point = [5,3,2]
+    translation = [11,-6,1]
+    quaternion = [0,0,0,1]
+    
+    assert (utils.change_reference_frame(point,translation,quaternion) == [-6,9,1]).all()
+
+def test_rotation_change_reference_frame():
+
+    point = [-0.250,0.256,1.118]
+    translation = [0.0,0.0,0.227]
+    quaternion = [0.0,0.0,1.0,0.0]
+    
+    assert np.allclose(a = utils.change_reference_frame(point,translation,quaternion),b =[0.250,-0.256,0.890], atol = 0.001)
