@@ -159,9 +159,9 @@ class UR10Env(gym.Env):
         target = [0.0]*6
         ur_j_pos = [0.0]*6
         ur_j_vel = [0.0]*6
-        ee_pose = [0.0]*6
+        ee_to_base_transform = [0.0]*7
         ur_collision = [0.0]
-        rs_state = target + ur_j_pos + ur_j_vel + ee_pose + ur_collision
+        rs_state = target + ur_j_pos + ur_j_vel + ee_to_base_transform + ur_collision
 
         return len(rs_state)
 
@@ -288,7 +288,7 @@ class EndEffectorPositioningUR10(UR10Env):
             info['final_status'] = 'success'
 
         # Check if robot is in collision
-        if rs_state[24] == 1:
+        if rs_state[25] == 1:
             collision = True
         else:
             collision = False
@@ -344,7 +344,7 @@ class EndEffectorPositioningAntiShakeUR10(UR10Env):
             info['final_status'] = 'success'
 
         # Check if robot is in collision
-        if rs_state[24] == 1:
+        if rs_state[25] == 1:
             collision = True
         else:
             collision = False
