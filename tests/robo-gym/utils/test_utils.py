@@ -110,7 +110,7 @@ def test_downsample_list_to_len(target_length):
 def test_translation_change_reference_frame():
 
     point = [5,3,2]
-    translation = [11,-6,1]
+    translation = [-11,6,-1]
     quaternion = [0,0,0,1]
     
     assert (utils.change_reference_frame(point,translation,quaternion) == [-6,9,1]).all()
@@ -118,7 +118,7 @@ def test_translation_change_reference_frame():
 def test_rotation_change_reference_frame():
 
     point = [-0.250,0.256,1.118]
-    translation = [0.0,0.0,0.227]
+    translation = [0.0,0.0,-0.227]
     quaternion = [0.0,0.0,1.0,0.0]
     
     assert np.allclose(a = utils.change_reference_frame(point,translation,quaternion),b =[0.250,-0.256,0.890], atol = 0.001)

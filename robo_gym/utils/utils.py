@@ -147,7 +147,7 @@ def change_reference_frame(point, translation, quaternion):
     """
 
     # Apply translation
-    translated_point = np.subtract(np.array(point),np.array(translation))
+    translated_point = np.add(np.array(point),np.array(translation))
 
     #Apply rotation
     r = R.from_quat(quaternion)
