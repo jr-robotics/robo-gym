@@ -30,7 +30,7 @@ test_environments:
   except:
     - /^capsize.*$/
 
-test_environments_with_rs_develop:
+test_environments_with_rs_manual_deploy:
   image: docker:18.09
   before_script:
   - apk add docker-compose
@@ -41,8 +41,8 @@ test_environments_with_rs_develop:
   stage: test
   script:
     - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
-    - docker pull robotics-git.joanneum.at:4567/robo-gym/robot-servers/develop:latest
-    - docker tag robotics-git.joanneum.at:4567/robo-gym/robot-servers/develop:latest robot-servers
+    - docker pull robotics-git.joanneum.at:4567/robo-gym/robot-servers/manual_deploy:latest
+    - docker tag robotics-git.joanneum.at:4567/robo-gym/robot-servers/manual_deploy:latest robot-servers
     - docker-compose -f docker-compose-test-melodic.yml up -d
     - docker exec robo-gym pytest
     - docker-compose -f docker-compose-test-melodic.yml down
