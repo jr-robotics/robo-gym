@@ -2,6 +2,7 @@
 
 import math
 import numpy as np
+from scipy.spatial.transform import Rotation as R
 
 def normalize_angle_rad(a):
     """Normalize angle (in radians) to +-pi
@@ -84,24 +85,23 @@ def cartesian_to_polar_2d(x_target, y_target, x_origin = 0, y_origin = 0):
 
     return polar_r, polar_theta
 
-def cartesian_to_polar_3d(target, origin = [0,0,0]):
+def cartesian_to_polar_3d(cartesian_coordinates):
     """Transform 3D cartesian coordinates to 3D polar coordinates.
 
     Args:
-        target (list): [x,y,z] coordinates of target point.
-        origin (list): [x,y,z] coordinates of origin of polar system. Defaults to [0,0,0].
+        cartesian_coordinates (list): [x,y,z] coordinates of target point.
 
     Returns:
-        list: [r,phi,theta] polar coordinates of target point.
+        list: [r,phi,theta] polar coordinates of point.
 
     """
 
-    delta_x = target[0] - origin[0]
-    delta_y = target[1] - origin[1]
-    delta_z = target[2] - origin[2]
-    r =  np.sqrt(delta_x**2+delta_y**2+delta_z**2)
-    phi = np.arctan2(delta_y,delta_x)
-    theta = np.arccos(delta_z/r)
+    x = cartesian_coordinates[0]
+    y = cartesian_coordinates[1]
+    z = cartesian_coordinates[2]
+    r =  np.sqrt(x**2+y**2+z**2)
+    phi = np.arctan2(y,x)
+    theta = np.arccos(z/r)
 
     return [r,phi,theta]
 
@@ -130,3 +130,27 @@ def downsample_list_to_len(data, output_len):
         ds_data.append(data[index])
 
     return ds_data
+
+def change_reference_frame(point, translation, quaternion):
+    """Transform a point from one reference frame to another, given
+        the translation vector between the two frames and the quaternion
+        between  the two frames.
+
+    Args:
+        point (array_like,shape(3,)): x,y,z coordinates of the point in the original frame
+        translation (array_like,shape(3,)): translation vector from the original frame to the new frame 
+        quaternion (array_like,shape(4,)): quaternion from the original frame to the new frame
+
+    Returns:
+        ndarray,shape(3,): x,y,z coordinates of the point in the new frame.
+        
+    """
+
+    # Apply translation
+    translated_point = np.add(np.array(point),np.array(translation))
+
+    #Apply rotation
+    r = R.from_quat(quaternion)
+    rotated_point = r.apply(translated_point)
+
+    return rotated_point
