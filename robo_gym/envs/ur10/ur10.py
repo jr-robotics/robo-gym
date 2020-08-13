@@ -2,6 +2,7 @@
 
 import sys, math, copy, random
 import numpy as np
+from scipy.spatial.transform import Rotation as R
 import gym
 from gym import spaces
 from gym.utils import seeding
@@ -223,10 +224,21 @@ class UR10Env(gym.Env):
         # Convert to numpy array and remove NaN values
         rs_state = np.nan_to_num(np.array(rs_state))
 
-        # Transform cartesian coordinates of target to polar coordinates
+        # Transform cartesian coordinates of target to polar coordinates 
+        # with respect to the end effector frame
         target_coord = rs_state[0:3]
-        ee_coord = rs_state[18:21]
-        target_polar = utils.cartesian_to_polar_3d(target_coord,ee_coord)
+        
+        ee_to_base_translation = rs_state[18:21]
+        ee_to_base_quaternion = rs_state[21:25]
+        ee_to_base_rotation = R.from_quat(ee_to_base_quaternion)
+        base_to_ee_rotation = ee_to_base_rotation.inv()
+        base_to_ee_quaternion = base_to_ee_rotation.as_quat()
+        base_to_ee_translation = - ee_to_base_translation
+
+        target_coord_ee_frame = utils.change_reference_frame(target_coord,base_to_ee_translation,base_to_ee_quaternion)
+        print('Target coords in EE frame')
+        print(target_coord_ee_frame)
+        target_polar = utils.cartesian_to_polar_3d(target_coord_ee_frame)
 
         # Transform joint positions and joint velocities from ROS indexing to
         # standard indexing
