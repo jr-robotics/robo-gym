@@ -45,7 +45,7 @@ class UR10():
         # Indexes go from shoulder pan joint to end effector
         self.max_joint_positions = np.array([6.28,6.28,3.14,6.28,6.28,6.28])
         self.min_joint_positions = - self.max_joint_positions
-        self.max_joint_velocities = np.array([2.10,2.10,3.14,3.14,3.14,3.14])
+        self.max_joint_velocities = np.array([np.inf] * 6)
         self.min_joint_velocities = - self.max_joint_velocities
 
 
