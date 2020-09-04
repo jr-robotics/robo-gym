@@ -2,31 +2,10 @@
 
 import numpy as np
 
-def dh_trans_matrix(theta, a, d, alpha):
-    """Get Denavit-Hartemberg transformation matrix from dh parameters.
-
-    Args:
-        theta (float): theta DH parameter.
-        a (float): a DH parameter.
-        d (float): d DH parameter.
-        alpha (float): alpha DH parameter.
-
-    Returns:
-        np.array: DH transformation matrix.
-
-    """
-
-    t = np.array([[np.cos(theta), -np.sin(theta)*np.cos(alpha),  np.sin(theta)*np.sin(alpha), a*np.cos(theta)], \
-                  [np.sin(theta),  np.cos(theta)*np.cos(alpha), -np.cos(theta)*np.sin(alpha), a*np.sin(theta)], \
-                  [0            ,  np.sin(alpha)              ,  np.cos(alpha)              , d              ], \
-                  [0            ,  0                          ,  0                          , 1              ]])
-    return t
-
 class UR10():
     """Universal Robots UR10 utilities.
 
     Attributes:
-        dh (list[dict]): Robot's Denavit-Hartemberg parameters.
         max_joint_positions (np.array): Description of parameter `max_joint_positions`.
         min_joint_positions (np.array): Description of parameter `min_joint_positions`.
         max_joint_velocities (np.array): Description of parameter `max_joint_velocities`.
@@ -35,70 +14,11 @@ class UR10():
     """
     def __init__(self):
 
-        self.dh = [{'theta':0, 'a':0,       'd':0.1273,     'alpha': np.pi/2},
-                   {'theta':0, 'a':-0.612,  'd':0,          'alpha': 0},
-                   {'theta':0, 'a':-0.5723, 'd':0,          'alpha': 0},
-                   {'theta':0, 'a':0,       'd':0.163941,   'alpha': np.pi/2},
-                   {'theta':0, 'a':0,       'd':0.1157,     'alpha': -np.pi/2},
-                   {'theta':0, 'a':0,       'd':0.0922,     'alpha': 0}]
-
         # Indexes go from shoulder pan joint to end effector
         self.max_joint_positions = np.array([6.28,6.28,3.14,6.28,6.28,6.28])
         self.min_joint_positions = - self.max_joint_positions
         self.max_joint_velocities = np.array([np.inf] * 6)
         self.min_joint_velocities = - self.max_joint_velocities
-
-
-    def get_ee_pose(self,thetas):
-        """Get end effector pose given the joints angles.
-
-        Args:
-            thetas (list): Joints angles (rad).
-
-        Returns:
-            list: Effector coordinates.
-
-        """
-
-
-        t = self._get_full_t(thetas)
-        x = t[0][3]
-        y = t[1][3]
-        z = t[2][3]
-
-        return [x,y,z]
-
-    def _get_dh_trans_matrix(self, theta, joint_number):
-        """Get Denavit-Hartemberg transformation matrix.
-
-        Args:
-            theta (float): Joint angle (rad).
-            joint_number (int): Joint number.
-
-        Returns:
-            np.array: DH transformation matrix.
-
-        """
-
-        return dh_trans_matrix(theta, self.dh[joint_number]['a'], \
-                               self.dh[joint_number]['d'], self.dh[joint_number]['alpha'])
-
-    def _get_full_t(self, thetas):
-        """Get full robot's transformation matrix.
-
-        Args:
-            thetas (list): Joints angles (rad).
-
-        Returns:
-            np.array: Full robot's transformation matrix.
-
-        """
-
-        t = self._get_dh_trans_matrix(thetas[0],0)
-        for i in range(1,len(thetas)):
-            t = np.matmul(t, self._get_dh_trans_matrix(thetas[i],i))
-
-        return t
 
     def _ros_joint_list_to_ur10_joint_list(self,ros_thetas):
         """Transform joint angles list from ROS indexing to standard indexing.
