@@ -8,7 +8,8 @@ import robo_gym
 
 envs = [ 
     'EndEffectorPositioningUR10Sim-v0', 
-    'EndEffectorPositioningAntiShakeUR10Sim-v0'
+    'EndEffectorPositioningAntiShakeUR10Sim-v0',
+    'EndEffectorPositioningUR5Sim-v0'
 ]
 
 
