@@ -6,9 +6,12 @@ import robo_gym
 
 
 
-envs = [ 
+
+envs = [
+    'NoObstacleNavigationMir100Sim-v0', 
+    'ObstacleAvoidanceMir100Sim-v0', 
     'EndEffectorPositioningUR10Sim-v0', 
-    'EndEffectorPositioningAntiShakeUR10Sim-v0',
+    'EndEffectorPositioningUR10DoF5Sim-v0',
     'EndEffectorPositioningUR5Sim-v0'
 ]
 
@@ -20,7 +23,12 @@ def test_collision_detection(env_name):
     env.reset()
     done = False
     while not done:
-        action = [1,1,1,1,1,1]
+        action = env.action_space.sample()
+        action = [1 for action in action]
         _, _, done, info = env.step(action)
+        if done and info['final_status'] == 'success':
+            env.reset()
+            done = False
+            
 
     assert info['final_status'] == 'collision'

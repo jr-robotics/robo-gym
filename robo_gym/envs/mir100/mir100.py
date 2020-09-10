@@ -73,7 +73,6 @@ class Mir100Env(gym.Env):
         self.elapsed_steps = 0
 
         self.prev_base_reward = None
-        self.steps_in_goal = 0
 
         # Initialize environment state
         self.state = np.zeros(self._get_env_state_len())
@@ -431,7 +430,6 @@ class ObstacleAvoidanceMir100(Mir100Env):
         self.elapsed_steps = 0
 
         self.prev_base_reward = None
-        self.steps_in_goal = 0
 
         # Initialize environment state
         self.state = np.zeros(self._get_env_state_len())
@@ -490,46 +488,30 @@ class ObstacleAvoidanceMir100(Mir100Env):
         mir_coords = np.array([rs_state[3],rs_state[4]])
         euclidean_dist_2d = np.linalg.norm(target_coords - mir_coords, axis=-1)
 
-        if self.steps_in_goal < 1:
-            # Reward base
-            base_reward = -50*euclidean_dist_2d
-            if self.prev_base_reward is not None:
-                reward = base_reward - self.prev_base_reward
-            self.prev_base_reward = base_reward
+        
+        # Reward base
+        base_reward = -50*euclidean_dist_2d
+        if self.prev_base_reward is not None:
+            reward = base_reward - self.prev_base_reward
+        self.prev_base_reward = base_reward
 
-            # Power used by the motors
-            linear_power = abs(action[0] *0.30)
-            angular_power = abs(action[1] *0.03)
-            reward-= linear_power
-            reward-= angular_power
+        # Power used by the motors
+        linear_power = abs(action[0] *0.30)
+        angular_power = abs(action[1] *0.03)
+        reward-= linear_power
+        reward-= angular_power
 
-            # End episode if robot is collides with an object, if it is too close
-            # to an object.
-            if not self.real_robot:
-                if self._sim_robot_collision(rs_state) or \
-                self._min_laser_reading_below_threshold(rs_state) or \
-                self._robot_close_to_sim_obstacle(rs_state):
-                    reward = -200.0
-                    done = True
-                    info['final_status'] = 'collision'
+        # End episode if robot is collides with an object, if it is too close
+        # to an object.
+        if not self.real_robot:
+            if self._sim_robot_collision(rs_state) or \
+            self._min_laser_reading_below_threshold(rs_state) or \
+            self._robot_close_to_sim_obstacle(rs_state):
+                reward = -200.0
+                done = True
+                info['final_status'] = 'collision'
 
-            if (euclidean_dist_2d < self.distance_threshold):
-                reward = 200.0
-                self.steps_in_goal += 1
-
-
-        elif self.steps_in_goal < 10:
-            # if the robot stays in the goal it gets zero reward
-            if (euclidean_dist_2d < self.distance_threshold):
-                self.steps_in_goal += 1
-            # if the robot goes away from the goal it gets negative reward
-            else:
-                reward = -200
-                self.steps_in_goal = 0
-        else:
-            # The episode terminates with success if the distance between the robot
-            # and the target is less than the distance threshold for 10 consecutive
-            # steps.
+        if (euclidean_dist_2d < self.distance_threshold):
             reward = 100
             done = True
             info['final_status'] = 'success'
