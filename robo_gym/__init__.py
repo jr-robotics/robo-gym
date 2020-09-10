@@ -31,13 +31,13 @@ register(
 register(
     id='EndEffectorPositioningUR5Sim-v0',
     entry_point='robo_gym.envs:EndEffectorPositioningUR5Sim',
-    max_episode_steps=500
+    max_episode_steps=300
 )
 
 register(
     id='EndEffectorPositioningUR5Rob-v0',
     entry_point='robo_gym.envs:EndEffectorPositioningUR5Rob',
-    max_episode_steps=500
+    max_episode_steps=300
 )
 
 ## UR10 Environments

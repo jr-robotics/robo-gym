@@ -29,7 +29,7 @@ class UR5Env(gym.Env):
     """
     real_robot = False
 
-    def __init__(self, rs_address=None, max_episode_steps=500, **kwargs):
+    def __init__(self, rs_address=None, max_episode_steps=300, **kwargs):
 
         self.ur5 = ur_utils.UR5()
         self.max_episode_steps = max_episode_steps
