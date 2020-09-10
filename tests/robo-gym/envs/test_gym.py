@@ -7,7 +7,7 @@ envs = [
     'NoObstacleNavigationMir100Sim-v0', 
     'ObstacleAvoidanceMir100Sim-v0', 
     'EndEffectorPositioningUR10Sim-v0', 
-    'EndEffectorPositioningAntiShakeUR10Sim-v0'
+    'EndEffectorPositioningUR10DoF5Sim-v0'
 ]
 
 
