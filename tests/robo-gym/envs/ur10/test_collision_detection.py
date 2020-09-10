@@ -23,5 +23,7 @@ def test_collision_detection(env_name):
         action = env.action_space.sample()
         action = [1 for action in action]
         _, _, done, info = env.step(action)
+        if info['final_status'] == 'success':
+            done = False
 
     assert info['final_status'] == 'collision'
