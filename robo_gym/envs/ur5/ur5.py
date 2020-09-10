@@ -249,7 +249,7 @@ class UR5Env(gym.Env):
         ur_j_vel = self.ur5._ros_joint_list_to_ur5_joint_list(rs_state[12:18])
 
         # Normalize joint position values
-        ur_j_pos_norm = self.ur10.normalize_joint_values(joints=ur_j_pos)
+        ur_j_pos_norm = self.ur5.normalize_joint_values(joints=ur_j_pos)
 
         # Compose environment state
         state = np.concatenate((target_polar, ur_j_pos_norm, ur_j_vel))
@@ -297,8 +297,8 @@ class EndEffectorPositioningUR5(UR5Env):
         # Reward base
         reward = -1 * euclidean_dist_3d
         
-        joint_positions = self.ur10._ros_joint_list_to_ur10_joint_list(rs_state[6:12])
-        joint_positions_normalized = self.ur10.normalize_joint_values(joint_positions)
+        joint_positions = self.ur5._ros_joint_list_to_ur5_joint_list(rs_state[6:12])
+        joint_positions_normalized = self.ur5.normalize_joint_values(joint_positions)
         delta = np.abs(np.subtract(joint_positions_normalized, action))
         reward = reward - (0.05 * np.sum(delta))
 

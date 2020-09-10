@@ -108,6 +108,22 @@ class UR5():
 
         return self.min_joint_velocities
 
+    def normalize_joint_values(self, joints):
+        """Normalize joint position values
+        
+        Args:
+            joints (np.array): Joint position values
+
+        Returns:
+            norm_joints (np.array): Joint position values normalized between [-1 , 1]
+        """
+        for i in range(len(joints)):
+            if joints[i] <= 0:
+                joints[i] = joints[i]/abs(self.min_joint_positions[i])
+            else:
+                joints[i] = joints[i]/abs(self.max_joint_positions[i])
+        return joints
+
 class UR10():
     """Universal Robots UR10 utilities.
 
