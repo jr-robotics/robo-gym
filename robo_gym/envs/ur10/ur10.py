@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import sys, math, copy, random
-from matplotlib.pyplot import step
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 import gym
