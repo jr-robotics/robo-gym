@@ -22,19 +22,3 @@ def test_ur_reset_init_joints(env_name, initial_joint_positions):
     for joint in joint_comparison:
         assert joint
 
-
-
-test_ur_reset_ee = [
-   ('EndEffectorPositioningUR10Sim-v0', [-0.4, -0.67, 1.2,  0.0, 0.0, 0.0], [-9.42509413e-01, 1.20400421e-01, 1.18193313e-01, -2.61158705e+00, 3.17868603e-06, -1.97080910e+00]),
-]
-
-@pytest.mark.parametrize('env_name, initial_joint_positions, ee_target_pose', test_ur_reset_ee)
-@pytest.mark.filterwarnings('ignore:UserWarning')
-def test_ur_reset_init_ee_pose_equals_target(env_name, initial_joint_positions, ee_target_pose):
-    env = gym.make(env_name, ip='robot-servers')
-
-    state = env.reset(initial_joint_positions=initial_joint_positions, ee_target_pose=ee_target_pose)
-
-    _,_,done,_ = env.step(env.action_space.sample())
-
-    assert done
