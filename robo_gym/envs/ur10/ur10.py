@@ -98,14 +98,14 @@ class UR10Env(gym.Env):
         if not len(rs_state)== self._get_robot_server_state_len():
             raise InvalidStateError("Robot Server state received has wrong length")
 
-        # Convert the initial state from Robot Server format to environment format
+        # Convert the initial state from Robot Server format to environment format3
         self.state = self._robot_server_state_to_env_state(rs_state)
 
         # Check if the environment state is contained in the observation space
         if not self.observation_space.contains(self.state):
             raise InvalidStateError()
         
-        _, _, done, _ = self.step(self.state[3:8])
+        _, _, done, _ = self.step(self.state[3:3+len(self.action_space.sample())])
         self.elapsed_steps = 0
         if done:
             raise InvalidStateError()
