@@ -105,6 +105,11 @@ class UR5Env(gym.Env):
         # Check if the environment state is contained in the observation space
         if not self.observation_space.contains(self.state):
             raise InvalidStateError()
+        
+        _, _, done, _ = self.step(self.state[3:3+len(self.action_space.sample())])
+        self.elapsed_steps = 0
+        if done:
+            raise InvalidStateError()
 
         return self.state
 
@@ -236,8 +241,6 @@ class UR5Env(gym.Env):
         base_to_ee_translation = - ee_to_base_translation
 
         target_coord_ee_frame = utils.change_reference_frame(target_coord,base_to_ee_translation,base_to_ee_quaternion)
-        print('Target coords in EE frame')
-        print(target_coord_ee_frame)
         target_polar = utils.cartesian_to_polar_3d(target_coord_ee_frame)
 
         # Transform joint positions and joint velocities from ROS indexing to
@@ -245,8 +248,11 @@ class UR5Env(gym.Env):
         ur_j_pos = self.ur5._ros_joint_list_to_ur5_joint_list(rs_state[6:12])
         ur_j_vel = self.ur5._ros_joint_list_to_ur5_joint_list(rs_state[12:18])
 
+        # Normalize joint position values
+        ur_j_pos_norm = self.ur10.normalize_joint_values(joints=ur_j_pos)
+
         # Compose environment state
-        state = np.concatenate((target_polar,ur_j_pos, ur_j_vel))
+        state = np.concatenate((target_polar, ur_j_pos_norm, ur_j_vel))
 
         return state
 
@@ -259,10 +265,10 @@ class UR5Env(gym.Env):
         """
 
         # Joint position range tolerance
-        pos_tolerance = np.full(6,0.3)
+        pos_tolerance = np.full(6,0.1)
         # Joint positions range used to determine if there is an error in the sensor readings
-        max_joint_positions = np.add(self.ur5.get_max_joint_positions(), pos_tolerance)
-        min_joint_positions = np.subtract(self.ur5.get_min_joint_positions(), pos_tolerance)
+        max_joint_positions = np.add(np.full(6, 1.0), pos_tolerance)
+        min_joint_positions = np.subtract(np.full(6, -1.0), pos_tolerance)
         # Target coordinates range
         target_range = np.full(3, np.inf)
         # Joint positions range tolerance
@@ -286,18 +292,21 @@ class EndEffectorPositioningUR5(UR5Env):
         # Calculate distance to the target
         target_coord = np.array(rs_state[0:3])
         ee_coord = np.array(rs_state[18:21])
-        euclidean_dist_3d = np.linalg.norm(target_coord-ee_coord)
+        euclidean_dist_3d = np.linalg.norm(target_coord - ee_coord)
 
         # Reward base
-        base_reward = -50*euclidean_dist_3d
-        if self.prev_base_reward is not None:
-            reward = base_reward - self.prev_base_reward
-        self.prev_base_reward = base_reward
+        reward = -1 * euclidean_dist_3d
+        
+        joint_positions = self.ur10._ros_joint_list_to_ur10_joint_list(rs_state[6:12])
+        joint_positions_normalized = self.ur10.normalize_joint_values(joint_positions)
+        delta = np.abs(np.subtract(joint_positions_normalized, action))
+        reward = reward - (0.05 * np.sum(delta))
 
         if euclidean_dist_3d <= self.distance_threshold:
             reward = 100
             done = True
             info['final_status'] = 'success'
+            info['target_coord'] = target_coord
 
         # Check if robot is in collision
         if rs_state[25] == 1:
@@ -306,13 +315,15 @@ class EndEffectorPositioningUR5(UR5Env):
             collision = False
 
         if collision:
-            reward = -200
+            reward = -400
             done = True
             info['final_status'] = 'collision'
+            info['target_coord'] = target_coord
 
         if self.elapsed_steps >= self.max_episode_steps:
             done = True
             info['final_status'] = 'max_steps_exceeded'
+            info['target_coord'] = target_coord
 
         return reward, done, info
 
