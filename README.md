@@ -46,6 +46,7 @@ capabilities and additional info can be found on our [website](https://sites.goo
     - [Mobile Industrial Robots Mir100](#mobile-industrial-robots-mir100)
   - [Robot Arms](#robot-arms)
     - [Universal Robots UR10](#universal-robots-ur10)
+    - [Universal Robots UR5](#universal-robots-ur5)
   - [Create your own Environments](#create-your-own-environments)
 - [Examples](#examples)
   - [Random Agent MiR100 Simulation Environment](#random-agent-mir100-simulation-environment)
@@ -375,6 +376,12 @@ negative reward is collected for moving away.
 A penalty is given for high variation in the robot's joint velocities.
 Both self collisions and collisions with the ground are taken into account and
 punished with a negative reward and termination of the episode.
+
+#### Universal Robots UR5
+
+``'EndEffectorPositioningUR5Sim-v0'``, ``'EndEffectorPositioningUR5Rob-v0'``
+
+Same as ``'EndEffectorPositioningUR10Sim-v0'`` and ``'EndEffectorPositioningUR10Rob-v0'`` with the UR5 robot. 
 
 ### Create your own Environments
 
