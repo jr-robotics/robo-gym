@@ -105,10 +105,11 @@ class UR5Env(gym.Env):
         # Check if the environment state is contained in the observation space
         if not self.observation_space.contains(self.state):
             raise InvalidStateError()
-        
+
         _, _, done, _ = self.step(self.state[3:3+len(self.action_space.sample())])
         self.elapsed_steps = 0
         if done:
+            print('Reset failed')
             raise InvalidStateError()
 
         return self.state
@@ -326,16 +327,144 @@ class EndEffectorPositioningUR5(UR5Env):
             info['target_coord'] = target_coord
 
         return reward, done, info
+    
+
+
+class EndEffectorPositioningUR5DoF5(UR5Env):
+    def __init__(self, rs_address=None, max_episode_steps=300, **kwargs):
+
+        self.ur5 = ur_utils.UR5()
+        self.max_episode_steps = max_episode_steps
+        self.elapsed_steps = 0
+        self.observation_space = self._get_observation_space()
+        self.action_space = spaces.Box(low=np.full((5), -1.0), high=np.full((5), 1.0), dtype=np.float32)
+        self.seed()
+        self.distance_threshold = 0.1
+        self.abs_joint_pos_range = self.ur5.get_max_joint_positions()
+
+        # Connect to Robot Server
+        if rs_address:
+            self.client = rs_client.Client(rs_address)
+        else:
+            print("WARNING: No IP and Port passed. Simulation will not be started")
+            print("WARNING: Use this only to get environment shape")
+    
+    def _get_initial_joint_positions(self):
+        """Generate random initial robot joint positions.
+
+        Returns:
+            np.array: Joint positions with standard indexing.
+
+        """
+
+        # Minimum initial joint positions
+        low = np.array([-0.65, -2.75, 1.0, -3.14, -1.7, 0])
+        # Maximum initial joint positions
+        high = np.array([0.65, -2.0, 2.5, 3.14, 1.7, 0])
+        # Random initial joint positions
+        joint_positions = np.random.default_rng().uniform(low=low, high=high)
+
+        return joint_positions
+
+    def _reward(self, rs_state, action):
+        reward = 0
+        done = False
+        info = {}
+
+        # Calculate distance to the target
+        target_coord = np.array(rs_state[0:3])
+        ee_coord = np.array(rs_state[18:21])
+        euclidean_dist_3d = np.linalg.norm(target_coord - ee_coord)
+
+        # Reward base
+        reward = -1 * euclidean_dist_3d
+        
+        joint_positions = self.ur5._ros_joint_list_to_ur5_joint_list(rs_state[6:12])
+        joint_positions_normalized = self.ur5.normalize_joint_values(joint_positions)
+        delta = np.abs(np.subtract(joint_positions_normalized, action))
+        reward = reward - (0.05 * np.sum(delta))
+
+        if euclidean_dist_3d <= self.distance_threshold:
+            reward = 100
+            done = True
+            info['final_status'] = 'success'
+            info['target_coord'] = target_coord
+
+        # Check if robot is in collision
+        if rs_state[25] == 1:
+            collision = True
+        else:
+            collision = False
+
+        if collision:
+            reward = -400
+            done = True
+            info['final_status'] = 'collision'
+            info['target_coord'] = target_coord
+
+        if self.elapsed_steps >= self.max_episode_steps:
+            done = True
+            info['final_status'] = 'max_steps_exceeded'
+            info['target_coord'] = target_coord
+
+        return reward, done, info
+
+    def step(self, action):
+        self.elapsed_steps += 1
+
+        # Check if the action is within the action space
+        assert self.action_space.contains(action), "%r (%s) invalid" % (action, type(action))
+        action =  np.append(action, [0.0])
+
+        # Convert environment action to Robot Server action
+        rs_action = copy.deepcopy(action)
+        # Scale action
+        rs_action = np.multiply(rs_action, self.abs_joint_pos_range)
+        # Convert action indexing from ur5 to ros
+        rs_action = self.ur5._ur_5_joint_list_to_ros_joint_list(rs_action)
+        # Send action to Robot Server
+        if not self.client.send_action(rs_action.tolist()):
+            raise RobotServerError("send_action")
+
+        # Get state from Robot Server
+        rs_state = self.client.get_state()
+        # Convert the state from Robot Server format to environment format
+        self.state = self._robot_server_state_to_env_state(rs_state)
+
+        # Check if the environment state is contained in the observation space
+        if not self.observation_space.contains(self.state):
+            raise InvalidStateError()
+
+        # Assign reward
+        reward = 0
+        done = False
+        reward, done, info = self._reward(rs_state=rs_state, action=action)
+
+        return self.state, reward, done, info
+
+    
 
 
 
 class EndEffectorPositioningUR5Sim(EndEffectorPositioningUR5, Simulation):
     cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
-        max_velocity_scale_factor:=0.5 \
-        action_cycle_rate:=25"
+        max_velocity_scale_factor:=0.2 \
+        action_cycle_rate:=20"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
         EndEffectorPositioningUR5.__init__(self, rs_address=self.robot_server_ip, **kwargs)
 
 class EndEffectorPositioningUR5Rob(EndEffectorPositioningUR5):
+    real_robot = True
+
+
+class EndEffectorPositioningUR5DoF5Sim(EndEffectorPositioningUR5DoF5, Simulation):
+    cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
+        max_velocity_scale_factor:=0.2 \
+        action_cycle_rate:=20"
+    def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
+        Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
+        EndEffectorPositioningUR5DoF5.__init__(self, rs_address=self.robot_server_ip, **kwargs)
+
+class EndEffectorPositioningUR5DoF5Rob(EndEffectorPositioningUR5DoF5):
     real_robot = True
