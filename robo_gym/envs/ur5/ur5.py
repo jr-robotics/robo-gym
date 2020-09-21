@@ -85,6 +85,8 @@ class UR5Env(gym.Env):
             assert len(ee_target_pose) == 6
         else:
             ee_target_pose = self._get_target_pose()
+            if ee_target_pose[2] < 0.05:
+                ee_target_pose[2] += 0.05
 
         rs_state[0:6] = ee_target_pose
 
@@ -105,12 +107,34 @@ class UR5Env(gym.Env):
         # Check if the environment state is contained in the observation space
         if not self.observation_space.contains(self.state):
             raise InvalidStateError()
+        
+        # low and high range indices are switched like in the rs_state
+        initial_joints_range_low = np.array([1.0, -2.75, -3.0, -3.14, -1.7, 0])
+        initial_joints_range_high = np.array([2.5, -2.0, 3.0, 3.14, -1.0, 0])
+        joint_positions = rs_state[6:12]
+        for joint in range(len(joint_positions)):
+            if (joint_positions[joint]+0.1 < initial_joints_range_low[joint]) or  (joint_positions[joint]-0.1  > initial_joints_range_high[joint]):
+                print('reset did not work correctly on joint with RS index ' + str(joint))    
+                print('rs_state', [round(r, 2) for r in rs_state.tolist()])
+                print('state', [round(s, 2) for s in self.state.tolist()])
+                raise InvalidStateError()
 
-        _, _, done, _ = self.step(self.state[3:3+len(self.action_space.sample())])
+
+        action = self.state[3:3+len(self.action_space.sample())]
+        for a in action:
+            if abs(a) > 1.0:
+                print('rs_state', [round(r, 2) for r in rs_state.tolist()])
+                print('state', [round(s, 2) for s in self.state.tolist()])
+        action = np.clip(action, -1, 1)
+        _, _, done, info = self.step(action)
         self.elapsed_steps = 0
         if done:
-            print('Reset failed')
+            print('rs_state', [round(r, 2) for r in rs_state.tolist()])
+            print('collision flag:', rs_state[25])
+            print('state', [round(s, 2) for s in self.state.tolist()])
+            print('New Info', info)
             raise InvalidStateError()
+            
 
         return self.state
 
@@ -358,9 +382,9 @@ class EndEffectorPositioningUR5DoF5(UR5Env):
         """
 
         # Minimum initial joint positions
-        low = np.array([-0.65, -2.75, 1.0, -3.14, -1.7, 0])
+        low = np.array([-3.0, -2.75, 1.0, -3.14, -1.7, 0.0])
         # Maximum initial joint positions
-        high = np.array([0.65, -2.0, 2.5, 3.14, 1.7, 0])
+        high = np.array([3.0, -2.0, 2.5, 3.14, -1.3, 0.0])
         # Random initial joint positions
         joint_positions = np.random.default_rng().uniform(low=low, high=high)
 
