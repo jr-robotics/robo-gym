@@ -30,7 +30,6 @@ class UR5Env(gym.Env):
     real_robot = False
 
     def __init__(self, rs_address=None, max_episode_steps=300, **kwargs):
-
         self.ur5 = ur_utils.UR5()
         self.max_episode_steps = max_episode_steps
         self.elapsed_steps = 0
@@ -39,6 +38,8 @@ class UR5Env(gym.Env):
         self.seed()
         self.distance_threshold = 0.1
         self.abs_joint_pos_range = self.ur5.get_max_joint_positions()
+        self.initial_joint_positions_low = np.zeros(6)
+        self.initial_joint_positions_high = np.zeros(6)
 
         # Connect to Robot Server
         if rs_address:
@@ -85,8 +86,6 @@ class UR5Env(gym.Env):
             assert len(ee_target_pose) == 6
         else:
             ee_target_pose = self._get_target_pose()
-            if ee_target_pose[2] < 0.05:
-                ee_target_pose[2] += 0.05
 
         rs_state[0:6] = ee_target_pose
 
@@ -108,34 +107,20 @@ class UR5Env(gym.Env):
         if not self.observation_space.contains(self.state):
             raise InvalidStateError()
         
-        # low and high range indices are switched like in the rs_state
-        initial_joints_range_low = np.array([1.0, -2.75, -3.0, -3.14, -1.7, 0])
-        initial_joints_range_high = np.array([2.5, -2.0, 3.0, 3.14, -1.0, 0])
-        joint_positions = rs_state[6:12]
+        # check if current position is in the range of the initial joint positions
+        joint_positions = self.ur5._ros_joint_list_to_ur5_joint_list(rs_state[6:12])
+        tolerance = 0.1
         for joint in range(len(joint_positions)):
-            if (joint_positions[joint]+0.1 < initial_joints_range_low[joint]) or  (joint_positions[joint]-0.1  > initial_joints_range_high[joint]):
-                print('reset did not work correctly on joint with RS index ' + str(joint))    
-                print('rs_state', [round(r, 2) for r in rs_state.tolist()])
-                print('state', [round(s, 2) for s in self.state.tolist()])
-                raise InvalidStateError()
+            if (joint_positions[joint]+tolerance < self.initial_joints_range_low[joint]) or  (joint_positions[joint]-tolerance  > self.initial_joints_range_high[joint]):
+                raise InvalidStateError('Reset joint positions are not within defined range')
 
-
+        # go one empty action and check if there is a collision
         action = self.state[3:3+len(self.action_space.sample())]
-        for a in action:
-            if abs(a) > 1.0:
-                print('rs_state', [round(r, 2) for r in rs_state.tolist()])
-                print('state', [round(s, 2) for s in self.state.tolist()])
-        action = np.clip(action, -1, 1)
         _, _, done, info = self.step(action)
         self.elapsed_steps = 0
         if done:
-            print('rs_state', [round(r, 2) for r in rs_state.tolist()])
-            print('collision flag:', rs_state[25])
-            print('state', [round(s, 2) for s in self.state.tolist()])
-            print('New Info', info)
-            raise InvalidStateError()
+            raise InvalidStateError('Reset started in a collision state')
             
-
         return self.state
 
     def _reward(self, rs_state, action):
@@ -214,6 +199,10 @@ class UR5Env(gym.Env):
 
         return len(env_state)
 
+    def _set_initial_joint_positions_range(self):
+        self.initial_joint_positions_low = np.array([-0.65, -2.75, 1.0, -3.14, -1.7, -3.14])
+        self.initial_joint_positions_high = np.array([0.65, -2.0, 2.5, 3.14, -1.0, 3.14])
+
     def _get_initial_joint_positions(self):
         """Generate random initial robot joint positions.
 
@@ -221,13 +210,9 @@ class UR5Env(gym.Env):
             np.array: Joint positions with standard indexing.
 
         """
-
-        # Minimum initial joint positions
-        low = np.array([-0.65, -2.75, 1.0, -3.14, -1.7, -3.14])
-        # Maximum initial joint positions
-        high = np.array([0.65, -2.0, 2.5, 3.14, -1.0, 3.14])
+        self._set_initial_joint_positions_range()
         # Random initial joint positions
-        joint_positions = np.random.default_rng().uniform(low=low, high=high)
+        joint_positions = np.random.default_rng().uniform(low=self.initial_joint_positions_low, high=self.initial_joint_positions_high)
 
         return joint_positions
 
@@ -373,22 +358,9 @@ class EndEffectorPositioningUR5DoF5(UR5Env):
             print("WARNING: No IP and Port passed. Simulation will not be started")
             print("WARNING: Use this only to get environment shape")
     
-    def _get_initial_joint_positions(self):
-        """Generate random initial robot joint positions.
-
-        Returns:
-            np.array: Joint positions with standard indexing.
-
-        """
-
-        # Minimum initial joint positions
-        low = np.array([-3.0, -2.75, 1.0, -3.14, -1.7, 0.0])
-        # Maximum initial joint positions
-        high = np.array([3.0, -2.0, 2.5, 3.14, -1.3, 0.0])
-        # Random initial joint positions
-        joint_positions = np.random.default_rng().uniform(low=low, high=high)
-
-        return joint_positions
+    def _set_initial_joint_positions_range(self):
+        self.initial_joint_positions_low = np.array([-3.0, -2.75, 1.0, -3.14, -1.7, 0.0])
+        self.initial_joint_positions_high = np.array([3.0, -2.0, 2.5, 3.14, -1.3, 0.0])
 
     def _reward(self, rs_state, action):
         reward = 0
@@ -465,6 +437,7 @@ class EndEffectorPositioningUR5DoF5(UR5Env):
         reward, done, info = self._reward(rs_state=rs_state, action=action)
 
         return self.state, reward, done, info
+        
 
     
 
