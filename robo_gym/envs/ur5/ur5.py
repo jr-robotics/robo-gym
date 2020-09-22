@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from copy import deepcopy
 import sys, math, copy, random
 import numpy as np
 from scipy.spatial.transform import Rotation as R
@@ -40,6 +41,7 @@ class UR5Env(gym.Env):
         self.abs_joint_pos_range = self.ur5.get_max_joint_positions()
         self.initial_joint_positions_low = np.zeros(6)
         self.initial_joint_positions_high = np.zeros(6)
+        
 
         # Connect to Robot Server
         if rs_address:
@@ -111,7 +113,7 @@ class UR5Env(gym.Env):
         joint_positions = self.ur5._ros_joint_list_to_ur5_joint_list(rs_state[6:12])
         tolerance = 0.1
         for joint in range(len(joint_positions)):
-            if (joint_positions[joint]+tolerance < self.initial_joints_range_low[joint]) or  (joint_positions[joint]-tolerance  > self.initial_joints_range_high[joint]):
+            if (joint_positions[joint]+tolerance < self.initial_joint_positions_low[joint]) or  (joint_positions[joint]-tolerance  > self.initial_joint_positions_low[joint]):
                 raise InvalidStateError('Reset joint positions are not within defined range')
 
         # go one empty action and check if there is a collision
@@ -337,8 +339,7 @@ class EndEffectorPositioningUR5(UR5Env):
 
         return reward, done, info
     
-
-
+    
 class EndEffectorPositioningUR5DoF5(UR5Env):
     def __init__(self, rs_address=None, max_episode_steps=300, **kwargs):
 
@@ -350,6 +351,8 @@ class EndEffectorPositioningUR5DoF5(UR5Env):
         self.seed()
         self.distance_threshold = 0.1
         self.abs_joint_pos_range = self.ur5.get_max_joint_positions()
+        
+        self.last_position_on_success = []
 
         # Connect to Robot Server
         if rs_address:
@@ -358,6 +361,85 @@ class EndEffectorPositioningUR5DoF5(UR5Env):
             print("WARNING: No IP and Port passed. Simulation will not be started")
             print("WARNING: Use this only to get environment shape")
     
+    
+    def reset(self, initial_joint_positions = None, ee_target_pose = None, type='continue'):
+        """Environment reset.
+
+        Args:
+            initial_joint_positions (list[6] or np.array[6]): robot joint positions in radians.
+            ee_target_pose (list[6] or np.array[6]): [x,y,z,r,p,y] target end effector pose.
+            type (random or continue):
+                random: reset at a random position within the range defined in _set_initial_joint_positions_range
+                continue: if the episode terminated with success the robot starts the next episode from this location, otherwise it starts at a random position
+
+        Returns:
+            np.array: Environment state.
+
+        """
+        self.elapsed_steps = 0
+
+        self.last_action = None
+        self.prev_base_reward = None
+
+        # Initialize environment state
+        self.state = np.zeros(self._get_env_state_len())
+        rs_state = np.zeros(self._get_robot_server_state_len())
+
+        # Set initial robot joint positions
+        if initial_joint_positions:
+            assert len(initial_joint_positions) == 6
+            ur5_initial_joint_positions = initial_joint_positions
+        elif (len(self.last_position_on_success) != 0) and (type=='continue'):
+            ur5_initial_joint_positions = self.last_position_on_success
+        else:
+            ur5_initial_joint_positions = self._get_initial_joint_positions()
+
+        
+        rs_state[6:12] = self.ur5._ur_5_joint_list_to_ros_joint_list(ur5_initial_joint_positions)
+        # Set target End Effector pose
+        if ee_target_pose:
+            assert len(ee_target_pose) == 6
+        else:
+            ee_target_pose = self._get_target_pose()
+
+        rs_state[0:6] = ee_target_pose
+
+        # Set initial state of the Robot Server
+        if not self.client.set_state(copy.deepcopy(rs_state.tolist())):
+            raise RobotServerError("set_state")
+
+        # Get Robot Server state
+        rs_state = copy.deepcopy(np.nan_to_num(np.array(self.client.get_state())))
+
+        # Check if the length of the Robot Server state received is correct
+        if not len(rs_state)== self._get_robot_server_state_len():
+            raise InvalidStateError("Robot Server state received has wrong length")
+
+        # Convert the initial state from Robot Server format to environment format
+        self.state = self._robot_server_state_to_env_state(rs_state)
+
+        # Check if the environment state is contained in the observation space
+        if not self.observation_space.contains(self.state):
+            raise InvalidStateError()
+        
+        # check if current position is in the range of the initial joint positions
+        if (len(self.last_position_on_success) == 0) or (type=='random'):
+            joint_positions = self.ur5._ros_joint_list_to_ur5_joint_list(rs_state[6:12])
+            tolerance = 0.1
+            for joint in range(len(joint_positions)):
+                if (joint_positions[joint]+tolerance < self.initial_joint_positions_low[joint]) or  (joint_positions[joint]-tolerance  > self.initial_joint_positions_high[joint]):
+                    raise InvalidStateError('Reset joint positions are not within defined range')
+
+        # go one empty action and check if there is a collision
+        action = self.state[3:3+len(self.action_space.sample())]
+        _, _, done, _ = self.step(action)
+        self.elapsed_steps = 0
+        if done:
+            raise InvalidStateError('Reset started in a collision state')
+            
+        return self.state
+
+
     def _set_initial_joint_positions_range(self):
         self.initial_joint_positions_low = np.array([-3.0, -2.75, 1.0, -3.14, -1.7, 0.0])
         self.initial_joint_positions_high = np.array([3.0, -2.0, 2.5, 3.14, -1.3, 0.0])
@@ -376,16 +458,19 @@ class EndEffectorPositioningUR5DoF5(UR5Env):
         reward = -1 * euclidean_dist_3d
         
         joint_positions = self.ur5._ros_joint_list_to_ur5_joint_list(rs_state[6:12])
-        joint_positions_normalized = self.ur5.normalize_joint_values(joint_positions)
+        joint_positions_normalized = self.ur5.normalize_joint_values(copy.deepcopy(joint_positions))
+        
         delta = np.abs(np.subtract(joint_positions_normalized, action))
         reward = reward - (0.05 * np.sum(delta))
 
         if euclidean_dist_3d <= self.distance_threshold:
+            
             reward = 100
             done = True
             info['final_status'] = 'success'
             info['target_coord'] = target_coord
-
+            self.last_position_on_success = joint_positions
+            
         # Check if robot is in collision
         if rs_state[25] == 1:
             collision = True
@@ -397,11 +482,13 @@ class EndEffectorPositioningUR5DoF5(UR5Env):
             done = True
             info['final_status'] = 'collision'
             info['target_coord'] = target_coord
+            self.last_position_on_success = []
 
         if self.elapsed_steps >= self.max_episode_steps:
             done = True
             info['final_status'] = 'max_steps_exceeded'
             info['target_coord'] = target_coord
+            self.last_position_on_success = []
 
         return reward, done, info
 
@@ -437,10 +524,6 @@ class EndEffectorPositioningUR5DoF5(UR5Env):
         reward, done, info = self._reward(rs_state=rs_state, action=action)
 
         return self.state, reward, done, info
-        
-
-    
-
 
 
 class EndEffectorPositioningUR5Sim(EndEffectorPositioningUR5, Simulation):
@@ -465,3 +548,4 @@ class EndEffectorPositioningUR5DoF5Sim(EndEffectorPositioningUR5DoF5, Simulation
 
 class EndEffectorPositioningUR5DoF5Rob(EndEffectorPositioningUR5DoF5):
     real_robot = True
+
