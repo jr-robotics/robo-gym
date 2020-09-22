@@ -9,7 +9,7 @@ class ExceptionHandling(gym.Wrapper):
             observation, reward, done, info = self.env.step(action)
             return observation, reward, done, info
         except (RpcError, InvalidStateError, RobotServerError) as e:
-            print('Restarting Robot server ...')
+            print('Error occurred while calling the step function. Restarting Robot server ...')
             self.env.restart_sim()
             return self.env.observation_space.sample(), 0, True, {"Exception":True, "ExceptionType": e}
 
@@ -18,6 +18,6 @@ class ExceptionHandling(gym.Wrapper):
             try:
                 return self.env.reset(**kwargs)
             except (RpcError, InvalidStateError, RobotServerError):
-                print('Restarting Robot server ...')
+                print('Error occurred while calling the reset function. Restarting Robot server ...')
                 self.env.restart_sim()
         raise Exception("Failed 5 tentatives to reset environment.")

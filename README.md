@@ -46,6 +46,7 @@ capabilities and additional info can be found on our [website](https://sites.goo
     - [Mobile Industrial Robots Mir100](#mobile-industrial-robots-mir100)
   - [Robot Arms](#robot-arms)
     - [Universal Robots UR10](#universal-robots-ur10)
+    - [Universal Robots UR5](#universal-robots-ur5)
   - [Create your own Environments](#create-your-own-environments)
 - [Examples](#examples)
   - [Random Agent MiR100 Simulation Environment](#random-agent-mir100-simulation-environment)
@@ -363,18 +364,23 @@ negative reward is collected for moving away.
 Both self collisions and collisions with the ground are taken into account and
 punished with a negative reward and termination of the episode.
 
-``'EndEffectorPositioningAntiShakeUR10Sim-v0'``, ``'EndEffectorPositioningAntiShakeUR10Rob-v0'``
+``'EndEffectorPositioningUR10DoF5Sim-v0'``, ``'EndEffectorPositioningUR10DoF5Rob-v0'``
 
-This environment has the same characteristics of *EndEffectorPositioningUR10Sim-v0* and
-*EndEffectorPositioningUR10Rob-v0* with a different reward function.
+ Same as ``'EndEffectorPositioningUR10Sim-v0'`` and ``'EndEffectorPositioningUR10Rob-v0'`` but with wrist_3 joint fixed (5DoF).
 
-The base reward that the agent receives at each step is proportional to the
-variation of the three-dimensional Euclidean distance to the goal position.
-Thus, a positive reward is received for moving closer to the goal, whereas a
-negative reward is collected for moving away.
-A penalty is given for high variation in the robot's joint velocities.
-Both self collisions and collisions with the ground are taken into account and
-punished with a negative reward and termination of the episode.
+ ! When resetting the Real Robot environment the robot could go in self collision, please be cautious. We are working on a solution to fix this.
+
+#### Universal Robots UR5
+
+``'EndEffectorPositioningUR5Sim-v0'``, ``'EndEffectorPositioningUR5Rob-v0'``
+
+Same as ``'EndEffectorPositioningUR10Sim-v0'`` and ``'EndEffectorPositioningUR10Rob-v0'`` with the UR5 robot. 
+
+``'EndEffectorPositioningUR5DoF5Sim-v0'``, ``'EndEffectorPositioningUR5DoF5Rob-v0'``
+
+ Same as ``'EndEffectorPositioningUR5Sim-v0'`` and ``'EndEffectorPositioningUR5Rob-v0'`` but with wrist_3 joint fixed (5DoF).
+
+ ! When resetting the Real Robot environment the robot could go in self collision, please be cautious. We are working on a solution to fix this.
 
 ### Create your own Environments
 
