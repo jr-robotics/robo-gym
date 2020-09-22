@@ -98,7 +98,7 @@ class UR10Env(gym.Env):
         if not len(rs_state)== self._get_robot_server_state_len():
             raise InvalidStateError("Robot Server state received has wrong length")
 
-        # Convert the initial state from Robot Server format to environment format3
+        # Convert the initial state from Robot Server format to environment format
         self.state = self._robot_server_state_to_env_state(rs_state)
 
         # Check if the environment state is contained in the observation space
