@@ -441,8 +441,8 @@ class EndEffectorPositioningUR5DoF5(UR5Env):
 
 
     def _set_initial_joint_positions_range(self):
-        self.initial_joint_positions_low = np.array([-3.0, -2.75, 1.0, -3.14, -1.7, 0.0])
-        self.initial_joint_positions_high = np.array([3.0, -2.0, 2.5, 3.14, -1.3, 0.0])
+        self.initial_joint_positions_low = np.array([-0.65 -2.75, 1.0, -3.14, -1.7, 0.0])
+        self.initial_joint_positions_high = np.array([0.65 -2.0, 2.5, 3.14, -1.3, 0.0])
 
     def _reward(self, rs_state, action):
         reward = 0
