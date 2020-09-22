@@ -364,24 +364,19 @@ negative reward is collected for moving away.
 Both self collisions and collisions with the ground are taken into account and
 punished with a negative reward and termination of the episode.
 
-``'EndEffectorPositioningAntiShakeUR10Sim-v0'``, ``'EndEffectorPositioningAntiShakeUR10Rob-v0'``
+``'EndEffectorPositioningUR10DoF5Sim-v0'``, ``'EndEffectorPositioningUR10DoF5Rob-v0'``
 
-This environment has the same characteristics of *EndEffectorPositioningUR10Sim-v0* and
-*EndEffectorPositioningUR10Rob-v0* with a different reward function.
-
-The base reward that the agent receives at each step is proportional to the
-variation of the three-dimensional Euclidean distance to the goal position.
-Thus, a positive reward is received for moving closer to the goal, whereas a
-negative reward is collected for moving away.
-A penalty is given for high variation in the robot's joint velocities.
-Both self collisions and collisions with the ground are taken into account and
-punished with a negative reward and termination of the episode.
+ Same as ``'EndEffectorPositioningUR10Sim-v0'`` and ``'EndEffectorPositioningUR10Rob-v0'`` but with wrist_3 joint fixed (5DoF).
 
 #### Universal Robots UR5
 
 ``'EndEffectorPositioningUR5Sim-v0'``, ``'EndEffectorPositioningUR5Rob-v0'``
 
 Same as ``'EndEffectorPositioningUR10Sim-v0'`` and ``'EndEffectorPositioningUR10Rob-v0'`` with the UR5 robot. 
+
+``'EndEffectorPositioningUR5DoF5Sim-v0'``, ``'EndEffectorPositioningUR5DoF5Rob-v0'``
+
+ Same as ``'EndEffectorPositioningUR5Sim-v0'`` and ``'EndEffectorPositioningUR5Rob-v0'`` but with wrist_3 joint fixed (5DoF).
 
 ### Create your own Environments
 
