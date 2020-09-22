@@ -105,10 +105,12 @@ class UR10Env(gym.Env):
         if not self.observation_space.contains(self.state):
             raise InvalidStateError()
         
-        _, _, done, _ = self.step(self.state[3:3+len(self.action_space.sample())])
+        # go one empty action and check if there is a collision
+        action = self.state[3:3+len(self.action_space.sample())]
+        _, _, done, _ = self.step(action)
         self.elapsed_steps = 0
         if done:
-            raise InvalidStateError()
+            raise InvalidStateError('Reset started in a collision state')
             
 
         return self.state
