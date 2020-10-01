@@ -9,6 +9,7 @@ from robo_gym.utils import utils, mir100_utils
 from robo_gym.utils.exceptions import InvalidStateError, RobotServerError
 import robo_gym_server_modules.robot_server.client as rs_client
 from robo_gym.envs.simulation_wrapper import Simulation
+from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
 
 class Mir100Env(gym.Env):
     """Mobile Industrial Robots MiR100 base environment.
@@ -94,11 +95,12 @@ class Mir100Env(gym.Env):
         rs_state[0:3] = target_pose
 
         # Set initial state of the Robot Server
-        if not self.client.set_state(copy.deepcopy(rs_state.tolist())):
+        state_msg = robot_server_pb2.State(state = rs_state.tolist())
+        if not self.client.set_state_msg(state_msg):
             raise RobotServerError("set_state")
 
         # Get Robot Server state
-        rs_state = copy.deepcopy(np.nan_to_num(np.array(self.client.get_state())))
+        rs_state = copy.deepcopy(np.nan_to_num(np.array(self.client.get_state_msg().state)))
 
         # Check if the length of the Robot Server state received is correct
         if not len(rs_state)== self._get_robot_server_state_len():
@@ -131,7 +133,7 @@ class Mir100Env(gym.Env):
             raise RobotServerError("send_action")
 
         # Get state from Robot Server
-        rs_state = self.client.get_state()
+        rs_state = self.client.get_state_msg().state
         # Convert the state from Robot Server format to environment format
         self.state = self._robot_server_state_to_env_state(rs_state)
 
@@ -201,7 +203,7 @@ class Mir100Env(gym.Env):
 
         if self.real_robot:
             # Take current robot position as start position
-            start_pose = self.client.get_state()[3:6]
+            start_pose = self.client.get_state_msg().state[3:6]
         else:
             # Create random starting position
             x = self.np_random.uniform(low= -2.0, high= 2.0)
@@ -457,11 +459,12 @@ class ObstacleAvoidanceMir100(Mir100Env):
         rs_state[1027:1030] = self.sim_obstacles[2]
 
         # Set initial state of the Robot Server
-        if not self.client.set_state(copy.deepcopy(rs_state.tolist())):
+        state_msg = robot_server_pb2.State(state = rs_state.tolist())
+        if not self.client.set_state_msg(state_msg):
             raise RobotServerError("set_state")
 
         # Get Robot Server state
-        rs_state = copy.deepcopy(np.nan_to_num(np.array(self.client.get_state())))
+        rs_state = copy.deepcopy(np.nan_to_num(np.array(self.client.get_state_msg().state)))
 
         # Check if the length of the Robot Server state received is correct
         if not len(rs_state)== self._get_robot_server_state_len():
@@ -536,7 +539,7 @@ class ObstacleAvoidanceMir100(Mir100Env):
 
         if self.real_robot:
             # Take current robot position as start position
-            start_pose = self.client.get_state()[3:6]
+            start_pose = self.client.get_state_msg().state[3:6]
         else:
             # Create random starting position
             x = self.np_random.uniform(low= -2.0, high= 2.0)

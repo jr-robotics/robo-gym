@@ -11,6 +11,7 @@ from robo_gym.utils import utils, ur_utils
 from robo_gym.utils.exceptions import InvalidStateError, RobotServerError
 import robo_gym_server_modules.robot_server.client as rs_client
 from robo_gym.envs.simulation_wrapper import Simulation
+from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
 
 class UR5Env(gym.Env):
     """Universal Robots UR5 base environment.
@@ -99,11 +100,12 @@ class UR5Env(gym.Env):
         rs_state[0:6] = ee_target_pose
 
         # Set initial state of the Robot Server
-        if not self.client.set_state(copy.deepcopy(rs_state.tolist())):
+        state_msg = robot_server_pb2.State(state = rs_state.tolist())
+        if not self.client.set_state_msg(state_msg):
             raise RobotServerError("set_state")
 
         # Get Robot Server state
-        rs_state = copy.deepcopy(np.nan_to_num(np.array(self.client.get_state())))
+        rs_state = copy.deepcopy(np.nan_to_num(np.array(self.client.get_state_msg().state)))
 
         # Check if the length of the Robot Server state received is correct
         if not len(rs_state)== self._get_robot_server_state_len():
@@ -154,7 +156,7 @@ class UR5Env(gym.Env):
             raise RobotServerError("send_action")
 
         # Get state from Robot Server
-        rs_state = self.client.get_state()
+        rs_state = self.client.get_state_msg().state
         # Convert the state from Robot Server format to environment format
         self.state = self._robot_server_state_to_env_state(rs_state)
 
@@ -416,11 +418,12 @@ class EndEffectorPositioningUR5DoF5(UR5Env):
         rs_state[0:6] = ee_target_pose
 
         # Set initial state of the Robot Server
-        if not self.client.set_state(copy.deepcopy(rs_state.tolist())):
+        state_msg = robot_server_pb2.State(state = rs_state.tolist())
+        if not self.client.set_state_msg(state_msg):
             raise RobotServerError("set_state")
 
         # Get Robot Server state
-        rs_state = copy.deepcopy(np.nan_to_num(np.array(self.client.get_state())))
+        rs_state = copy.deepcopy(np.nan_to_num(np.array(self.client.get_state_msg().state)))
 
         # Check if the length of the Robot Server state received is correct
         if not len(rs_state)== self._get_robot_server_state_len():
@@ -521,7 +524,7 @@ class EndEffectorPositioningUR5DoF5(UR5Env):
             raise RobotServerError("send_action")
 
         # Get state from Robot Server
-        rs_state = self.client.get_state()
+        rs_state = self.client.get_state_msg().state
         # Convert the state from Robot Server format to environment format
         self.state = self._robot_server_state_to_env_state(rs_state)
 
