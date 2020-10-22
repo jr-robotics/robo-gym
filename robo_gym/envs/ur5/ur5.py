@@ -137,7 +137,7 @@ class UR5Env(gym.Env):
         return self.state
 
     def _reward(self, rs_state, action):
-        return 0, False
+        return 0, False, {}
 
     def step(self, action):
         self.elapsed_steps += 1
@@ -563,3 +563,168 @@ class EndEffectorPositioningUR5DoF5Sim(EndEffectorPositioningUR5DoF5, Simulation
 class EndEffectorPositioningUR5DoF5Rob(EndEffectorPositioningUR5DoF5):
     real_robot = True
 
+class MovingBoxTargetUR5DoF3(UR5Env):
+    def __init__(self, rs_address=None, max_episode_steps=300, **kwargs):
+
+        self.ur5 = ur_utils.UR5()
+        self.max_episode_steps = max_episode_steps
+        self.elapsed_steps = 0
+        self.observation_space = self._get_observation_space()
+        self.action_space = spaces.Box(low=np.full((3), -1.0), high=np.full((3), 1.0), dtype=np.float32)
+        self.seed()
+        self.distance_threshold = 0.1
+        self.abs_joint_pos_range = self.ur5.get_max_joint_positions()
+        
+        self.last_position_on_success = []
+
+        # Connect to Robot Server
+        if rs_address:
+            self.client = rs_client.Client(rs_address)
+        else:
+            print("WARNING: No IP and Port passed. Simulation will not be started")
+            print("WARNING: Use this only to get environment shape")
+            
+    def reset(self, initial_joint_positions = None, type='random'):
+        """Environment reset.
+
+        Args:
+            initial_joint_positions (list[6] or np.array[6]): robot joint positions in radians.
+            ee_target_pose (list[6] or np.array[6]): [x,y,z,r,p,y] target end effector pose.
+
+        Returns:
+            np.array: Environment state.
+
+        """
+        self.elapsed_steps = 0
+
+        self.last_action = None
+        self.prev_base_reward = None
+
+        # Initialize environment state
+        self.state = np.zeros(self._get_env_state_len())
+        rs_state = np.zeros(self._get_robot_server_state_len())
+        
+        # Set initial robot joint positions
+        if initial_joint_positions:
+            assert len(initial_joint_positions) == 6
+            ur5_initial_joint_positions = initial_joint_positions
+        elif (len(self.last_position_on_success) != 0) and (type=='continue'):
+            ur5_initial_joint_positions = self.last_position_on_success
+        else:
+            ur5_initial_joint_positions = self._get_initial_joint_positions()
+
+        rs_state[6:12] = self.ur5._ur_5_joint_list_to_ros_joint_list(ur5_initial_joint_positions)
+
+
+        # Set initial state of the Robot Server
+        z_amplitude = 0.25
+        z_frequency = 0.125
+        z_offset = 0.35
+        float_params = {"x": 0.13, "y": -0.30, "z_amplitude": z_amplitude, "z_frequency": z_frequency, "z_offset": z_offset}
+        state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params)
+        if not self.client.set_state_msg(state_msg):
+            raise RobotServerError("set_state")
+
+        # Get Robot Server state
+        rs_state = copy.deepcopy(np.nan_to_num(np.array(self.client.get_state_msg().state)))
+
+        # Check if the length of the Robot Server state received is correct
+        if not len(rs_state)== self._get_robot_server_state_len():
+            raise InvalidStateError("Robot Server state received has wrong length")
+
+        # Convert the initial state from Robot Server format to environment format
+        self.state = self._robot_server_state_to_env_state(rs_state)
+
+        # Check if the environment state is contained in the observation space
+        if not self.observation_space.contains(self.state):
+            raise InvalidStateError()
+        
+        # check if current position is in the range of the initial joint positions
+        if (len(self.last_position_on_success) == 0) or (type=='random'):
+            joint_positions = self.ur5._ros_joint_list_to_ur5_joint_list(rs_state[6:12])
+            tolerance = 0.1
+            for joint in range(len(joint_positions)):
+                if (joint_positions[joint]+tolerance < self.initial_joint_positions_low[joint]) or  (joint_positions[joint]-tolerance  > self.initial_joint_positions_high[joint]):
+                    raise InvalidStateError('Reset joint positions are not within defined range')
+
+
+        # go one empty action and check if there is a collision
+        action = self.state[4:7]
+        _, _, done, info = self.step(action)
+        self.elapsed_steps = 0
+        if done:
+            raise InvalidStateError('Reset started in a collision state')
+            
+        return self.state
+
+    def step(self, action):
+        self.elapsed_steps += 1
+
+        # Check if the action is within the action space
+        assert self.action_space.contains(action), "%r (%s) invalid" % (action, type(action))
+        # action =  np.append(action, [0.0])
+
+        # Convert environment action to Robot Server action
+        # rs_action = copy.deepcopy(action)
+        # Scale action
+        action = np.multiply(action, self.abs_joint_pos_range[1:4])
+        # Convert environment action to Robot Server action
+        initial_joint_positions = self._get_initial_joint_positions()
+        rs_action = np.array([initial_joint_positions[0], action[0], action[1], \
+                            action[2], initial_joint_positions[4], initial_joint_positions[5]])
+
+        # Convert action indexing from ur5 to ros
+        rs_action = self.ur5._ur_5_joint_list_to_ros_joint_list(rs_action)
+        # Send action to Robot Server
+        if not self.client.send_action(rs_action.tolist()):
+            raise RobotServerError("send_action")
+
+        # Get state from Robot Server
+        rs_state = self.client.get_state_msg().state
+        # Convert the state from Robot Server format to environment format
+        self.state = self._robot_server_state_to_env_state(rs_state)
+
+        # Check if the environment state is contained in the observation space
+        if not self.observation_space.contains(self.state):
+            raise InvalidStateError()
+
+        # Assign reward
+        reward = 0
+        done = False
+        reward, done, info = self._reward(rs_state=rs_state, action=action)
+
+        return self.state, reward, done, info
+    
+    def _set_initial_joint_positions_range(self):
+        self.initial_joint_positions_low = np.array([-0.9, -1.5, -1.5, -3.14, 1.3, 0.0])
+        self.initial_joint_positions_high = np.array([-0.7, -1.1, -1.1, 3.14, 1.7, 0.0])
+
+    def _get_initial_joint_positions(self):
+        """Get initial robot joint positions.
+
+        Returns:
+            np.array: Joint positions with standard indexing.
+
+        """
+        self._set_initial_joint_positions_range()
+        # Fixed initial joint positions
+        joint_positions = np.array([-0.78,-1.31,-1.31,-2.18,1.57,0.0])
+
+        return joint_positions
+class MovingBoxTargetUR5DoF3Sim(MovingBoxTargetUR5DoF3, Simulation):
+    cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
+        world_name:=box100.world \
+        yaw:=3.14\
+        reference_frame:=world \
+        max_velocity_scale_factor:=0.2 \
+        action_cycle_rate:=20 \
+        rviz_gui:=false \
+        gazebo_gui:=true \
+        obstacle_controller:=true \
+        target_mode:=moving \
+        target_model_name:=box100"
+    def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
+        Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
+        MovingBoxTargetUR5DoF3.__init__(self, rs_address=self.robot_server_ip, **kwargs)
+
+    
