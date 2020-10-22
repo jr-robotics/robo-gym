@@ -55,7 +55,7 @@ register(
 register(
     id='MovingBoxTargetUR5DoF3Sim-v0',
     entry_point='robo_gym.envs:MovingBoxTargetUR5DoF3Sim',
-    max_episode_steps=300
+    max_episode_steps=1000
 )
 
 ## UR10 Environments

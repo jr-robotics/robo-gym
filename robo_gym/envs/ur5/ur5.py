@@ -564,7 +564,7 @@ class EndEffectorPositioningUR5DoF5Rob(EndEffectorPositioningUR5DoF5):
     real_robot = True
 
 class MovingBoxTargetUR5DoF3(UR5Env):
-    def __init__(self, rs_address=None, max_episode_steps=300, **kwargs):
+    def __init__(self, rs_address=None, max_episode_steps=1000, **kwargs):
 
         self.ur5 = ur_utils.UR5()
         self.max_episode_steps = max_episode_steps
@@ -656,6 +656,44 @@ class MovingBoxTargetUR5DoF3(UR5Env):
             raise InvalidStateError('Reset started in a collision state')
             
         return self.state
+
+    
+    def _reward(self, rs_state, action):
+        reward = 0
+        done = False
+        info = {}
+
+        # Calculate distance to the target
+        target_coord = np.array(rs_state[0:3])
+        ee_coord = np.array(rs_state[18:21])
+        euclidean_dist_3d = np.linalg.norm(target_coord - ee_coord)
+        
+        wanted_distance = 0.1 # m
+        # threshold punishment
+        if (euclidean_dist_3d > wanted_distance + .05) or (euclidean_dist_3d > wanted_distance - .05):
+            reward -= 1
+            
+        # Check if robot is in collision
+        if rs_state[25] == 1:
+            collision = True
+        else:
+            collision = False
+
+        if collision:
+            reward = -100
+            done = True
+            info['final_status'] = 'collision'
+            info['target_coord'] = target_coord
+            self.last_position_on_success = []
+
+        if self.elapsed_steps >= self.max_episode_steps:
+            done = True
+            info['final_status'] = 'max_steps_exceeded'
+            info['target_coord'] = target_coord
+            self.last_position_on_success = []
+
+        return reward, done, info
+
 
     def step(self, action):
         self.elapsed_steps += 1
