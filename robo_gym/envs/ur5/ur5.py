@@ -114,6 +114,7 @@ class UR5Env(gym.Env):
         # Convert the initial state from Robot Server format to environment format
         self.state = self._robot_server_state_to_env_state(rs_state)
 
+
         # Check if the environment state is contained in the observation space
         if not self.observation_space.contains(self.state):
             raise InvalidStateError()
@@ -574,6 +575,8 @@ class MovingBoxTargetUR5DoF3(UR5Env):
         self.seed()
         self.distance_threshold = 0.1
         self.abs_joint_pos_range = self.ur5.get_max_joint_positions()
+
+        self.prev_rs_state = None
         
         self.last_position_on_success = []
 
@@ -584,6 +587,37 @@ class MovingBoxTargetUR5DoF3(UR5Env):
             print("WARNING: No IP and Port passed. Simulation will not be started")
             print("WARNING: Use this only to get environment shape")
             
+    def _get_observation_space(self):
+        """Get environment observation space.
+
+        Returns:
+            gym.spaces: Gym observation space object.
+
+        """
+
+        # Joint position range tolerance
+        pos_tolerance = np.full(6,0.1)
+        # Joint positions range used to determine if there is an error in the sensor readings
+        max_joint_positions = np.add(np.full(6, 1.0), pos_tolerance)
+        min_joint_positions = np.subtract(np.full(6, -1.0), pos_tolerance)
+        # Target coordinates range
+        target_range = np.full(3, np.inf)
+        # Joint positions range tolerance
+        vel_tolerance = np.full(6,0.5)
+        # Joint velocities range used to determine if there is an error in the sensor readings
+        max_joint_velocities = np.add(self.ur5.get_max_joint_velocities(), vel_tolerance)
+        min_joint_velocities = np.subtract(self.ur5.get_min_joint_velocities(), vel_tolerance)
+
+        max_start_positions = np.add(np.full(6, 1.0), pos_tolerance)
+        min_start_positions = np.subtract(np.full(6, -1.0), pos_tolerance)
+        # Definition of environment observation_space
+        max_obs = np.concatenate((target_range, max_joint_positions, max_joint_velocities, max_start_positions))
+        min_obs = np.concatenate((-target_range, min_joint_positions, min_joint_velocities, min_start_positions))
+
+        return spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
+
+
+
     def reset(self, initial_joint_positions = None, type='random'):
         """Environment reset.
 
@@ -627,6 +661,7 @@ class MovingBoxTargetUR5DoF3(UR5Env):
 
         # Get Robot Server state
         rs_state = copy.deepcopy(np.nan_to_num(np.array(self.client.get_state_msg().state)))
+        self.prev_rs_state = copy.deepcopy(rs_state)
 
         # Check if the length of the Robot Server state received is correct
         if not len(rs_state)== self._get_robot_server_state_len():
@@ -634,6 +669,9 @@ class MovingBoxTargetUR5DoF3(UR5Env):
 
         # Convert the initial state from Robot Server format to environment format
         self.state = self._robot_server_state_to_env_state(rs_state)
+
+        # save start position
+        self.start_position = self.state[3:9]
 
         # Check if the environment state is contained in the observation space
         if not self.observation_space.contains(self.state):
@@ -657,7 +695,9 @@ class MovingBoxTargetUR5DoF3(UR5Env):
             
         return self.state
 
-    
+
+    ## Second Reward with squared weighted punishment for movement
+    ## NOTE: works nice but diverges with longer training periods
     def _reward(self, rs_state, action):
         reward = 0
         done = False
@@ -668,10 +708,24 @@ class MovingBoxTargetUR5DoF3(UR5Env):
         ee_coord = np.array(rs_state[18:21])
         euclidean_dist_3d = np.linalg.norm(target_coord - ee_coord)
         
-        wanted_distance = 0.1 # m
-        # threshold punishment
-        if (euclidean_dist_3d > wanted_distance + .05) or (euclidean_dist_3d > wanted_distance - .05):
+        minimum_distance = 0.3 # m
+        maximum_distance = 0.5 # m 
+        
+        # punish movement in general
+        reward +=  - np.square(action).sum() * (1/3) * (1/10)
+
+        # reward for going back to the original predefined position
+        if action.sum() < 0.1:
+            reward += 0.02
+
+        # collect some reward for staying in a certain distance to the target
+        if (euclidean_dist_3d > minimum_distance) and (euclidean_dist_3d < maximum_distance):
+            reward += 0.02
+        
+        # punish if the end effector is too close to the target
+        if euclidean_dist_3d < minimum_distance:
             reward -= 1
+
             
         # Check if robot is in collision
         if rs_state[25] == 1:
@@ -680,7 +734,7 @@ class MovingBoxTargetUR5DoF3(UR5Env):
             collision = False
 
         if collision:
-            reward = -100
+            reward = -10
             done = True
             info['final_status'] = 'collision'
             info['target_coord'] = target_coord
@@ -695,6 +749,7 @@ class MovingBoxTargetUR5DoF3(UR5Env):
         return reward, done, info
 
 
+
     def step(self, action):
         self.elapsed_steps += 1
 
@@ -705,11 +760,26 @@ class MovingBoxTargetUR5DoF3(UR5Env):
         # Convert environment action to Robot Server action
         # rs_action = copy.deepcopy(action)
         # Scale action
-        action = np.multiply(action, self.abs_joint_pos_range[1:4])
+        # action = np.multiply(action, self.abs_joint_pos_range[1:4])
+        # convert action
+        # current_joint_positions = self.ur5._ros_joint_list_to_ur5_joint_list(self.prev_rs_state[6:12])[1:4]
+        # print('current joint positions:', current_joint_positions)
+        # print('action to take:', action)
+        # rs_action = action + current_joint_positions
+        # print('converted action:', action)
+
+        
         # Convert environment action to Robot Server action
         initial_joint_positions = self._get_initial_joint_positions()
-        rs_action = np.array([initial_joint_positions[0], action[0], action[1], \
-                            action[2], initial_joint_positions[4], initial_joint_positions[5]])
+        # print(initial_joint_positions)
+        initial_joint_positions[1:4] = initial_joint_positions[1:4] + action
+        # print(initial_joint_positions)
+        rs_action = initial_joint_positions
+
+
+        # rs_action = np.array([initial_joint_positions[0], rs_action[0], rs_action[1], rs_action[2], initial_joint_positions[4], initial_joint_positions[5]])
+
+        
 
         # Convert action indexing from ur5 to ros
         rs_action = self.ur5._ur_5_joint_list_to_ros_joint_list(rs_action)
@@ -719,8 +789,13 @@ class MovingBoxTargetUR5DoF3(UR5Env):
 
         # Get state from Robot Server
         rs_state = self.client.get_state_msg().state
+        self.prev_rs_state = copy.deepcopy(rs_state)
+        # print('rs_state joints', rs_state[6:12])
         # Convert the state from Robot Server format to environment format
         self.state = self._robot_server_state_to_env_state(rs_state)
+        
+        
+
 
         # Check if the environment state is contained in the observation space
         if not self.observation_space.contains(self.state):
@@ -737,6 +812,8 @@ class MovingBoxTargetUR5DoF3(UR5Env):
         self.initial_joint_positions_low = np.array([-0.9, -1.5, -1.5, -3.14, 1.3, 0.0])
         self.initial_joint_positions_high = np.array([-0.7, -1.1, -1.1, 3.14, 1.7, 0.0])
 
+
+
     def _get_initial_joint_positions(self):
         """Get initial robot joint positions.
 
@@ -749,6 +826,51 @@ class MovingBoxTargetUR5DoF3(UR5Env):
         joint_positions = np.array([-0.78,-1.31,-1.31,-2.18,1.57,0.0])
 
         return joint_positions
+
+    def _robot_server_state_to_env_state(self, rs_state):
+        """Transform state from Robot Server to environment format.
+
+        Args:
+            rs_state (list): State in Robot Server format.
+
+        Returns:
+            numpy.array: State in environment format.
+
+        """
+        # Convert to numpy array and remove NaN values
+        rs_state = np.nan_to_num(np.array(rs_state))
+
+        # Transform cartesian coordinates of target to polar coordinates 
+        # with respect to the end effector frame
+        target_coord = rs_state[0:3]
+        
+        ee_to_base_translation = rs_state[18:21]
+        ee_to_base_quaternion = rs_state[21:25]
+        ee_to_base_rotation = R.from_quat(ee_to_base_quaternion)
+        base_to_ee_rotation = ee_to_base_rotation.inv()
+        base_to_ee_quaternion = base_to_ee_rotation.as_quat()
+        base_to_ee_translation = - ee_to_base_translation
+
+        target_coord_ee_frame = utils.change_reference_frame(target_coord,base_to_ee_translation,base_to_ee_quaternion)
+        target_polar = utils.cartesian_to_polar_3d(target_coord_ee_frame)
+
+        # Transform joint positions and joint velocities from ROS indexing to
+        # standard indexing
+        ur_j_pos = self.ur5._ros_joint_list_to_ur5_joint_list(rs_state[6:12])
+        ur_j_vel = self.ur5._ros_joint_list_to_ur5_joint_list(rs_state[12:18])
+
+        # Normalize joint position values
+        ur_j_pos_norm = self.ur5.normalize_joint_values(joints=ur_j_pos)
+
+        # start joint positions
+        start_joints = self.ur5.normalize_joint_values(self._get_initial_joint_positions())
+
+        # Compose environment state
+        state = np.concatenate((target_polar, ur_j_pos_norm, ur_j_vel, start_joints))
+
+        return state
+
+    
 class MovingBoxTargetUR5DoF3Sim(MovingBoxTargetUR5DoF3, Simulation):
     cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
         world_name:=box100.world \
