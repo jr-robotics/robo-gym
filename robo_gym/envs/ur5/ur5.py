@@ -695,6 +695,127 @@ class MovingBoxTargetUR5DoF3(UR5Env):
             
         return self.state
 
+    # learns something but is unsatisfactory
+    # def _reward(self, rs_state, action):
+    #     reward = 0
+    #     done = False
+    #     info = {}
+
+    #     # Calculate distance to the target
+    #     target_coord = np.array(rs_state[0:3])
+    #     ee_coord = np.array(rs_state[18:21])
+    #     euclidean_dist_3d = np.linalg.norm(target_coord - ee_coord)
+        
+    #     wanted_distance = 0.3 # m
+    #     threshold = 0.1
+    #     # threshold punishment
+
+    #     if (euclidean_dist_3d < wanted_distance + threshold) and (euclidean_dist_3d > wanted_distance - threshold):
+    #         reward += .1
+    #     elif euclidean_dist_3d  < wanted_distance - threshold:
+    #         reward -= .5
+    #     elif euclidean_dist_3d > wanted_distance - 3*threshold:
+    #         reward -= .05
+    #     elif euclidean_dist_3d > wanted_distance - 2*threshold:
+    #         reward -= .01
+
+            
+    #     # Check if robot is in collision
+    #     if rs_state[25] == 1:
+    #         collision = True
+    #     else:
+    #         collision = False
+
+    #     if collision:
+    #         reward = -100
+    #         done = True
+    #         info['final_status'] = 'collision'
+    #         info['target_coord'] = target_coord
+    #         self.last_position_on_success = []
+
+    #     if self.elapsed_steps >= self.max_episode_steps:
+    #         done = True
+    #         info['final_status'] = 'max_steps_exceeded'
+    #         info['target_coord'] = target_coord
+    #         self.last_position_on_success = []
+
+    #     return reward, done, info
+
+    # def _reward(self, rs_state, action):
+    #     reward = 0
+    #     done = False
+    #     info = {}
+
+    #     minimum_distance = 0.3 # m
+    #     maximum_distance = 0.6 # m
+
+    #     # Calculate distance to the target
+    #     target_coord = np.array(rs_state[0:3])
+    #     ee_coord = np.array(rs_state[18:21])
+    #     distance_to_target = np.linalg.norm(target_coord - ee_coord)   
+
+    #     env_state = self._robot_server_state_to_env_state(rs_state)
+
+    #     polar_1 = abs(env_state[1] * 180/math.pi)
+    #     polar_2 = abs(env_state[2] * 180/math.pi)
+
+    #     # reward polar coords close to zero
+    #     # polar 1 weighted by max_steps
+    #     p1_r = (1 - (polar_1 / 90)) * (1/1000)
+    #     # if p1_r <= 0.001:
+    #     #     reward += p1_r
+        
+    #     # polar 1 weighted by max_steps
+    #     p2_r = (1 - (polar_2 / 90)) * (1/1000)
+    #     # if p2_r <= 0.001:
+    #     #     reward += p2_r
+
+
+
+    #     delta_joint_pos = env_state[3:9] - env_state[-6:]
+
+    #     dr = 0
+    #     if abs(delta_joint_pos).sum() < 0.5:
+    #         dr = 4 * (1 - (abs(delta_joint_pos).sum()/0.5)) * (1/1000)
+    #         reward += dr
+        
+    #     act_r = 0
+    #     if abs(action).sum() < 0.4:
+    #         act_r = 4 * (1 - (abs(action).sum()/0.4)) * (1/1000)
+    #         reward += act_r
+
+    #     dist = 0
+    #     if distance_to_target < minimum_distance:
+    #         dist = -30 * (1/1000)
+    #         reward += dist
+
+    #     dist_max = 0
+    #     if distance_to_target > maximum_distance:
+    #         dist_max = -2 * (1/1000)
+    #         reward += dist_max
+
+    #     # Check if robot is in collision
+    #     if rs_state[25] == 1:
+    #         collision = True
+    #     else:
+    #         collision = False
+
+    #     if collision:
+    #         reward = -10
+    #         done = True
+    #         info['final_status'] = 'collision'
+    #         info['target_coord'] = target_coord
+    #         self.last_position_on_success = []
+
+    #     if self.elapsed_steps >= self.max_episode_steps:
+    #         done = True
+    #         info['final_status'] = 'success'
+    #         info['target_coord'] = target_coord
+    #         self.last_position_on_success = []
+
+    #     print('reward composition: p1 =', p1_r, 'p2 =', p2_r, 'dr =', dr, 'no_act =', act_r, 'min_dist =', dist, 'max_dist', dist_max)
+
+    #     return reward, done, info
 
     ## Second Reward with squared weighted punishment for movement
     ## NOTE: works nice but diverges with longer training periods
