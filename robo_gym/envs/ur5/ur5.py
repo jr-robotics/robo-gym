@@ -651,9 +651,14 @@ class MovingBoxTargetUR5DoF3(UR5Env):
 
 
         # Set initial state of the Robot Server
-        z_amplitude = 0.25
+        # z_amplitude = 0.25
+        # z_frequency = 0.125
+        # z_offset = 0.35
+        z_amplitude = np.random.default_rng().uniform(low=0.09, high=0.35)
         z_frequency = 0.125
-        z_offset = 0.35
+        z_offset = np.random.default_rng().uniform(low=0.2, high=0.6)
+        
+
         float_params = {"x": 0.13, "y": -0.30, "z_amplitude": z_amplitude, "z_frequency": z_frequency, "z_offset": z_offset}
         state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params)
         if not self.client.set_state_msg(state_msg):
