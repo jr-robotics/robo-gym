@@ -85,18 +85,17 @@ Python virtual environments. See the following section for further details.
 ### Environment Side
 **Requirements:** robo-gym requires Python >= 3.5
 
-robo-gym is provided as a package on the PyPI repository. You can install it with:
-
-```bash
-pip install robo-gym
-```
-
-If you prefer you can also install it from source:
+You can perform a minimal install of robo-gym with:
 
 ```bash
 git clone https://github.com/jr-robotics/robo-gym.git
 cd robo-gym
-pip install .
+pip install -e .
+```
+If you prefer, you can do a minimal install of the packaged version directly from PyPI:
+
+```bash
+pip install robo-gym
 ```
 
 ### Robot Server Side
