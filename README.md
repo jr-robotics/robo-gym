@@ -150,11 +150,9 @@ pip install robo-gym-server-modules
 <!-- omit in toc -->
 ##### Test the installation
 
-To test the installation of *robo-gym-server-modules* try to run:  `kill-server-manager` . 
+To test the installation of *robo-gym-server-modules* try to run:  `start-server-manager` . 
 
-You should see something like: `error connecting to /tmp/tmux-1000/default (No such file or directory)`
-
-If you get: `kill-server-manager: command not found` it is most probably because your `$PATH` is not set correctly, to fix the problem add:
+If you get: `start-server-manager: command not found` it is most probably because your `$PATH` is not set correctly, to fix the problem add:
 
 ```bash
 export PATH="/home/<your_username>/.local/bin:$PATH"
@@ -162,6 +160,21 @@ export PATH="/home/<your_username>/.local/bin:$PATH"
 
 to your `.bashrc` file. 
 
+In a second terminal window activate the Python 3.6 virtual environment and run:
+
+```python
+import gym, robo_gym
+
+env = gym.make('NoObstacleNavigationMir100Sim-v0', ip='localhost', gui=True)
+
+env.reset()
+```
+
+If you are running the ServerManager on a different PC replace *localhost* with the IP address of the machine. 
+
+After running the command you should see the robot simulation starting and the initial state of the environment printed in the terminal window. 
+
+Once you are done run `kill-server-manager` in a terminal window to kill the RobotServer and the ServerManager.
 
 ### Managing Multiple Python Versions
 
