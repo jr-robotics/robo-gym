@@ -658,9 +658,9 @@ class MovingBoxTargetUR5DoF3(UR5Env):
         z_frequency = 0.125
         z_offset = np.random.default_rng().uniform(low=0.2, high=0.6)
         
-
+        string_params = {"function": "triangle_wave"}
         float_params = {"x": 0.13, "y": -0.30, "z_amplitude": z_amplitude, "z_frequency": z_frequency, "z_offset": z_offset}
-        state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params)
+        state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
         if not self.client.set_state_msg(state_msg):
             raise RobotServerError("set_state")
 
