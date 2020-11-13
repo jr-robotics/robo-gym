@@ -1014,3 +1014,101 @@ class MovingBoxTargetUR5DoF3Sim(MovingBoxTargetUR5DoF3, Simulation):
         MovingBoxTargetUR5DoF3.__init__(self, rs_address=self.robot_server_ip, **kwargs)
 
     
+class MovingBox3DSplineTargetUR5DoF3(MovingBoxTargetUR5DoF3):
+
+    def reset(self, initial_joint_positions = None, type='random'):
+        """Environment reset.
+
+        Args:
+            initial_joint_positions (list[6] or np.array[6]): robot joint positions in radians.
+            ee_target_pose (list[6] or np.array[6]): [x,y,z,r,p,y] target end effector pose.
+
+        Returns:
+            np.array: Environment state.
+
+        """
+        self.elapsed_steps = 0
+
+        self.last_action = None
+        self.prev_base_reward = None
+
+        # Initialize environment state
+        self.state = np.zeros(self._get_env_state_len())
+        rs_state = np.zeros(self._get_robot_server_state_len())
+        
+        # Set initial robot joint positions
+        if initial_joint_positions:
+            assert len(initial_joint_positions) == 6
+            ur5_initial_joint_positions = initial_joint_positions
+        elif (len(self.last_position_on_success) != 0) and (type=='continue'):
+            ur5_initial_joint_positions = self.last_position_on_success
+        else:
+            ur5_initial_joint_positions = self._get_initial_joint_positions()
+
+        rs_state[6:12] = self.ur5._ur_5_joint_list_to_ros_joint_list(ur5_initial_joint_positions)
+
+
+        # Set initial state of the Robot Server
+        
+        z_amplitude = np.random.default_rng().uniform(low=0.09, high=0.35)
+        z_frequency = 0.125
+        z_offset = np.random.default_rng().uniform(low=0.2, high=0.6)
+        
+        string_params = {"function": "3d_spline"}
+        float_params = {"x_min": 0.2, "x_max": 0.4, "y_min": -0.2, "y_max": -0.8, "z_min": 0.1, "z_max": 1.0, \
+                        "n_points": 10, "n_sampling_points": 4000}
+        state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
+        if not self.client.set_state_msg(state_msg):
+            raise RobotServerError("set_state")
+
+        # Get Robot Server state
+        rs_state = copy.deepcopy(np.nan_to_num(np.array(self.client.get_state_msg().state)))
+        self.prev_rs_state = copy.deepcopy(rs_state)
+
+        # Check if the length of the Robot Server state received is correct
+        if not len(rs_state)== self._get_robot_server_state_len():
+            raise InvalidStateError("Robot Server state received has wrong length")
+
+        # Convert the initial state from Robot Server format to environment format
+        self.state = self._robot_server_state_to_env_state(rs_state)
+
+        # save start position
+        self.start_position = self.state[3:9]
+
+        # Check if the environment state is contained in the observation space
+        if not self.observation_space.contains(self.state):
+            raise InvalidStateError()
+        
+        # check if current position is in the range of the initial joint positions
+        if (len(self.last_position_on_success) == 0) or (type=='random'):
+            joint_positions = self.ur5._ros_joint_list_to_ur5_joint_list(rs_state[6:12])
+            tolerance = 0.1
+            for joint in range(len(joint_positions)):
+                if (joint_positions[joint]+tolerance < self.initial_joint_positions_low[joint]) or  (joint_positions[joint]-tolerance  > self.initial_joint_positions_high[joint]):
+                    raise InvalidStateError('Reset joint positions are not within defined range')
+
+
+        # go one empty action and check if there is a collision
+        action = self.state[4:7]
+        _, _, done, info = self.step(action)
+        self.elapsed_steps = 0
+        if done:
+            raise InvalidStateError('Reset started in a collision state')
+            
+        return self.state
+
+class MovingBox3DSplineTargetUR5DoF3Sim(MovingBox3DSplineTargetUR5DoF3, Simulation):
+    cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
+        world_name:=box100.world \
+        yaw:=3.14\
+        reference_frame:=world \
+        max_velocity_scale_factor:=0.2 \
+        action_cycle_rate:=20 \
+        rviz_gui:=false \
+        gazebo_gui:=true \
+        obstacle_controller:=true \
+        target_mode:=moving \
+        target_model_name:=box100"
+    def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
+        Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
+        MovingBox3DSplineTargetUR5DoF3.__init__(self, rs_address=self.robot_server_ip, **kwargs)
