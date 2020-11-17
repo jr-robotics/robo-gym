@@ -829,30 +829,56 @@ class MovingBoxTargetUR5DoF3(UR5Env):
         done = False
         info = {}
 
+        minimum_distance = 0.3 # m
+        maximum_distance = 0.6 # m
+
         # Calculate distance to the target
         target_coord = np.array(rs_state[0:3])
         ee_coord = np.array(rs_state[18:21])
-        euclidean_dist_3d = np.linalg.norm(target_coord - ee_coord)
-        
-        minimum_distance = 0.3 # m
-        maximum_distance = 0.5 # m 
-        
-        # punish movement in general
-        reward +=  - np.square(action).sum() * (1/3) * (1/10)
+        distance_to_target = np.linalg.norm(target_coord - ee_coord)   
 
-        # reward for going back to the original predefined position
-        if action.sum() < 0.1:
-            reward += 0.02
+        env_state = self._robot_server_state_to_env_state(rs_state)
 
-        # collect some reward for staying in a certain distance to the target
-        if (euclidean_dist_3d > minimum_distance) and (euclidean_dist_3d < maximum_distance):
-            reward += 0.02
+        polar_1 = abs(env_state[1] * 180/math.pi)
+        polar_2 = abs(env_state[2] * 180/math.pi)
+
+        # reward polar coords close to zero
+        # polar 1 weighted by max_steps
+        p1_r = (1 - (polar_1 / 90)) * (1/1000)
+        # if p1_r <= 0.001:
+        #     reward += p1_r
         
-        # punish if the end effector is too close to the target
-        if euclidean_dist_3d < minimum_distance:
-            reward -= 1
+        # polar 1 weighted by max_steps
+        p2_r = (1 - (polar_2 / 90)) * (1/1000)
+        # if p2_r <= 0.001:
+        #     reward += p2_r
 
-            
+
+
+        delta_joint_pos = env_state[3:9] - env_state[-6:]
+
+        print('action', action)
+
+        dr = 0
+        if abs(delta_joint_pos).sum() < 0.5:
+            dr = 1 * (1 - (abs(delta_joint_pos).sum()/0.5)) * (1/1000)
+            reward += dr
+        
+        act_r = 0 
+        if abs(action).sum() <= 3:
+            act_r = 1 * (1 - (np.square(action).sum()/3)) * (1/1000)
+            reward += act_r
+
+        dist = 0
+        if distance_to_target < minimum_distance:
+            dist = -2 * (1/1000) 
+            reward += dist
+
+        dist_max = 0
+        if distance_to_target > maximum_distance:
+            dist_max = -1 * (1/1000)
+            reward += dist_max
+
         # Check if robot is in collision
         if rs_state[25] == 1:
             collision = True
@@ -860,7 +886,7 @@ class MovingBoxTargetUR5DoF3(UR5Env):
             collision = False
 
         if collision:
-            reward = -10
+            #reward = -5
             done = True
             info['final_status'] = 'collision'
             info['target_coord'] = target_coord
@@ -868,9 +894,11 @@ class MovingBoxTargetUR5DoF3(UR5Env):
 
         if self.elapsed_steps >= self.max_episode_steps:
             done = True
-            info['final_status'] = 'max_steps_exceeded'
+            info['final_status'] = 'success'
             info['target_coord'] = target_coord
             self.last_position_on_success = []
+
+        print('reward composition:', 'dr =', round(dr, 5), 'no_act =', round(act_r, 5), 'min_dist =', round(dist, 5), 'max_dist', round(dist_max, 5))
 
         return reward, done, info
 
