@@ -129,11 +129,12 @@ class UR5Env(gym.Env):
 
 
         # go one empty action and check if there is a collision
-        action = self.state[3:3+len(self.action_space.sample())]
-        _, _, done, info = self.step(action)
-        self.elapsed_steps = 0
-        if done:
-            raise InvalidStateError('Reset started in a collision state')
+        if not self.real_robot:
+            action = self.state[3:3+len(self.action_space.sample())]
+            _, _, done, info = self.step(action)
+            self.elapsed_steps = 0
+            if done:
+                raise InvalidStateError('Reset started in a collision state')
             
         return self.state
 
@@ -446,11 +447,12 @@ class EndEffectorPositioningUR5DoF5(UR5Env):
                     raise InvalidStateError('Reset joint positions are not within defined range')
 
         # go one empty action and check if there is a collision
-        action = self.state[3:3+len(self.action_space.sample())]
-        _, _, done, _ = self.step(action)
-        self.elapsed_steps = 0
-        if done:
-            raise InvalidStateError('Reset started in a collision state')
+        if not self.real_robot:
+            action = self.state[3:3+len(self.action_space.sample())]
+            _, _, done, _ = self.step(action)
+            self.elapsed_steps = 0
+            if done:
+                raise InvalidStateError('Reset started in a collision state')
             
         return self.state
 
@@ -692,11 +694,12 @@ class MovingBoxTargetUR5DoF3(UR5Env):
 
 
         # go one empty action and check if there is a collision
-        action = self.state[4:7]
-        _, _, done, info = self.step(action)
-        self.elapsed_steps = 0
-        if done:
-            raise InvalidStateError('Reset started in a collision state')
+        if not self.real_robot:
+            action = self.state[4:7]
+            _, _, done, info = self.step(action)
+            self.elapsed_steps = 0
+            if done:
+                raise InvalidStateError('Reset started in a collision state')
             
         return self.state
 
@@ -1117,11 +1120,12 @@ class MovingBox3DSplineTargetUR5DoF3(MovingBoxTargetUR5DoF3):
 
 
         # go one empty action and check if there is a collision
-        action = self.state[4:7]
-        _, _, done, info = self.step(action)
-        self.elapsed_steps = 0
-        if done:
-            raise InvalidStateError('Reset started in a collision state')
+        if not self.real_robot:
+            action = self.state[4:7]
+            _, _, done, info = self.step(action)
+            self.elapsed_steps = 0
+            if done:
+                raise InvalidStateError('Reset started in a collision state')
             
         return self.state
 
