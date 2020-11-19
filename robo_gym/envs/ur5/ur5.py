@@ -1140,3 +1140,8 @@ class MovingBox3DSplineTargetUR5DoF3Sim(MovingBox3DSplineTargetUR5DoF3, Simulati
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
         MovingBox3DSplineTargetUR5DoF3.__init__(self, rs_address=self.robot_server_ip, **kwargs)
+
+class MovingBox3DSplineTargetUR5DoF3Rob(MovingBox3DSplineTargetUR5DoF3):
+    real_robot = True
+
+# roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=moving
