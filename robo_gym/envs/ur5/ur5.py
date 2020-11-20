@@ -632,9 +632,6 @@ class MovingBoxTargetUR5DoF3(UR5Env):
 
 
         # Set initial state of the Robot Server
-        # z_amplitude = 0.25
-        # z_frequency = 0.125
-        # z_offset = 0.35
         z_amplitude = np.random.default_rng().uniform(low=0.09, high=0.35)
         z_frequency = 0.125
         z_offset = np.random.default_rng().uniform(low=0.2, high=0.6)
@@ -671,15 +668,6 @@ class MovingBoxTargetUR5DoF3(UR5Env):
                 if (joint_positions[joint]+tolerance < self.initial_joint_positions_low[joint]) or  (joint_positions[joint]-tolerance  > self.initial_joint_positions_high[joint]):
                     raise InvalidStateError('Reset joint positions are not within defined range')
 
-
-        # go one empty action and check if there is a collision
-        if not self.real_robot:
-            action = self.state[4:7]
-            _, _, done, info = self.step(action)
-            self.elapsed_steps = 0
-            if done:
-                raise InvalidStateError('Reset started in a collision state')
-            
         return self.state
 
     # learns something but is unsatisfactory
@@ -1106,15 +1094,6 @@ class MovingBox3DSplineTargetUR5DoF3(MovingBoxTargetUR5DoF3):
             for joint in range(len(joint_positions)):
                 if (joint_positions[joint]+tolerance < self.initial_joint_positions_low[joint]) or  (joint_positions[joint]-tolerance  > self.initial_joint_positions_high[joint]):
                     raise InvalidStateError('Reset joint positions are not within defined range')
-
-
-        # go one empty action and check if there is a collision
-        if not self.real_robot:
-            action = self.state[4:7]
-            _, _, done, info = self.step(action)
-            self.elapsed_steps = 0
-            if done:
-                raise InvalidStateError('Reset started in a collision state')
             
         return self.state
 
