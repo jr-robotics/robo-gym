@@ -11,6 +11,8 @@ from robo_gym.envs.ur5.ur5 import EndEffectorPositioningUR5Sim
 from robo_gym.envs.ur5.ur5 import EndEffectorPositioningUR5Rob
 from robo_gym.envs.ur5.ur5 import EndEffectorPositioningUR5DoF5Sim
 from robo_gym.envs.ur5.ur5 import EndEffectorPositioningUR5DoF5Rob
+from robo_gym.envs.ur5.ur5 import MovingBoxTargetUR5Sim
 from robo_gym.envs.ur5.ur5 import MovingBoxTargetUR5DoF3Sim
+from robo_gym.envs.ur5.ur5 import MovingBoxTargetUR5DoF5Sim
 from robo_gym.envs.ur5.ur5 import MovingBox3DSplineTargetUR5DoF3Sim
 from robo_gym.envs.ur5.ur5 import MovingBox3DSplineTargetUR5DoF3Rob

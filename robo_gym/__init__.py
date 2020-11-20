@@ -50,8 +50,18 @@ register(
 )
 
 register(
+    id='MovingBox3DSplineTargetUR5Sim-v0',
+    entry_point='robo_gym.envs:MovingBox3DSplineTargetUR5Sim',
+)
+
+register(
     id='MovingBox3DSplineTargetUR5DoF3Sim-v0',
     entry_point='robo_gym.envs:MovingBox3DSplineTargetUR5DoF3Sim',
+)
+
+register(
+    id='MovingBox3DSplineTargetUR5DoF5Sim-v0',
+    entry_point='robo_gym.envs:MovingBox3DSplineTargetUR5DoF5Sim',
 )
 
 register(

@@ -565,7 +565,7 @@ class EndEffectorPositioningUR5DoF5Sim(EndEffectorPositioningUR5DoF5, Simulation
 class EndEffectorPositioningUR5DoF5Rob(EndEffectorPositioningUR5DoF5):
     real_robot = True
 
-class MovingBoxTargetUR5DoF3(UR5Env):
+class MovingBoxTargetUR5(UR5Env):
     max_episode_steps = 1000
             
     def _get_observation_space(self):
@@ -596,8 +596,6 @@ class MovingBoxTargetUR5DoF3(UR5Env):
         min_obs = np.concatenate((-target_range, min_joint_positions, min_joint_velocities, min_start_positions))
 
         return spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
-
-
 
     def reset(self, initial_joint_positions = None, type='random'):
         """Environment reset.
@@ -835,8 +833,8 @@ class MovingBoxTargetUR5DoF3(UR5Env):
             reward += dr
         
         act_r = 0 
-        if abs(action).sum() <= 3:
-            act_r = 1 * (1 - (np.square(action).sum()/3)) * (1/1000)
+        if abs(action).sum() <= action.size:
+            act_r = 1 * (1 - (np.square(action).sum()/action.size)) * (1/1000)
             reward += act_r
 
         dist = 0
@@ -872,8 +870,6 @@ class MovingBoxTargetUR5DoF3(UR5Env):
 
         return reward, done, info
 
-
-
     def step(self, action):
         self.elapsed_steps += 1
 
@@ -896,7 +892,14 @@ class MovingBoxTargetUR5DoF3(UR5Env):
         # Convert environment action to Robot Server action
         initial_joint_positions = self._get_initial_joint_positions()
         # print(initial_joint_positions)
-        initial_joint_positions[1:4] = initial_joint_positions[1:4] + action
+        if action.size == 3:
+            initial_joint_positions[1:4] = initial_joint_positions[1:4] + action
+        elif action.size == 5:
+            initial_joint_positions[0:5] = initial_joint_positions[0:5] + action
+        elif action.size == 6:
+            initial_joint_positions = initial_joint_positions + action
+
+
         # print(initial_joint_positions)
         rs_action = initial_joint_positions
 
@@ -935,8 +938,6 @@ class MovingBoxTargetUR5DoF3(UR5Env):
     def _set_initial_joint_positions_range(self):
         self.initial_joint_positions_low = np.array([-0.9, -1.5, -1.5, -3.14, 1.3, 0.0])
         self.initial_joint_positions_high = np.array([-0.7, -1.1, -1.1, 3.14, 1.7, 0.0])
-
-
 
     def _get_initial_joint_positions(self):
         """Get initial robot joint positions.
@@ -994,6 +995,8 @@ class MovingBoxTargetUR5DoF3(UR5Env):
 
         return state
 
+class MovingBoxTargetUR5DoF3(MovingBoxTargetUR5):
+
     def _get_action_space(self):
         """Get environment action space.
 
@@ -1004,7 +1007,35 @@ class MovingBoxTargetUR5DoF3(UR5Env):
 
         return spaces.Box(low=np.full((3), -1.0), high=np.full((3), 1.0), dtype=np.float32)
 
+class MovingBoxTargetUR5DoF5(MovingBoxTargetUR5):
+
+    def _get_action_space(self):
+        """Get environment action space.
+
+        Returns:
+            gym.spaces: Gym action space object.
+
+        """
+
+        return spaces.Box(low=np.full((5), -1.0), high=np.full((5), 1.0), dtype=np.float32)
+
     
+class MovingBoxTargetUR5Sim(MovingBoxTargetUR5, Simulation):
+    cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
+        world_name:=box100.world \
+        yaw:=3.14\
+        reference_frame:=world \
+        max_velocity_scale_factor:=0.2 \
+        action_cycle_rate:=20 \
+        rviz_gui:=false \
+        gazebo_gui:=true \
+        obstacle_controller:=true \
+        target_mode:=moving \
+        target_model_name:=box100"
+    def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
+        Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
+        MovingBoxTargetUR5.__init__(self, rs_address=self.robot_server_ip, **kwargs)
+
 class MovingBoxTargetUR5DoF3Sim(MovingBoxTargetUR5DoF3, Simulation):
     cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
         world_name:=box100.world \
@@ -1020,6 +1051,22 @@ class MovingBoxTargetUR5DoF3Sim(MovingBoxTargetUR5DoF3, Simulation):
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
         MovingBoxTargetUR5DoF3.__init__(self, rs_address=self.robot_server_ip, **kwargs)
+
+class MovingBoxTargetUR5DoF5Sim(MovingBoxTargetUR5DoF5, Simulation):
+    cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
+        world_name:=box100.world \
+        yaw:=3.14\
+        reference_frame:=world \
+        max_velocity_scale_factor:=0.2 \
+        action_cycle_rate:=20 \
+        rviz_gui:=false \
+        gazebo_gui:=true \
+        obstacle_controller:=true \
+        target_mode:=moving \
+        target_model_name:=box100"
+    def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
+        Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
+        MovingBoxTargetUR5DoF5.__init__(self, rs_address=self.robot_server_ip, **kwargs)
 
     
 class MovingBox3DSplineTargetUR5DoF3(MovingBoxTargetUR5DoF3):
