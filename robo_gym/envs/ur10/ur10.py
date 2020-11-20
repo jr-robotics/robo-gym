@@ -445,7 +445,7 @@ class EndEffectorPositioningUR10DoF5(UR10Env):
 
         """
 
-        return spaces.Box(low=np.full((5), -1.0), high=np.full((6), 1.0), dtype=np.float32)
+        return spaces.Box(low=np.full((5), -1.0), high=np.full((5), 1.0), dtype=np.float32)
 
 
 class EndEffectorPositioningUR10Sim(EndEffectorPositioningUR10, Simulation):
