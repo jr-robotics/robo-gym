@@ -45,23 +45,23 @@ register(
 )
 
 register(
+    id='MovingBoxTargetUR5Sim-v0',
+    entry_point='robo_gym.envs:MovingBoxTargetUR5Sim',
+)
+
+register(
     id='MovingBoxTargetUR5DoF3Sim-v0',
     entry_point='robo_gym.envs:MovingBoxTargetUR5DoF3Sim',
 )
 
 register(
-    id='MovingBox3DSplineTargetUR5Sim-v0',
-    entry_point='robo_gym.envs:MovingBox3DSplineTargetUR5Sim',
+    id='MovingBoxTargetUR5DoF5Sim-v0',
+    entry_point='robo_gym.envs:MovingBoxTargetUR5DoF5Sim',
 )
 
 register(
     id='MovingBox3DSplineTargetUR5DoF3Sim-v0',
     entry_point='robo_gym.envs:MovingBox3DSplineTargetUR5DoF3Sim',
-)
-
-register(
-    id='MovingBox3DSplineTargetUR5DoF5Sim-v0',
-    entry_point='robo_gym.envs:MovingBox3DSplineTargetUR5DoF5Sim',
 )
 
 register(
