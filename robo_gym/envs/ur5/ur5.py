@@ -875,6 +875,9 @@ class MovingBoxTargetUR5(UR5Env):
 
         # Check if the action is within the action space
         assert self.action_space.contains(action), "%r (%s) invalid" % (action, type(action))
+
+        action = np.array(action)
+        
         # action =  np.append(action, [0.0])
 
         # Convert environment action to Robot Server action
