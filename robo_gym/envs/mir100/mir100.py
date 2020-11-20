@@ -32,11 +32,11 @@ class Mir100Env(gym.Env):
 
     real_robot = False
     laser_len = 1022
+    max_episode_steps = 500 
 
-    def __init__(self, rs_address=None, max_episode_steps=500, **kwargs):
+    def __init__(self, rs_address=None, **kwargs):
 
         self.mir100 = mir100_utils.Mir100()
-        self.max_episode_steps = max_episode_steps
         self.elapsed_steps = 0
         self.observation_space = self._get_observation_space()
         self.action_space = spaces.Box(low=np.full((2), -1.0), high=np.full((2), 1.0), dtype=np.float32)

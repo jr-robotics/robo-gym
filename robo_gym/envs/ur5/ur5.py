@@ -30,22 +30,21 @@ class UR5Env(gym.Env):
 
     """
     real_robot = False
+    max_episode_steps = 300
 
-    def __init__(self, rs_address=None, max_episode_steps=300, **kwargs):
+    def __init__(self, rs_address=None, **kwargs):
         self.ur5 = ur_utils.UR5()
-        self.max_episode_steps = max_episode_steps
         self.elapsed_steps = 0
         self.observation_space = self._get_observation_space()
-        self.action_space = spaces.Box(low=np.full((6), -1.0), high=np.full((6), 1.0), dtype=np.float32)
+        self.action_space = self._get_action_space()
         self.seed()
         self.distance_threshold = 0.1
         self.abs_joint_pos_range = self.ur5.get_max_joint_positions()
         self.initial_joint_positions_low = np.zeros(6)
         self.initial_joint_positions_high = np.zeros(6)
-
         self.last_position_on_success = []
+        self.prev_rs_state = None
         
-
         # Connect to Robot Server
         if rs_address:
             self.client = rs_client.Client(rs_address)
@@ -306,6 +305,16 @@ class UR5Env(gym.Env):
         min_obs = np.concatenate((-target_range, min_joint_positions, min_joint_velocities))
 
         return spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
+    
+    def _get_action_space(self):
+        """Get environment action space.
+
+        Returns:
+            gym.spaces: Gym action space object.
+
+        """
+
+        return spaces.Box(low=np.full((6), -1.0), high=np.full((6), 1.0), dtype=np.float32)
 
 class EndEffectorPositioningUR5(UR5Env):
 
@@ -354,27 +363,7 @@ class EndEffectorPositioningUR5(UR5Env):
     
     
 class EndEffectorPositioningUR5DoF5(UR5Env):
-    def __init__(self, rs_address=None, max_episode_steps=300, **kwargs):
-
-        self.ur5 = ur_utils.UR5()
-        self.max_episode_steps = max_episode_steps
-        self.elapsed_steps = 0
-        self.observation_space = self._get_observation_space()
-        self.action_space = spaces.Box(low=np.full((5), -1.0), high=np.full((5), 1.0), dtype=np.float32)
-        self.seed()
-        self.distance_threshold = 0.1
-        self.abs_joint_pos_range = self.ur5.get_max_joint_positions()
         
-        self.last_position_on_success = []
-
-        # Connect to Robot Server
-        if rs_address:
-            self.client = rs_client.Client(rs_address)
-        else:
-            print("WARNING: No IP and Port passed. Simulation will not be started")
-            print("WARNING: Use this only to get environment shape")
-    
-    
     def reset(self, initial_joint_positions = None, ee_target_pose = None, type='continue'):
         """Environment reset.
 
@@ -541,6 +530,16 @@ class EndEffectorPositioningUR5DoF5(UR5Env):
         reward, done, info = self._reward(rs_state=rs_state, action=action)
 
         return self.state, reward, done, info
+    
+    def _get_action_space(self):
+        """Get environment action space.
+
+        Returns:
+            gym.spaces: Gym action space object.
+
+        """
+
+        return spaces.Box(low=np.full((5), -1.0), high=np.full((5), 1.0), dtype=np.float32)
 
 
 class EndEffectorPositioningUR5Sim(EndEffectorPositioningUR5, Simulation):
@@ -567,27 +566,7 @@ class EndEffectorPositioningUR5DoF5Rob(EndEffectorPositioningUR5DoF5):
     real_robot = True
 
 class MovingBoxTargetUR5DoF3(UR5Env):
-    def __init__(self, rs_address=None, max_episode_steps=1000, **kwargs):
-
-        self.ur5 = ur_utils.UR5()
-        self.max_episode_steps = max_episode_steps
-        self.elapsed_steps = 0
-        self.observation_space = self._get_observation_space()
-        self.action_space = spaces.Box(low=np.full((3), -1.0), high=np.full((3), 1.0), dtype=np.float32)
-        self.seed()
-        self.distance_threshold = 0.1
-        self.abs_joint_pos_range = self.ur5.get_max_joint_positions()
-
-        self.prev_rs_state = None
-        
-        self.last_position_on_success = []
-
-        # Connect to Robot Server
-        if rs_address:
-            self.client = rs_client.Client(rs_address)
-        else:
-            print("WARNING: No IP and Port passed. Simulation will not be started")
-            print("WARNING: Use this only to get environment shape")
+    max_episode_steps = 1000
             
     def _get_observation_space(self):
         """Get environment observation space.
@@ -1026,6 +1005,16 @@ class MovingBoxTargetUR5DoF3(UR5Env):
         state = np.concatenate((target_polar, ur_j_pos_norm, ur_j_vel, start_joints))
 
         return state
+
+    def _get_action_space(self):
+        """Get environment action space.
+
+        Returns:
+            gym.spaces: Gym action space object.
+
+        """
+
+        return spaces.Box(low=np.full((3), -1.0), high=np.full((3), 1.0), dtype=np.float32)
 
     
 class MovingBoxTargetUR5DoF3Sim(MovingBoxTargetUR5DoF3, Simulation):

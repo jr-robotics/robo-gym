@@ -29,13 +29,13 @@ class UR10Env(gym.Env):
 
     """
     real_robot = False
+    max_episode_steps = 300
 
-    def __init__(self, rs_address=None, max_episode_steps=300, **kwargs):
+    def __init__(self, rs_address=None, **kwargs):
         self.ur10 = ur_utils.UR10()
-        self.max_episode_steps = max_episode_steps
         self.elapsed_steps = 0
         self.observation_space = self._get_observation_space()
-        self.action_space = spaces.Box(low=np.full((6), -1.0), high=np.full((6), 1.0), dtype=np.float32)
+        self.action_space = self._get_action_space()
         self.seed()
         self.distance_threshold = 0.1
         self.abs_joint_pos_range = self.ur10.get_max_joint_positions()
@@ -286,6 +286,16 @@ class UR10Env(gym.Env):
 
         return spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
 
+    def _get_action_space(self):
+        """Get environment action space.
+
+        Returns:
+            gym.spaces: Gym action space object.
+
+        """
+
+        return spaces.Box(low=np.full((6), -1.0), high=np.full((6), 1.0), dtype=np.float32)
+
 class EndEffectorPositioningUR10(UR10Env):
 
     def _reward(self, rs_state, action):
@@ -333,23 +343,6 @@ class EndEffectorPositioningUR10(UR10Env):
         return reward, done, info
 
 class EndEffectorPositioningUR10DoF5(UR10Env):
-    def __init__(self, rs_address=None, max_episode_steps=300, **kwargs):
-        self.ur10 = ur_utils.UR10()
-        self.max_episode_steps = max_episode_steps
-        self.elapsed_steps = 0
-        self.observation_space = self._get_observation_space()
-        self.action_space = spaces.Box(low=np.full((5), -1.0), high=np.full((5), 1.0), dtype=np.float32)
-        self.seed()
-        self.distance_threshold = 0.1
-        self.abs_joint_pos_range = self.ur10.get_max_joint_positions()
-
-        # Connect to Robot Server
-        if rs_address:
-            self.client = rs_client.Client(rs_address)
-        else:
-            print("WARNING: No IP and Port passed. Simulation will not be started")
-            print("WARNING: Use this only to get environment shape")
-
 
     def _get_initial_joint_positions(self):
         """Generate random initial robot joint positions.
@@ -366,7 +359,6 @@ class EndEffectorPositioningUR10DoF5(UR10Env):
         joint_positions = np.random.default_rng().uniform(low=low, high=high)
 
         return joint_positions
-
 
     def _reward(self, rs_state, action):
         reward = 0
@@ -444,6 +436,16 @@ class EndEffectorPositioningUR10DoF5(UR10Env):
         reward, done, info = self._reward(rs_state=rs_state, action=action)       
 
         return self.state, reward, done, info
+
+    def _get_action_space(self):
+        """Get environment action space.
+
+        Returns:
+            gym.spaces: Gym action space object.
+
+        """
+
+        return spaces.Box(low=np.full((5), -1.0), high=np.full((6), 1.0), dtype=np.float32)
 
 
 class EndEffectorPositioningUR10Sim(EndEffectorPositioningUR10, Simulation):
