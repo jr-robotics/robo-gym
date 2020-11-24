@@ -12,6 +12,7 @@ num_episodes = 10
 
 for episode in range(num_episodes):
     done = False
+    env.reset()
     while not done:
         # random step in the environment
         state, reward, done, info = env.step(env.action_space.sample())
