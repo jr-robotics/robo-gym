@@ -1072,7 +1072,7 @@ class MovingBoxTargetUR5DoF5Sim(MovingBoxTargetUR5DoF5, Simulation):
         MovingBoxTargetUR5DoF5.__init__(self, rs_address=self.robot_server_ip, **kwargs)
 
     
-class MovingBox3DSplineTargetUR5DoF3(MovingBoxTargetUR5DoF3):
+class MovingBox3DSplineTargetUR5(MovingBoxTargetUR5):
 
     def reset(self, initial_joint_positions = None, type='random'):
         """Environment reset.
@@ -1147,6 +1147,51 @@ class MovingBox3DSplineTargetUR5DoF3(MovingBoxTargetUR5DoF3):
             
         return self.state
 
+class MovingBox3DSplineTargetUR5DoF3(MovingBox3DSplineTargetUR5):
+
+    def _get_action_space(self):
+        """Get environment action space.
+
+        Returns:
+            gym.spaces: Gym action space object.
+
+        """
+
+        return spaces.Box(low=np.full((3), -1.0), high=np.full((3), 1.0), dtype=np.float32)
+
+class MovingBox3DSplineTargetUR5DoF5(MovingBox3DSplineTargetUR5):
+
+    def _get_action_space(self):
+        """Get environment action space.
+
+        Returns:
+            gym.spaces: Gym action space object.
+
+        """
+
+        return spaces.Box(low=np.full((5), -1.0), high=np.full((5), 1.0), dtype=np.float32)
+
+class MovingBox3DSplineTargetUR5Sim(MovingBox3DSplineTargetUR5, Simulation):
+    cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
+        world_name:=box100.world \
+        yaw:=3.14\
+        reference_frame:=world \
+        max_velocity_scale_factor:=0.2 \
+        action_cycle_rate:=20 \
+        rviz_gui:=false \
+        gazebo_gui:=true \
+        obstacle_controller:=true \
+        target_mode:=moving \
+        target_model_name:=box100"
+    def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
+        Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
+        MovingBox3DSplineTargetUR5.__init__(self, rs_address=self.robot_server_ip, **kwargs)
+
+class MovingBox3DSplineTargetUR5Rob(MovingBox3DSplineTargetUR5):
+    real_robot = True
+
+# roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=moving
+
 class MovingBox3DSplineTargetUR5DoF3Sim(MovingBox3DSplineTargetUR5DoF3, Simulation):
     cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
         world_name:=box100.world \
@@ -1167,3 +1212,25 @@ class MovingBox3DSplineTargetUR5DoF3Rob(MovingBox3DSplineTargetUR5DoF3):
     real_robot = True
 
 # roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=moving
+
+class MovingBox3DSplineTargetUR5DoF5Sim(MovingBox3DSplineTargetUR5DoF5, Simulation):
+    cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
+        world_name:=box100.world \
+        yaw:=3.14\
+        reference_frame:=world \
+        max_velocity_scale_factor:=0.2 \
+        action_cycle_rate:=20 \
+        rviz_gui:=false \
+        gazebo_gui:=true \
+        obstacle_controller:=true \
+        target_mode:=moving \
+        target_model_name:=box100"
+    def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
+        Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
+        MovingBox3DSplineTargetUR5DoF5.__init__(self, rs_address=self.robot_server_ip, **kwargs)
+
+class MovingBox3DSplineTargetUR5DoF5Rob(MovingBox3DSplineTargetUR5DoF5):
+    real_robot = True
+
+# roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=moving
+

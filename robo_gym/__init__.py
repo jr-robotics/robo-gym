@@ -60,6 +60,16 @@ register(
 )
 
 register(
+    id='MovingBox3DSplineTargetUR5Sim-v0',
+    entry_point='robo_gym.envs:MovingBox3DSplineTargetUR5Sim',
+)
+
+register(
+    id='MovingBox3DSplineTargetUR5Rob-v0',
+    entry_point='robo_gym.envs:MovingBox3DSplineTargetUR5Rob',
+)
+
+register(
     id='MovingBox3DSplineTargetUR5DoF3Sim-v0',
     entry_point='robo_gym.envs:MovingBox3DSplineTargetUR5DoF3Sim',
 )
@@ -67,6 +77,16 @@ register(
 register(
     id='MovingBox3DSplineTargetUR5DoF3Rob-v0',
     entry_point='robo_gym.envs:MovingBox3DSplineTargetUR5DoF3Rob',
+)
+
+register(
+    id='MovingBox3DSplineTargetUR5DoF5Sim-v0',
+    entry_point='robo_gym.envs:MovingBox3DSplineTargetUR5DoF5Sim',
+)
+
+register(
+    id='MovingBox3DSplineTargetUR5DoF5Rob-v0',
+    entry_point='robo_gym.envs:MovingBox3DSplineTargetUR5DoF5Rob',
 )
 
 ## UR10 Environments
