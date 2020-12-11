@@ -53,6 +53,7 @@ IROS 2020 is live! This year the event is on-demand and accessible for free to e
 - [Examples](#examples)
   - [Random Agent MiR100 Simulation Environment](#random-agent-mir100-simulation-environment)
 - [Contributing](#contributing)
+- [Citation](#citation)
 - [News](#news)
 
 
@@ -441,6 +442,17 @@ More details and guides on how to contribute will be added soon!
 
 If you encounter troubles running robo-gym or if you have questions please submit a new [issue](https://github.com/jr-robotics/robo-gym/issues/new/).
 
+## Citation
+[back to top](#robo-gym)
+
+```
+@article{lucchi2020robo,
+  title={robo-gym--An Open Source Toolkit for Distributed Deep Reinforcement Learning on Real and Simulated Robots},
+  author={Lucchi, Matteo and Zindler, Friedemann and M{\"u}hlbacher-Karrer, Stephan and Pichler, Horst},
+  journal={2020 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)},
+  year={2020}
+}
+```
 ## News
 [back to top](#robo-gym)
 
