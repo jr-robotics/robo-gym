@@ -358,7 +358,7 @@ class MovingBox3DSplineTargetUR5(MovingBoxTargetUR5):
         z_offset = np.random.default_rng().uniform(low=0.2, high=0.6)
         
         string_params = {"function": "3d_spline"}
-        float_params = {"x_min": 0.2, "x_max": 0.4, "y_min": -0.2, "y_max": -0.8, "z_min": 0.1, "z_max": 1.0, \
+        float_params = {"x_min": -0.7, "x_max": 0.7, "y_min": 0.2, "y_max": 1.0, "z_min": 0.1, "z_max": 1.0, \
                         "n_points": 10, "n_sampling_points": 4000}
         state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
         if not self.client.set_state_msg(state_msg):
@@ -471,7 +471,7 @@ class MovingBoxTargetUR5DoF5Rob(MovingBoxTargetUR5DoF5):
 class MovingBox3DSplineTargetUR5Sim(MovingBox3DSplineTargetUR5, Simulation):
     cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
         world_name:=box100.world \
-        yaw:=3.14\
+        yaw:=-0.78\
         reference_frame:=world \
         max_velocity_scale_factor:=0.2 \
         action_cycle_rate:=20 \
@@ -493,7 +493,7 @@ class MovingBox3DSplineTargetUR5Rob(MovingBox3DSplineTargetUR5):
 class MovingBox3DSplineTargetUR5DoF3Sim(MovingBox3DSplineTargetUR5DoF3, Simulation):
     cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
         world_name:=box100.world \
-        yaw:=3.14\
+        yaw:=-0.78\
         reference_frame:=world \
         max_velocity_scale_factor:=0.2 \
         action_cycle_rate:=20 \
@@ -515,7 +515,7 @@ class MovingBox3DSplineTargetUR5DoF3Rob(MovingBox3DSplineTargetUR5DoF3):
 class MovingBox3DSplineTargetUR5DoF5Sim(MovingBox3DSplineTargetUR5DoF5, Simulation):
     cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
         world_name:=box100.world \
-        yaw:=3.14\
+        yaw:=-0.78\
         reference_frame:=world \
         max_velocity_scale_factor:=0.2 \
         action_cycle_rate:=20 \
