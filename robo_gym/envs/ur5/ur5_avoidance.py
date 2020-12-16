@@ -377,10 +377,11 @@ class MovingBox3DSplineTargetUR5(MovingBoxTargetUR5):
         z_amplitude = np.random.default_rng().uniform(low=0.09, high=0.35)
         z_frequency = 0.125
         z_offset = np.random.default_rng().uniform(low=0.2, high=0.6)
+        n_sampling_points = int(np.random.default_rng().uniform(low= 4000, high=50000))
         
         string_params = {"function": "3d_spline"}
         float_params = {"x_min": -0.7, "x_max": 0.7, "y_min": 0.2, "y_max": 1.0, "z_min": 0.1, "z_max": 1.0, \
-                        "n_points": 10, "n_sampling_points": 4000}
+                        "n_points": 10, "n_sampling_points": n_sampling_points}
         state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
         if not self.client.set_state_msg(state_msg):
             raise RobotServerError("set_state")
