@@ -44,6 +44,7 @@ class UR5Env(gym.Env):
         self.initial_joint_positions_high = np.zeros(6)
         self.last_position_on_success = []
         self.prev_rs_state = None
+        self.last_action = None
         
         # Connect to Robot Server
         if rs_address:

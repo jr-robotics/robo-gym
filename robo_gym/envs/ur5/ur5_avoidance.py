@@ -69,6 +69,8 @@ class MovingBoxTargetUR5(UR5Env):
         """
         self.elapsed_steps = 0
 
+        
+
         # Initialize environment state
         self.state = np.zeros(self._get_env_state_len())
         rs_state = np.zeros(self._get_robot_server_state_len())
@@ -240,7 +242,7 @@ class MovingBoxTargetUR5(UR5Env):
         # Check if the action is within the action space
         assert self.action_space.contains(action), "%r (%s) invalid" % (action, type(action))
         action = np.array(action)
-        if self.last_action == None:
+        if self.last_action is None:
             self.last_action = action
         
         # Convert environment action to Robot Server action
