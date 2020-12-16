@@ -174,6 +174,16 @@ class MovingBoxTargetUR5(UR5Env):
             act_r = 1 * (1 - (np.square(action).sum()/action.size)) * (1/1000)
             reward += act_r
 
+        # punish big deltas in action
+        act_delta = 0
+        for i in range(len(action)):
+            if abs(action[i] - self.last_action[i]) > 0.5:
+                a_r = - 0.2 * (1/1000)
+                act_delta += a_r
+                reward += a_r
+            
+
+
         # punish if the obstacle gets too close
         dist = 0
         if distance_to_target < minimum_distance:
@@ -205,7 +215,7 @@ class MovingBoxTargetUR5(UR5Env):
 
         if DEBUG: self.print_state_action_info(rs_state, action)
         # ? DEBUG PRINT
-        if DEBUG: print('reward composition:', 'dr =', round(dr, 5), 'no_act =', round(act_r, 5), 'min_dist =', round(dist, 5), 'max_dist', round(dist_max, 5))
+        if DEBUG: print('reward composition:', 'dr =', round(dr, 5), 'no_act =', round(act_r, 5), 'min_dist =', round(dist, 5), 'delta_act', round(act_delta, 5))
 
 
         return reward, done, info
@@ -214,6 +224,7 @@ class MovingBoxTargetUR5(UR5Env):
         env_state = self._robot_server_state_to_env_state(rs_state)
 
         print('Action:', action)
+        print('Last A:', self.last_action)
         print('Distance: {:.2f}'.format(env_state[0]))
         print('Polar 1 (degree): {:.2f}'.format(env_state[1] * 180/math.pi))
         print('Polar 2 (degree): {:.2f}'.format(env_state[2] * 180/math.pi))
@@ -229,6 +240,8 @@ class MovingBoxTargetUR5(UR5Env):
         # Check if the action is within the action space
         assert self.action_space.contains(action), "%r (%s) invalid" % (action, type(action))
         action = np.array(action)
+        if self.last_action == None:
+            self.last_action = action
         
         # Convert environment action to Robot Server action
         initial_joint_positions = self._get_initial_joint_positions()
@@ -262,6 +275,7 @@ class MovingBoxTargetUR5(UR5Env):
         reward = 0
         done = False
         reward, done, info = self._reward(rs_state=rs_state, action=action)
+        self.last_action = action
 
         return self.state, reward, done, info
     
