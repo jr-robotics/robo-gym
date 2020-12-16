@@ -16,6 +16,8 @@ from robo_gym.envs.ur5.ur5 import UR5Env
 
 # TODO: In general it would be nice if we find a better way to highlight ros joint order vs normal and normalized joints vs rs joints
 
+DEBUG = True
+
 # ? Base Environment for the Obstacle Avoidance Use Case
 # * In the base environment the target obstacle is only moving up and down in a vertical line in front of the robot.
 # * The goal in this environment is for the robot to stay as much as possible in it's initial joint configuration while keeping a minimum distance to the obstacle
@@ -44,11 +46,12 @@ class MovingBoxTargetUR5(UR5Env):
         max_joint_velocities = np.add(self.ur5.get_max_joint_velocities(), vel_tolerance)
         min_joint_velocities = np.subtract(self.ur5.get_min_joint_velocities(), vel_tolerance)
 
-        max_start_positions = np.add(np.full(6, 1.0), pos_tolerance)
-        min_start_positions = np.subtract(np.full(6, -1.0), pos_tolerance)
+        max_delta_start_positions = np.add(np.full(6, 1.0), pos_tolerance)
+        min_delta_start_positions = np.subtract(np.full(6, -1.0), pos_tolerance)
+
         # Definition of environment observation_space
-        max_obs = np.concatenate((target_range, max_joint_positions, max_joint_velocities, max_start_positions))
-        min_obs = np.concatenate((-target_range, min_joint_positions, min_joint_velocities, min_start_positions))
+        max_obs = np.concatenate((target_range, max_joint_positions, max_delta_start_positions))
+        min_obs = np.concatenate((-target_range, min_joint_positions, min_delta_start_positions))
 
         return spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
 
@@ -123,7 +126,7 @@ class MovingBoxTargetUR5(UR5Env):
 
     def _reward(self, rs_state, action):
         # TODO: remove print when not needed anymore
-        print('action', action)
+        # print('action', action)
         env_state = self._robot_server_state_to_env_state(rs_state)
 
         reward = 0
@@ -156,11 +159,12 @@ class MovingBoxTargetUR5(UR5Env):
 
         # TODO: depends on the stating pos being in the state, maybe find better solution
         # difference in joint position current vs. starting position
-        delta_joint_pos = env_state[3:9] - env_state[-6:]
+        # delta_joint_pos = env_state[3:9] - env_state[-6:]
+        delta_joint_pos = env_state[9:15]
 
         # reward for being in the defined interval of minimum_distance and maximum_distance
         dr = 0
-        if abs(delta_joint_pos).sum() < 0.5:
+        if abs(env_state[-6:]).sum() < 0.5:
             dr = 1 * (1 - (abs(delta_joint_pos).sum()/0.5)) * (1/1000)
             reward += dr
         
@@ -180,7 +184,7 @@ class MovingBoxTargetUR5(UR5Env):
         dist_max = 0
         if distance_to_target > maximum_distance:
             dist_max = -1 * (1/self.max_episode_steps)
-            reward += dist_max
+            #reward += dist_max
 
         # TODO: we could remove this if we do not need to punish failure or reward success
         # Check if robot is in collision
@@ -197,11 +201,27 @@ class MovingBoxTargetUR5(UR5Env):
             info['final_status'] = 'success'
             info['target_coord'] = target_coord
             self.last_position_on_success = []
+        
 
+        if DEBUG: self.print_state_action_info(rs_state, action)
         # ? DEBUG PRINT
-        print('reward composition:', 'dr =', round(dr, 5), 'no_act =', round(act_r, 5), 'min_dist =', round(dist, 5), 'max_dist', round(dist_max, 5))
+        if DEBUG: print('reward composition:', 'dr =', round(dr, 5), 'no_act =', round(act_r, 5), 'min_dist =', round(dist, 5), 'max_dist', round(dist_max, 5))
+
 
         return reward, done, info
+
+    def print_state_action_info(self, rs_state, action):
+        env_state = self._robot_server_state_to_env_state(rs_state)
+
+        print('Action:', action)
+        print('Distance: {:.2f}'.format(env_state[0]))
+        print('Polar 1 (degree): {:.2f}'.format(env_state[1] * 180/math.pi))
+        print('Polar 2 (degree): {:.2f}'.format(env_state[2] * 180/math.pi))
+        print('Joint Positions: [1]:{:.2e} [2]:{:.2e} [3]:{:.2e} [4]:{:.2e} [5]:{:.2e} [6]:{:.2e}'.format(*env_state[3:9]))
+        print('Joint PosDeltas: [1]:{:.2e} [2]:{:.2e} [3]:{:.2e} [4]:{:.2e} [5]:{:.2e} [6]:{:.2e}'.format(*env_state[9:15]))
+        print('Sum of Deltas: {:.2e}'.format(sum(abs(env_state[9:15]))))
+        print()
+
 
     def step(self, action):
         self.elapsed_steps += 1
@@ -300,9 +320,10 @@ class MovingBoxTargetUR5(UR5Env):
 
         # start joint positions
         start_joints = self.ur5.normalize_joint_values(self._get_initial_joint_positions())
+        delta_joints = ur_j_pos_norm - start_joints
 
         # Compose environment state
-        state = np.concatenate((target_polar, ur_j_pos_norm, ur_j_vel, start_joints))
+        state = np.concatenate((target_polar, ur_j_pos_norm, delta_joints))
 
         return state
 
