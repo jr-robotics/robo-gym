@@ -89,6 +89,38 @@ register(
     entry_point='robo_gym.envs:MovingBox3DSplineTargetUR5DoF5Rob',
 )
 
+# 2 Boxes
+
+register(
+    id='Moving2Box3DSplineTargetUR5Sim-v0',
+    entry_point='robo_gym.envs:Moving2Box3DSplineTargetUR5Sim',
+)
+
+register(
+    id='Moving2Box3DSplineTargetUR5Rob-v0',
+    entry_point='robo_gym.envs:Moving2Box3DSplineTargetUR5Rob',
+)
+
+register(
+    id='Moving2Box3DSplineTargetUR5DoF3Sim-v0',
+    entry_point='robo_gym.envs:Moving2Box3DSplineTargetUR5DoF3Sim',
+)
+
+register(
+    id='Moving2Box3DSplineTargetUR5DoF3Rob-v0',
+    entry_point='robo_gym.envs:Moving2Box3DSplineTargetUR5DoF3Rob',
+)
+
+register(
+    id='Moving2Box3DSplineTargetUR5DoF5Sim-v0',
+    entry_point='robo_gym.envs:Moving2Box3DSplineTargetUR5DoF5Sim',
+)
+
+register(
+    id='Moving2Box3DSplineTargetUR5DoF5Rob-v0',
+    entry_point='robo_gym.envs:Moving2Box3DSplineTargetUR5DoF5Rob',
+)
+
 ## UR10 Environments
 register(
     id='EndEffectorPositioningUR10Sim-v0',

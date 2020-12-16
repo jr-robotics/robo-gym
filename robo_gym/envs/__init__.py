@@ -23,3 +23,10 @@ from robo_gym.envs.ur5.ur5_avoidance import MovingBox3DSplineTargetUR5DoF3Sim
 from robo_gym.envs.ur5.ur5_avoidance import MovingBox3DSplineTargetUR5DoF3Rob
 from robo_gym.envs.ur5.ur5_avoidance import MovingBox3DSplineTargetUR5DoF5Sim
 from robo_gym.envs.ur5.ur5_avoidance import MovingBox3DSplineTargetUR5DoF5Rob
+
+from robo_gym.envs.ur5.ur5_avoidance import Moving2Box3DSplineTargetUR5Sim
+from robo_gym.envs.ur5.ur5_avoidance import Moving2Box3DSplineTargetUR5Rob
+from robo_gym.envs.ur5.ur5_avoidance import Moving2Box3DSplineTargetUR5DoF3Sim
+from robo_gym.envs.ur5.ur5_avoidance import Moving2Box3DSplineTargetUR5DoF3Rob
+from robo_gym.envs.ur5.ur5_avoidance import Moving2Box3DSplineTargetUR5DoF5Sim
+from robo_gym.envs.ur5.ur5_avoidance import Moving2Box3DSplineTargetUR5DoF5Rob
