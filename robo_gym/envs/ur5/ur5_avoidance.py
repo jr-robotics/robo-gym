@@ -587,7 +587,7 @@ class Moving2Box3DSplineTargetUR5(MovingBoxTargetUR5):
 
         # Transform cartesian coordinates of object2 to polar coordinates 
         # with respect to the end effector frame
-        object2_coord = rs_state[23:26]
+        object2_coord = rs_state[26:29]
 
         object2_coord_ee_frame = utils.change_reference_frame(object2_coord,base_to_ee_translation,base_to_ee_quaternion)
         object2_polar = utils.cartesian_to_polar_3d(object2_coord_ee_frame)
@@ -712,6 +712,27 @@ class Moving2Box3DSplineTargetUR5(MovingBoxTargetUR5):
 
 
         return reward, done, info
+
+    def _get_robot_server_state_len(self):
+        """Get length of the Robot Server state.
+
+        Describes the composition of the Robot Server state and returns
+        its length.
+
+        Returns:
+            int: Length of the Robot Server state.
+
+        """
+
+        target = [0.0]*6
+        ur_j_pos = [0.0]*6
+        ur_j_vel = [0.0]*6
+        ee_to_base_transform = [0.0]*7
+        ur_collision = [0.0]
+        object_2 = [0.0]*6 
+        rs_state = target + ur_j_pos + ur_j_vel + ee_to_base_transform + ur_collision + object_2
+
+        return len(rs_state)
 
 class Moving2Box3DSplineTargetUR5DoF3(Moving2Box3DSplineTargetUR5):
     def _get_action_space(self):
@@ -866,7 +887,7 @@ class Moving2Box3DSplineTargetUR5Sim(Moving2Box3DSplineTargetUR5, Simulation):
         rviz_gui:=false \
         gazebo_gui:=true \
         obstacle_controller:=true \
-        target_mode:=moving \
+        target_mode:=2moving \
         target_model_name:=box100"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
@@ -888,7 +909,7 @@ class Moving2Box3DSplineTargetUR5DoF3Sim(Moving2Box3DSplineTargetUR5DoF3, Simula
         rviz_gui:=false \
         gazebo_gui:=true \
         obstacle_controller:=true \
-        target_mode:=moving \
+        target_mode:=2moving \
         target_model_name:=box100"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
@@ -910,7 +931,7 @@ class Moving2Box3DSplineTargetUR5DoF5Sim(Moving2Box3DSplineTargetUR5DoF5, Simula
         rviz_gui:=false \
         gazebo_gui:=true \
         obstacle_controller:=true \
-        target_mode:=moving \
+        target_mode:=2moving \
         target_model_name:=box100"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
