@@ -896,8 +896,7 @@ class Moving2Box3DSplineTargetUR5Sim(Moving2Box3DSplineTargetUR5, Simulation):
 class Moving2Box3DSplineTargetUR5Rob(Moving2Box3DSplineTargetUR5):
     real_robot = True
 
-# TODO: can this comment be removed?
-# roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=moving
+# roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=2moving
 
 class Moving2Box3DSplineTargetUR5DoF3Sim(Moving2Box3DSplineTargetUR5DoF3, Simulation):
     cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
@@ -918,8 +917,7 @@ class Moving2Box3DSplineTargetUR5DoF3Sim(Moving2Box3DSplineTargetUR5DoF3, Simula
 class Moving2Box3DSplineTargetUR5DoF3Rob(Moving2Box3DSplineTargetUR5DoF3):
     real_robot = True
 
-# TODO: can this comment be removed?
-# roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=moving
+# roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=2moving
 
 class Moving2Box3DSplineTargetUR5DoF5Sim(Moving2Box3DSplineTargetUR5DoF5, Simulation):
     cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
@@ -939,3 +937,5 @@ class Moving2Box3DSplineTargetUR5DoF5Sim(Moving2Box3DSplineTargetUR5DoF5, Simula
 
 class Moving2Box3DSplineTargetUR5DoF5Rob(Moving2Box3DSplineTargetUR5DoF5):
     real_robot = True
+
+# roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=2moving
