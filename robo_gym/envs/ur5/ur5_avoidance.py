@@ -630,6 +630,8 @@ class Moving2Box3DSplineTargetUR5(MovingBoxTargetUR5):
         target_coord = np.array(rs_state[0:3])
         ee_coord = np.array(rs_state[18:21])
         distance_to_target = np.linalg.norm(target_coord - ee_coord)   
+
+        distance_to_target_2 = env_state[15]
         
         # ! not used yet
         # ? we could train the robot to always "look" at the target just because it would look cool
@@ -679,7 +681,7 @@ class Moving2Box3DSplineTargetUR5(MovingBoxTargetUR5):
             reward += dist_1
         
         dist_2 = 0
-        if distance_to_target < minimum_distance:
+        if distance_to_target_2 < minimum_distance:
             dist_2 = -1 * (1/self.max_episode_steps) # -2
             reward += dist_2
 
