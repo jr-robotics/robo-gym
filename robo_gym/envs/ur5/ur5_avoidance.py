@@ -757,7 +757,7 @@ class MovingBoxTargetUR5Sim(MovingBoxTargetUR5, Simulation):
         action_cycle_rate:=20 \
         rviz_gui:=false \
         gazebo_gui:=true \
-        obstacle_controller:=true \
+        objects_controller:=true \
         target_mode:=moving \
         target_model_name:=box100"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
@@ -776,7 +776,7 @@ class MovingBoxTargetUR5DoF3Sim(MovingBoxTargetUR5DoF3, Simulation):
         action_cycle_rate:=20 \
         rviz_gui:=false \
         gazebo_gui:=true \
-        obstacle_controller:=true \
+        objects_controller:=true \
         target_mode:=moving \
         target_model_name:=box100"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
@@ -795,7 +795,7 @@ class MovingBoxTargetUR5DoF5Sim(MovingBoxTargetUR5DoF5, Simulation):
         action_cycle_rate:=20 \
         rviz_gui:=false \
         gazebo_gui:=true \
-        obstacle_controller:=true \
+        objects_controller:=true \
         target_mode:=moving \
         target_model_name:=box100"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
@@ -820,7 +820,7 @@ class MovingBox3DSplineTargetUR5Sim(MovingBox3DSplineTargetUR5, Simulation):
         action_cycle_rate:=20 \
         rviz_gui:=false \
         gazebo_gui:=true \
-        obstacle_controller:=true \
+        objects_controller:=true \
         target_mode:=moving \
         target_model_name:=box100"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
@@ -842,7 +842,7 @@ class MovingBox3DSplineTargetUR5DoF3Sim(MovingBox3DSplineTargetUR5DoF3, Simulati
         action_cycle_rate:=20 \
         rviz_gui:=false \
         gazebo_gui:=true \
-        obstacle_controller:=true \
+        objects_controller:=true \
         target_mode:=moving \
         target_model_name:=box100"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
@@ -864,7 +864,7 @@ class MovingBox3DSplineTargetUR5DoF5Sim(MovingBox3DSplineTargetUR5DoF5, Simulati
         action_cycle_rate:=20 \
         rviz_gui:=false \
         gazebo_gui:=true \
-        obstacle_controller:=true \
+        objects_controller:=true \
         target_mode:=moving \
         target_model_name:=box100"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
@@ -888,7 +888,7 @@ class Moving2Box3DSplineTargetUR5Sim(Moving2Box3DSplineTargetUR5, Simulation):
         action_cycle_rate:=20 \
         rviz_gui:=false \
         gazebo_gui:=true \
-        obstacle_controller:=true \
+        objects_controller:=true \
         target_mode:=2moving \
         target_model_name:=box100"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
@@ -909,7 +909,7 @@ class Moving2Box3DSplineTargetUR5DoF3Sim(Moving2Box3DSplineTargetUR5DoF3, Simula
         action_cycle_rate:=20 \
         rviz_gui:=false \
         gazebo_gui:=true \
-        obstacle_controller:=true \
+        objects_controller:=true \
         target_mode:=2moving \
         target_model_name:=box100"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
@@ -930,7 +930,7 @@ class Moving2Box3DSplineTargetUR5DoF5Sim(Moving2Box3DSplineTargetUR5DoF5, Simula
         action_cycle_rate:=20 \
         rviz_gui:=false \
         gazebo_gui:=true \
-        obstacle_controller:=true \
+        objects_controller:=true \
         target_mode:=2moving \
         target_model_name:=box100"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
