@@ -92,8 +92,9 @@ class MovingBoxTargetUR5(UR5Env):
         z_frequency = 0.125
         z_offset = np.random.default_rng().uniform(low=0.2, high=0.6)
         
-        string_params = {"function": "triangle_wave"}
-        float_params = {"x": 0.13, "y": -0.30, "z_amplitude": z_amplitude, "z_frequency": z_frequency, "z_offset": z_offset, "n_objects":1.0}
+        string_params = {"object_0_function": "triangle_wave"}
+        float_params = {"object_0_x": 0.13, "object_0_y": -0.30, "object_0_z_amplitude": z_amplitude, \
+                        "object_0_z_frequency": z_frequency, "object_0_z_offset": z_offset}
         state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
         if not self.client.set_state_msg(state_msg):
             raise RobotServerError("set_state")
@@ -395,9 +396,10 @@ class MovingBox3DSplineTargetUR5(MovingBoxTargetUR5):
         z_offset = np.random.default_rng().uniform(low=0.2, high=0.6)
         n_sampling_points = int(np.random.default_rng().uniform(low= 4000, high=50000))
         
-        string_params = {"function": "3d_spline"}
-        float_params = {"x_min": -0.7, "x_max": 0.7, "y_min": 0.2, "y_max": 1.0, "z_min": 0.1, "z_max": 1.0, \
-                        "n_points": 10, "n_sampling_points": n_sampling_points, "n_objects":1.0}
+        string_params = {"object_0_function": "3d_spline"}
+        float_params = {"object_0_x_min": -0.7, "object_0_x_max": 0.7, "object_0_y_min": 0.2, "object_0_y_max": 1.0, \
+                        "object_0_z_min": 0.1, "object_0_z_max": 1.0, "object_0_n_points": 10, \
+                        "n_sampling_points": n_sampling_points}
         state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
         if not self.client.set_state_msg(state_msg):
             raise RobotServerError("set_state")
@@ -511,9 +513,13 @@ class Moving2Box3DSplineTargetUR5(MovingBoxTargetUR5):
         z_frequency = 0.125
         z_offset = np.random.default_rng().uniform(low=0.2, high=0.6)
         
-        string_params = {"function": "3d_spline"}
-        float_params = {"x_min": -0.7, "x_max": 0.7, "y_min": 0.2, "y_max": 1.0, "z_min": 0.1, "z_max": 1.0, \
-                        "n_points": 10, "n_sampling_points": 4000, "n_objects":2.0}
+        string_params = {"object_0_function": "3d_spline", \
+                         "object_1_function": "3d_spline"}
+        float_params = {"object_0_x_min": -0.7, "object_0_x_max": 0.7, "object_0_y_min": 0.2, "object_0_y_max": 1.0, \
+                        "object_0_z_min": 0.1, "object_0_z_max": 1.0, "object_0_n_points": 10, \
+                        "object_1_x_min": -0.7, "object_1_x_max": 0.7, "object_1_y_min": 0.2, "object_1_y_max": 1.0, \
+                        "object_1_z_min": 0.1, "object_1_z_max": 1.0, "object_1_n_points": 10,  \
+                        "n_sampling_points": 4000}
         state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
         if not self.client.set_state_msg(state_msg):
             raise RobotServerError("set_state")
@@ -759,7 +765,9 @@ class MovingBoxTargetUR5Sim(MovingBoxTargetUR5, Simulation):
         gazebo_gui:=true \
         objects_controller:=true \
         target_mode:=moving \
-        target_model_name:=box100"
+        n_objects:=1.0 \
+        object_0_model_name:=box100 \
+        object_0_frame:=target"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
         MovingBoxTargetUR5.__init__(self, rs_address=self.robot_server_ip, **kwargs)
@@ -778,7 +786,9 @@ class MovingBoxTargetUR5DoF3Sim(MovingBoxTargetUR5DoF3, Simulation):
         gazebo_gui:=true \
         objects_controller:=true \
         target_mode:=moving \
-        target_model_name:=box100"
+        n_objects:=1.0 \
+        object_0_model_name:=box100 \
+        object_0_frame:=target"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
         MovingBoxTargetUR5DoF3.__init__(self, rs_address=self.robot_server_ip, **kwargs)
@@ -797,7 +807,9 @@ class MovingBoxTargetUR5DoF5Sim(MovingBoxTargetUR5DoF5, Simulation):
         gazebo_gui:=true \
         objects_controller:=true \
         target_mode:=moving \
-        target_model_name:=box100"
+        n_objects:=1.0 \
+        object_0_model_name:=box100 \
+        object_0_frame:=target"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
         MovingBoxTargetUR5DoF5.__init__(self, rs_address=self.robot_server_ip, **kwargs)
@@ -822,7 +834,9 @@ class MovingBox3DSplineTargetUR5Sim(MovingBox3DSplineTargetUR5, Simulation):
         gazebo_gui:=true \
         objects_controller:=true \
         target_mode:=moving \
-        target_model_name:=box100"
+        n_objects:=1.0 \
+        object_0_model_name:=box100 \
+        object_0_frame:=target"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
         MovingBox3DSplineTargetUR5.__init__(self, rs_address=self.robot_server_ip, **kwargs)
@@ -844,7 +858,9 @@ class MovingBox3DSplineTargetUR5DoF3Sim(MovingBox3DSplineTargetUR5DoF3, Simulati
         gazebo_gui:=true \
         objects_controller:=true \
         target_mode:=moving \
-        target_model_name:=box100"
+        n_objects:=1.0 \
+        object_0_model_name:=box100 \
+        object_0_frame:=target"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
         MovingBox3DSplineTargetUR5DoF3.__init__(self, rs_address=self.robot_server_ip, **kwargs)
@@ -866,7 +882,9 @@ class MovingBox3DSplineTargetUR5DoF5Sim(MovingBox3DSplineTargetUR5DoF5, Simulati
         gazebo_gui:=true \
         objects_controller:=true \
         target_mode:=moving \
-        target_model_name:=box100"
+        n_objects:=1.0 \
+        object_0_model_name:=box100 \
+        object_0_frame:=target"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
         MovingBox3DSplineTargetUR5DoF5.__init__(self, rs_address=self.robot_server_ip, **kwargs)
@@ -890,7 +908,11 @@ class Moving2Box3DSplineTargetUR5Sim(Moving2Box3DSplineTargetUR5, Simulation):
         gazebo_gui:=true \
         objects_controller:=true \
         target_mode:=2moving \
-        target_model_name:=box100"
+        n_objects:=2.0 \
+        object_0_model_name:=box100 \
+        object_0_frame:=target \
+        object_1_model_name:=box100_2 \
+        object_1_frame:=object_02"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
         Moving2Box3DSplineTargetUR5.__init__(self, rs_address=self.robot_server_ip, **kwargs)
@@ -911,7 +933,11 @@ class Moving2Box3DSplineTargetUR5DoF3Sim(Moving2Box3DSplineTargetUR5DoF3, Simula
         gazebo_gui:=true \
         objects_controller:=true \
         target_mode:=2moving \
-        target_model_name:=box100"
+        n_objects:=2.0 \
+        object_0_model_name:=box100 \
+        object_0_frame:=target \
+        object_1_model_name:=box100_2 \
+        object_1_frame:=object_02"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
         Moving2Box3DSplineTargetUR5DoF3.__init__(self, rs_address=self.robot_server_ip, **kwargs)
@@ -932,7 +958,11 @@ class Moving2Box3DSplineTargetUR5DoF5Sim(Moving2Box3DSplineTargetUR5DoF5, Simula
         gazebo_gui:=true \
         objects_controller:=true \
         target_mode:=2moving \
-        target_model_name:=box100"
+        n_objects:=2.0 \
+        object_0_model_name:=box100 \
+        object_0_frame:=target \
+        object_1_model_name:=box100_2 \
+        object_1_frame:=object_02"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
         Moving2Box3DSplineTargetUR5DoF5.__init__(self, rs_address=self.robot_server_ip, **kwargs)
