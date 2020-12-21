@@ -9,3 +9,24 @@ from robo_gym.envs.ur10.ur10 import EndEffectorPositioningUR10DoF5Sim
 from robo_gym.envs.ur10.ur10 import EndEffectorPositioningUR10DoF5Rob
 from robo_gym.envs.ur5.ur5 import EndEffectorPositioningUR5Sim
 from robo_gym.envs.ur5.ur5 import EndEffectorPositioningUR5Rob
+from robo_gym.envs.ur5.ur5 import EndEffectorPositioningUR5DoF5Sim
+from robo_gym.envs.ur5.ur5 import EndEffectorPositioningUR5DoF5Rob
+from robo_gym.envs.ur5.ur5_avoidance import MovingBoxTargetUR5Sim
+from robo_gym.envs.ur5.ur5_avoidance import MovingBoxTargetUR5Rob
+from robo_gym.envs.ur5.ur5_avoidance import MovingBoxTargetUR5DoF3Sim
+from robo_gym.envs.ur5.ur5_avoidance import MovingBoxTargetUR5DoF3Rob
+from robo_gym.envs.ur5.ur5_avoidance import MovingBoxTargetUR5DoF5Sim
+from robo_gym.envs.ur5.ur5_avoidance import MovingBoxTargetUR5DoF5Rob
+from robo_gym.envs.ur5.ur5_avoidance import MovingBox3DSplineTargetUR5Sim
+from robo_gym.envs.ur5.ur5_avoidance import MovingBox3DSplineTargetUR5Rob
+from robo_gym.envs.ur5.ur5_avoidance import MovingBox3DSplineTargetUR5DoF3Sim
+from robo_gym.envs.ur5.ur5_avoidance import MovingBox3DSplineTargetUR5DoF3Rob
+from robo_gym.envs.ur5.ur5_avoidance import MovingBox3DSplineTargetUR5DoF5Sim
+from robo_gym.envs.ur5.ur5_avoidance import MovingBox3DSplineTargetUR5DoF5Rob
+
+from robo_gym.envs.ur5.ur5_avoidance import Moving2Box3DSplineTargetUR5Sim
+from robo_gym.envs.ur5.ur5_avoidance import Moving2Box3DSplineTargetUR5Rob
+from robo_gym.envs.ur5.ur5_avoidance import Moving2Box3DSplineTargetUR5DoF3Sim
+from robo_gym.envs.ur5.ur5_avoidance import Moving2Box3DSplineTargetUR5DoF3Rob
+from robo_gym.envs.ur5.ur5_avoidance import Moving2Box3DSplineTargetUR5DoF5Sim
+from robo_gym.envs.ur5.ur5_avoidance import Moving2Box3DSplineTargetUR5DoF5Rob

@@ -20,6 +20,8 @@ Main features :
 A [paper](https://arxiv.org/abs/2007.02753) describing robo-gym has been accepted for IROS 2020. A video showcasing the toolkit's
 capabilities and additional info can be found on our [website](https://sites.google.com/view/robo-gym)
 
+IROS 2020 is live! This year the event is on-demand and accessible for free to everyone. You can register at https://www.iros2020.org/ondemand/signup and find the presentation of our paper about robo-gym here https://www.iros2020.org/ondemand/episode?id=1357&id2=Transfer%20Learning&1603991207687 . 
+
 **NOTE**: We are continuously working to improve and expand robo-gym. If you are interested in reproducing the results obtained in the IROS 2020 paper please refer to v.0.1.0 for all the 3 repositories involved in the framework: [robo-gym](https://github.com/jr-robotics/robo-gym/tree/v0.1.0), [robo-gym-robot-servers](https://github.com/jr-robotics/robo-gym-robot-servers/tree/v0.1.0), [robo-gym-server-modules](https://github.com/jr-robotics/robo-gym-server-modules/tree/v0.1.0).
 
 [See the News section](#news)
@@ -85,18 +87,17 @@ Python virtual environments. See the following section for further details.
 ### Environment Side
 **Requirements:** robo-gym requires Python >= 3.5
 
-robo-gym is provided as a package on the PyPI repository. You can install it with:
-
-```bash
-pip install robo-gym
-```
-
-If you prefer you can also install it from source:
+You can perform a minimal install of robo-gym with:
 
 ```bash
 git clone https://github.com/jr-robotics/robo-gym.git
 cd robo-gym
-pip install .
+pip install -e .
+```
+If you prefer, you can do a minimal install of the packaged version directly from PyPI:
+
+```bash
+pip install robo-gym
 ```
 
 ### Robot Server Side
@@ -151,11 +152,9 @@ pip install robo-gym-server-modules
 <!-- omit in toc -->
 ##### Test the installation
 
-To test the installation of *robo-gym-server-modules* try to run:  `kill-server-manager` . 
+To test the installation of *robo-gym-server-modules* try to run:  `start-server-manager` . 
 
-You should see something like: `error connecting to /tmp/tmux-1000/default (No such file or directory)`
-
-If you get: `kill-server-manager: command not found` it is most probably because your `$PATH` is not set correctly, to fix the problem add:
+If you get: `start-server-manager: command not found` it is most probably because your `$PATH` is not set correctly, to fix the problem add:
 
 ```bash
 export PATH="/home/<your_username>/.local/bin:$PATH"
@@ -163,6 +162,21 @@ export PATH="/home/<your_username>/.local/bin:$PATH"
 
 to your `.bashrc` file. 
 
+In a second terminal window activate the Python 3.6 virtual environment and run:
+
+```python
+import gym, robo_gym
+
+env = gym.make('NoObstacleNavigationMir100Sim-v0', ip='localhost', gui=True)
+
+env.reset()
+```
+
+If you are running the ServerManager on a different PC replace *localhost* with the IP address of the machine. 
+
+After running the command you should see the robot simulation starting and the initial state of the environment printed in the terminal window. 
+
+Once you are done run `kill-server-manager` in a terminal window to kill the RobotServer and the ServerManager.
 
 ### Managing Multiple Python Versions
 
@@ -364,24 +378,23 @@ negative reward is collected for moving away.
 Both self collisions and collisions with the ground are taken into account and
 punished with a negative reward and termination of the episode.
 
-``'EndEffectorPositioningAntiShakeUR10Sim-v0'``, ``'EndEffectorPositioningAntiShakeUR10Rob-v0'``
+``'EndEffectorPositioningUR10DoF5Sim-v0'``, ``'EndEffectorPositioningUR10DoF5Rob-v0'``
 
-This environment has the same characteristics of *EndEffectorPositioningUR10Sim-v0* and
-*EndEffectorPositioningUR10Rob-v0* with a different reward function.
+ Same as ``'EndEffectorPositioningUR10Sim-v0'`` and ``'EndEffectorPositioningUR10Rob-v0'`` but with wrist_3 joint fixed (5DoF).
 
-The base reward that the agent receives at each step is proportional to the
-variation of the three-dimensional Euclidean distance to the goal position.
-Thus, a positive reward is received for moving closer to the goal, whereas a
-negative reward is collected for moving away.
-A penalty is given for high variation in the robot's joint velocities.
-Both self collisions and collisions with the ground are taken into account and
-punished with a negative reward and termination of the episode.
+ ! When resetting the Real Robot environment the robot could go in self collision, please be cautious. We are working on a solution to fix this.
 
 #### Universal Robots UR5
 
 ``'EndEffectorPositioningUR5Sim-v0'``, ``'EndEffectorPositioningUR5Rob-v0'``
 
 Same as ``'EndEffectorPositioningUR10Sim-v0'`` and ``'EndEffectorPositioningUR10Rob-v0'`` with the UR5 robot. 
+
+``'EndEffectorPositioningUR5DoF5Sim-v0'``, ``'EndEffectorPositioningUR5DoF5Rob-v0'``
+
+ Same as ``'EndEffectorPositioningUR5Sim-v0'`` and ``'EndEffectorPositioningUR5Rob-v0'`` but with wrist_3 joint fixed (5DoF).
+
+ ! When resetting the Real Robot environment the robot could go in self collision, please be cautious. We are working on a solution to fix this.
 
 ### Create your own Environments
 
@@ -426,6 +439,9 @@ If you encounter troubles running robo-gym or if you have questions please submi
 
 ## News
 [back to top](#robo-gym)
+
+- 2020-11-03
+  + IROS 2020 is live! This year the event is on-demand and accessible for free to everyone. You can register at https://www.iros2020.org/ondemand/signup and find the presentation of our paper about robo-gym here https://www.iros2020.org/ondemand/episode?id=1357&id2=Transfer%20Learning&1603991207687
 
 - 2020-07-07
   + The robo-gym paper has been accepted for IROS 2020 !
