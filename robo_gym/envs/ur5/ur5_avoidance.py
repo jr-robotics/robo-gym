@@ -681,15 +681,24 @@ class Moving2Box3DSplineTargetUR5(MovingBoxTargetUR5):
         
         # ? First try is to just split the distance reward
         # punish if the obstacle gets too close
+        # dist_1 = 0
+        # if distance_to_target < minimum_distance:
+        #     dist_1 = -1 * (1/self.max_episode_steps) # -2
+        #     reward += dist_1
+        
+        # dist_2 = 0
+        # if distance_to_target_2 < minimum_distance:
+        #     dist_2 = -1 * (1/self.max_episode_steps) # -2
+        #     reward += dist_2
+
         dist_1 = 0
-        if distance_to_target < minimum_distance:
-            dist_1 = -1 * (1/self.max_episode_steps) # -2
+        if (distance_to_target < minimum_distance) or (distance_to_target_2 < minimum_distance):
+            dist_1 = -2 * (1/self.max_episode_steps) # -2
             reward += dist_1
         
         dist_2 = 0
-        if distance_to_target_2 < minimum_distance:
-            dist_2 = -1 * (1/self.max_episode_steps) # -2
-            reward += dist_2
+       
+
 
         # punish if the robot moves too far away from the obstacle
         dist_max = 0
