@@ -203,7 +203,7 @@ class ObstacleAvoidance1Box2PointsUR5(MovingBoxTargetUR5):
         info = {}
 
         # minimum and maximum distance the robot should keep to the obstacle
-        minimum_distance = 0.3 # m
+        minimum_distance = 0.35 # m
         maximum_distance = 0.6 # m
 
         # calculate distance to the target
@@ -211,7 +211,7 @@ class ObstacleAvoidance1Box2PointsUR5(MovingBoxTargetUR5):
         ee_coord = np.array(rs_state[18:21])
         distance_to_target = np.linalg.norm(target_coord - ee_coord)   
 
-        distance_to_target_2 = env_state[15]
+        distance_to_target_2 = env_state[-3]
         
         # ! not used yet
         # ? we could train the robot to always "look" at the target just because it would look cool
@@ -255,15 +255,12 @@ class ObstacleAvoidance1Box2PointsUR5(MovingBoxTargetUR5):
         
         # ? First try is to just split the distance reward
         # punish if the obstacle gets too close
-        dist_1 = 0
-        if distance_to_target < minimum_distance:
-            dist_1 = -1 * (1/self.max_episode_steps) # -2
-            reward += dist_1
-        
+        dist_1 = 0 
         dist_2 = 0
-        if distance_to_target_2 < minimum_distance:
-            dist_2 = -1 * (1/self.max_episode_steps) # -2
-            reward += dist_2
+        if (distance_to_target < minimum_distance) or (distance_to_target_2 < minimum_distance):
+            dist_1 = -2 * (1/self.max_episode_steps) # -2
+            reward += dist_1
+
 
         # punish if the robot moves too far away from the obstacle
         dist_max = 0
