@@ -19,7 +19,7 @@ class UR10Env(gym.Env):
         rs_address (str): Robot Server address. Formatted as 'ip:port'. Defaults to None.
 
     Attributes:
-        ur10 (:obj:): Robot utilities object.
+        ur (:obj:): Robot utilities object.
         observation_space (:obj:): Environment observation space.
         action_space (:obj:): Environment action space.
         distance_threshold (float): Minimum distance (m) from target to consider it reached.
@@ -32,13 +32,13 @@ class UR10Env(gym.Env):
     max_episode_steps = 300
 
     def __init__(self, rs_address=None, **kwargs):
-        self.ur10 = ur_utils.UR10()
+        self.ur = ur_utils.UR(model="ur10")
         self.elapsed_steps = 0
         self.observation_space = self._get_observation_space()
         self.action_space = self._get_action_space()
         self.seed()
         self.distance_threshold = 0.1
-        self.abs_joint_pos_range = self.ur10.get_max_joint_positions()
+        self.abs_joint_pos_range = self.ur.get_max_joint_positions()
 
         # Connect to Robot Server
         if rs_address:
@@ -74,11 +74,11 @@ class UR10Env(gym.Env):
         # Set initial robot joint positions
         if initial_joint_positions:
             assert len(initial_joint_positions) == 6
-            ur10_initial_joint_positions = initial_joint_positions
+            ur_initial_joint_positions = initial_joint_positions
         else:
-            ur10_initial_joint_positions = self._get_initial_joint_positions()
+            ur_initial_joint_positions = self._get_initial_joint_positions()
 
-        rs_state[6:12] = self.ur10._ur_10_joint_list_to_ros_joint_list(ur10_initial_joint_positions)
+        rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(ur_initial_joint_positions)
 
         # Set target End Effector pose
         if ee_target_pose:
@@ -132,8 +132,8 @@ class UR10Env(gym.Env):
 
         # Scale action
         rs_action = np.multiply(rs_action, self.abs_joint_pos_range)
-        # Convert action indexing from ur10 to ros
-        rs_action = self.ur10._ur_10_joint_list_to_ros_joint_list(rs_action)
+        # Convert action indexing from ur to ros
+        rs_action = self.ur._ur_joint_list_to_ros_joint_list(rs_action)
         # Send action to Robot Server
         if not self.client.send_action(rs_action.tolist()):
             raise RobotServerError("send_action")
@@ -219,7 +219,7 @@ class UR10Env(gym.Env):
             np.array: [x,y,z,alpha,theta,gamma] pose.
 
         """
-        return self.ur10.get_random_workspace_pose()
+        return self.ur.get_random_workspace_pose()
 
     def _robot_server_state_to_env_state(self, rs_state):
         """Transform state from Robot Server to environment format.
@@ -250,11 +250,11 @@ class UR10Env(gym.Env):
 
         # Transform joint positions and joint velocities from ROS indexing to
         # standard indexing
-        ur_j_pos = self.ur10._ros_joint_list_to_ur10_joint_list(rs_state[6:12])
-        ur_j_vel = self.ur10._ros_joint_list_to_ur10_joint_list(rs_state[12:18])
+        ur_j_pos = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
+        ur_j_vel = self.ur._ros_joint_list_to_ur_joint_list(rs_state[12:18])
 
         # Normalize joint position values
-        ur_j_pos_norm = self.ur10.normalize_joint_values(joints=ur_j_pos)
+        ur_j_pos_norm = self.ur.normalize_joint_values(joints=ur_j_pos)
 
         # Compose environment state
         state = np.concatenate((target_polar, ur_j_pos_norm, ur_j_vel))
@@ -275,11 +275,9 @@ class UR10Env(gym.Env):
         min_joint_positions = np.subtract(np.full(6, -1.0), pos_tolerance)
         # Target coordinates range
         target_range = np.full(3, np.inf)
-        # Joint positions range tolerance
-        vel_tolerance = np.full(6,0.5)
-        # Joint velocities range used to determine if there is an error in the sensor readings
-        max_joint_velocities = np.add(self.ur10.get_max_joint_velocities(), vel_tolerance)
-        min_joint_velocities = np.subtract(self.ur10.get_min_joint_velocities(), vel_tolerance)
+        # Joint velocities range 
+        max_joint_velocities = np.array([np.inf] * 6)
+        min_joint_velocities = - np.array([np.inf] * 6)
         # Definition of environment observation_space
         max_obs = np.concatenate((target_range, max_joint_positions, max_joint_velocities))
         min_obs = np.concatenate((-target_range, min_joint_positions, min_joint_velocities))
@@ -311,8 +309,8 @@ class EndEffectorPositioningUR10(UR10Env):
         # Reward base
         reward = -1 * euclidean_dist_3d
         
-        joint_positions = self.ur10._ros_joint_list_to_ur10_joint_list(rs_state[6:12])
-        joint_positions_normalized = self.ur10.normalize_joint_values(joint_positions)
+        joint_positions = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
+        joint_positions_normalized = self.ur.normalize_joint_values(joint_positions)
         delta = np.abs(np.subtract(joint_positions_normalized, action))
         reward = reward - (0.05 * np.sum(delta))
 
@@ -373,8 +371,8 @@ class EndEffectorPositioningUR10DoF5(UR10Env):
         # Reward base
         reward = -1 * euclidean_dist_3d
         
-        joint_positions = self.ur10._ros_joint_list_to_ur10_joint_list(rs_state[6:12])
-        joint_positions_normalized = self.ur10.normalize_joint_values(joint_positions)
+        joint_positions = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
+        joint_positions_normalized = self.ur.normalize_joint_values(joint_positions)
         delta = np.abs(np.subtract(joint_positions_normalized, action))
         reward = reward - (0.05 * np.sum(delta))
 
@@ -415,8 +413,8 @@ class EndEffectorPositioningUR10DoF5(UR10Env):
         rs_action = copy.deepcopy(action)
         # Scale action
         rs_action = np.multiply(rs_action, self.abs_joint_pos_range)
-        # Convert action indexing from ur10 to ros
-        rs_action = self.ur10._ur_10_joint_list_to_ros_joint_list(rs_action)
+        # Convert action indexing from ur to ros
+        rs_action = self.ur._ur_joint_list_to_ros_joint_list(rs_action)
         # Send action to Robot Server
         if not self.client.send_action(rs_action.tolist()):
             raise RobotServerError("send_action")

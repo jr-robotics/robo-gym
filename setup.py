@@ -21,7 +21,8 @@ setuptools.setup(name='robo-gym',
       install_requires=[
       'gym',
       'robo-gym-server-modules',
-      'numpy'
+      'numpy',
+      'pyyaml'
       ],
       python_requires='>=3.5',
       scripts = ['bin/run-rs-side-standard']

@@ -40,12 +40,7 @@ class MovingBoxTargetUR5(UR5Env):
         min_joint_positions = np.subtract(np.full(6, -1.0), pos_tolerance)
         # Target coordinates range
         target_range = np.full(3, np.inf)
-        # Joint positions range tolerance
-        vel_tolerance = np.full(6,0.5)
-        # Joint velocities range used to determine if there is an error in the sensor readings
-        max_joint_velocities = np.add(self.ur5.get_max_joint_velocities(), vel_tolerance)
-        min_joint_velocities = np.subtract(self.ur5.get_min_joint_velocities(), vel_tolerance)
-
+        
         max_delta_start_positions = np.add(np.full(6, 1.0), pos_tolerance)
         min_delta_start_positions = np.subtract(np.full(6, -1.0), pos_tolerance)
 
@@ -78,13 +73,13 @@ class MovingBoxTargetUR5(UR5Env):
         # Set initial robot joint positions
         if initial_joint_positions:
             assert len(initial_joint_positions) == 6
-            ur5_initial_joint_positions = initial_joint_positions
+            ur_initial_joint_positions = initial_joint_positions
         elif (len(self.last_position_on_success) != 0) and (type=='continue'):
-            ur5_initial_joint_positions = self.last_position_on_success
+            ur_initial_joint_positions = self.last_position_on_success
         else:
-            ur5_initial_joint_positions = self._get_initial_joint_positions()
+            ur_initial_joint_positions = self._get_initial_joint_positions()
 
-        rs_state[6:12] = self.ur5._ur_5_joint_list_to_ros_joint_list(ur5_initial_joint_positions)
+        rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(ur_initial_joint_positions)
 
 
         # Set initial state of the Robot Server
@@ -119,7 +114,7 @@ class MovingBoxTargetUR5(UR5Env):
         
         # check if current position is in the range of the initial joint positions
         if (len(self.last_position_on_success) == 0) or (type=='random'):
-            joint_positions = self.ur5._ros_joint_list_to_ur5_joint_list(rs_state[6:12])
+            joint_positions = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
             tolerance = 0.1
             for joint in range(len(joint_positions)):
                 if (joint_positions[joint]+tolerance < self.initial_joint_positions_low[joint]) or  (joint_positions[joint]-tolerance  > self.initial_joint_positions_high[joint]):
@@ -257,8 +252,8 @@ class MovingBoxTargetUR5(UR5Env):
 
         rs_action = initial_joint_positions
 
-        # Convert action indexing from ur5 to ros
-        rs_action = self.ur5._ur_5_joint_list_to_ros_joint_list(rs_action)
+        # Convert action indexing from ur to ros
+        rs_action = self.ur._ur_joint_list_to_ros_joint_list(rs_action)
         # Send action to Robot Server
         if not self.client.send_action(rs_action.tolist()):
             raise RobotServerError("send_action")
@@ -329,14 +324,14 @@ class MovingBoxTargetUR5(UR5Env):
 
         # Transform joint positions and joint velocities from ROS indexing to
         # standard indexing
-        ur_j_pos = self.ur5._ros_joint_list_to_ur5_joint_list(rs_state[6:12])
-        ur_j_vel = self.ur5._ros_joint_list_to_ur5_joint_list(rs_state[12:18])
+        ur_j_pos = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
+        ur_j_vel = self.ur._ros_joint_list_to_ur_joint_list(rs_state[12:18])
 
         # Normalize joint position values
-        ur_j_pos_norm = self.ur5.normalize_joint_values(joints=ur_j_pos)
+        ur_j_pos_norm = self.ur.normalize_joint_values(joints=ur_j_pos)
 
         # start joint positions
-        start_joints = self.ur5.normalize_joint_values(self._get_initial_joint_positions())
+        start_joints = self.ur.normalize_joint_values(self._get_initial_joint_positions())
         delta_joints = ur_j_pos_norm - start_joints
 
         # Compose environment state
@@ -380,13 +375,13 @@ class MovingBox3DSplineTargetUR5(MovingBoxTargetUR5):
         # Set initial robot joint positions
         if initial_joint_positions:
             assert len(initial_joint_positions) == 6
-            ur5_initial_joint_positions = initial_joint_positions
+            ur_initial_joint_positions = initial_joint_positions
         elif (len(self.last_position_on_success) != 0) and (type=='continue'):
-            ur5_initial_joint_positions = self.last_position_on_success
+            ur_initial_joint_positions = self.last_position_on_success
         else:
-            ur5_initial_joint_positions = self._get_initial_joint_positions()
+            ur_initial_joint_positions = self._get_initial_joint_positions()
 
-        rs_state[6:12] = self.ur5._ur_5_joint_list_to_ros_joint_list(ur5_initial_joint_positions)
+        rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(ur_initial_joint_positions)
 
 
         # TODO: We should create some kind of helper function depending on how dynamic these settings should be
@@ -424,7 +419,7 @@ class MovingBox3DSplineTargetUR5(MovingBoxTargetUR5):
         
         # check if current position is in the range of the initial joint positions
         if (len(self.last_position_on_success) == 0) or (type=='random'):
-            joint_positions = self.ur5._ros_joint_list_to_ur5_joint_list(rs_state[6:12])
+            joint_positions = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
             tolerance = 0.1
             for joint in range(len(joint_positions)):
                 if (joint_positions[joint]+tolerance < self.initial_joint_positions_low[joint]) or  (joint_positions[joint]-tolerance  > self.initial_joint_positions_high[joint]):
@@ -463,8 +458,8 @@ class Moving2Box3DSplineTargetUR5(MovingBoxTargetUR5):
         # Joint positions range tolerance
         vel_tolerance = np.full(6,0.5)
         # Joint velocities range used to determine if there is an error in the sensor readings
-        max_joint_velocities = np.add(self.ur5.get_max_joint_velocities(), vel_tolerance)
-        min_joint_velocities = np.subtract(self.ur5.get_min_joint_velocities(), vel_tolerance)
+        max_joint_velocities = np.add(self.ur.get_max_joint_velocities(), vel_tolerance)
+        min_joint_velocities = np.subtract(self.ur.get_min_joint_velocities(), vel_tolerance)
 
         max_delta_start_positions = np.add(np.full(6, 1.0), pos_tolerance)
         min_delta_start_positions = np.subtract(np.full(6, -1.0), pos_tolerance)
@@ -498,13 +493,13 @@ class Moving2Box3DSplineTargetUR5(MovingBoxTargetUR5):
         # Set initial robot joint positions
         if initial_joint_positions:
             assert len(initial_joint_positions) == 6
-            ur5_initial_joint_positions = initial_joint_positions
+            ur_initial_joint_positions = initial_joint_positions
         elif (len(self.last_position_on_success) != 0) and (type=='continue'):
-            ur5_initial_joint_positions = self.last_position_on_success
+            ur_initial_joint_positions = self.last_position_on_success
         else:
-            ur5_initial_joint_positions = self._get_initial_joint_positions()
+            ur_initial_joint_positions = self._get_initial_joint_positions()
 
-        rs_state[6:12] = self.ur5._ur_5_joint_list_to_ros_joint_list(ur5_initial_joint_positions)
+        rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(ur_initial_joint_positions)
 
 
         # TODO: We should create some kind of helper function depending on how dynamic these settings should be
@@ -544,7 +539,7 @@ class Moving2Box3DSplineTargetUR5(MovingBoxTargetUR5):
         
         # check if current position is in the range of the initial joint positions
         if (len(self.last_position_on_success) == 0) or (type=='random'):
-            joint_positions = self.ur5._ros_joint_list_to_ur5_joint_list(rs_state[6:12])
+            joint_positions = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
             tolerance = 0.1
             for joint in range(len(joint_positions)):
                 if (joint_positions[joint]+tolerance < self.initial_joint_positions_low[joint]) or  (joint_positions[joint]-tolerance  > self.initial_joint_positions_high[joint]):
@@ -581,14 +576,14 @@ class Moving2Box3DSplineTargetUR5(MovingBoxTargetUR5):
 
         # Transform joint positions and joint velocities from ROS indexing to
         # standard indexing
-        ur_j_pos = self.ur5._ros_joint_list_to_ur5_joint_list(rs_state[6:12])
-        ur_j_vel = self.ur5._ros_joint_list_to_ur5_joint_list(rs_state[12:18])
+        ur_j_pos = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
+        ur_j_vel = self.ur._ros_joint_list_to_ur_joint_list(rs_state[12:18])
 
         # Normalize joint position values
-        ur_j_pos_norm = self.ur5.normalize_joint_values(joints=ur_j_pos)
+        ur_j_pos_norm = self.ur.normalize_joint_values(joints=ur_j_pos)
 
         # start joint positions
-        start_joints = self.ur5.normalize_joint_values(self._get_initial_joint_positions())
+        start_joints = self.ur.normalize_joint_values(self._get_initial_joint_positions())
         delta_joints = ur_j_pos_norm - start_joints
 
         # Transform cartesian coordinates of object2 to polar coordinates 
