@@ -343,7 +343,7 @@ class ObstacleAvoidance1Box2PointsUR5Sim(ObstacleAvoidance1Box2PointsUR5, Simula
 class ObstacleAvoidance1Box2PointsUR5Rob(ObstacleAvoidance1Box2PointsUR5):
     real_robot = True
 
-# roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=1moving2points
+# roslaunch ur_robot_server ur5_real_robot_server.launch gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=1moving2points n_objects:=1.0 object_0_frame:=target
 
 class ObstacleAvoidance1Box2PointsUR5DoF3Sim(ObstacleAvoidance1Box2PointsUR5DoF3, Simulation):
     cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
@@ -366,7 +366,7 @@ class ObstacleAvoidance1Box2PointsUR5DoF3Sim(ObstacleAvoidance1Box2PointsUR5DoF3
 class ObstacleAvoidance1Box2PointsUR5DoF3Rob(ObstacleAvoidance1Box2PointsUR5DoF3):
     real_robot = True
 
-# roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=1moving2points
+# roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=1moving2points n_objects:=1.0 object_0_frame:=target
 
 class ObstacleAvoidance1Box2PointsUR5DoF5Sim(ObstacleAvoidance1Box2PointsUR5DoF5, Simulation):
     cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
@@ -389,4 +389,4 @@ class ObstacleAvoidance1Box2PointsUR5DoF5Sim(ObstacleAvoidance1Box2PointsUR5DoF5
 class ObstacleAvoidance1Box2PointsUR5DoF5Rob(ObstacleAvoidance1Box2PointsUR5DoF5):
     real_robot = True
 
-# roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=1moving2points
+# roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=1moving2points n_objects:=1.0 object_0_frame:=target
