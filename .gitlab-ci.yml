@@ -25,7 +25,7 @@ test_environments:
     - docker pull $ROBOT_SERVERS_IMAGE
     - docker tag $ROBOT_SERVERS_IMAGE robot-servers
     - docker-compose -f docker-compose-test-melodic.yml up -d
-    - docker exec robo-gym pytest
+    - docker exec robo-gym pytest -x
     - docker-compose -f docker-compose-test-melodic.yml down
   except:
     - /^capsize.*$/
@@ -44,7 +44,7 @@ test_environments_with_master:
     - docker pull robotics-git.joanneum.at:4567/robo-gym/robot-servers/master:latest
     - docker tag robotics-git.joanneum.at:4567/robo-gym/robot-servers/master:latest robot-servers
     - docker-compose -f docker-compose-test-melodic.yml up -d
-    - docker exec robo-gym pytest
+    - docker exec robo-gym pytest -x
     - docker-compose -f docker-compose-test-melodic.yml down
   only:
     - master
@@ -63,7 +63,7 @@ test_environments_with_rs_manual_deploy:
     - docker pull robotics-git.joanneum.at:4567/robo-gym/robot-servers/manual_deploy:latest
     - docker tag robotics-git.joanneum.at:4567/robo-gym/robot-servers/manual_deploy:latest robot-servers
     - docker-compose -f docker-compose-test-melodic.yml up -d
-    - docker exec robo-gym pytest
+    - docker exec robo-gym pytest -x
     - docker-compose -f docker-compose-test-melodic.yml down
   when: manual
 
@@ -81,7 +81,7 @@ capsize_test_environments_with_rs_master:
     - docker pull robotics-git.joanneum.at:4567/robo-gym/robot-servers/capsize_master:latest
     - docker tag robotics-git.joanneum.at:4567/robo-gym/robot-servers/capsize_master:latest robot-servers
     - docker-compose -f docker-compose-test-melodic.yml up -d
-    - docker exec robo-gym pytest
+    - docker exec robo-gym pytest -x
     - docker-compose -f docker-compose-test-melodic.yml down
   only:
     - /^capsize.*$/
@@ -100,7 +100,7 @@ capsize_test_environments_with_rs_develop:
     - docker pull robotics-git.joanneum.at:4567/robo-gym/robot-servers/capsize_develop:latest
     - docker tag robotics-git.joanneum.at:4567/robo-gym/robot-servers/capsize_develop:latest robot-servers
     - docker-compose -f docker-compose-test-melodic.yml up -d
-    - docker exec robo-gym pytest
+    - docker exec robo-gym pytest -x
     - docker-compose -f docker-compose-test-melodic.yml down
   when: manual
 
