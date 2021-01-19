@@ -25,3 +25,6 @@ def test_ur_reset_init_joints(env_name, initial_joint_positions, ur_model):
 
    for joint in joint_comparison:
       assert joint
+   
+   env.kill_sim()
+   env.close()

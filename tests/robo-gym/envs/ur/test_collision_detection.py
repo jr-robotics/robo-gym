@@ -31,3 +31,6 @@ def test_collision_detection(env_name):
             
 
     assert info['final_status'] == 'collision'
+
+    env.kill_sim()
+    env.close()

@@ -33,3 +33,6 @@ def test_env_initialization(env_name):
             observation, reward, done, info = env.step(action)
 
     assert env.observation_space.contains(observation)
+
+    env.kill_sim()
+    env.close()
