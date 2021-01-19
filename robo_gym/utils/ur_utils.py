@@ -26,7 +26,7 @@ class UR():
         assert model in ["ur3", "ur3e", "ur5", "ur5e", "ur10", "ur10e", "ur16e"]
         
         file_name = model + ".yaml"
-        file_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "ur_parameters", file_name)
+        file_path = os.path.join(os.path.dirname(__file__), 'ur_parameters', file_name)
 
         # Load robot paramters
         with open(file_path, 'r') as stream:
