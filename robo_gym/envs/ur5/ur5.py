@@ -40,8 +40,7 @@ class UR5Env(gym.Env):
         self.seed()
         self.distance_threshold = 0.1
         self.abs_joint_pos_range = self.ur.get_max_joint_positions()
-        self.initial_joint_positions_low = np.zeros(6)
-        self.initial_joint_positions_high = np.zeros(6)
+        self._set_initial_joint_positions_range()
         self.last_position_on_success = []
         self.prev_rs_state = None
         self.last_action = None
@@ -225,7 +224,6 @@ class UR5Env(gym.Env):
             np.array: Joint positions with standard indexing.
 
         """
-        self._set_initial_joint_positions_range()
         # Random initial joint positions
         joint_positions = np.random.default_rng().uniform(low=self.initial_joint_positions_low, high=self.initial_joint_positions_high)
 
