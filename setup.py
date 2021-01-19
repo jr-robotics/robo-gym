@@ -11,6 +11,7 @@ setuptools.setup(name='robo-gym',
       author="Matteo Lucchi, Friedemann Zindler",
       author_email="matteo.lucchi@joanneum.at, friedemann.zindler@joanneum.at",
       packages=setuptools.find_packages(),
+      include_package_data=True,
       classifiers=[
           'Programming Language :: Python :: 3',
           'Programming Language :: Python :: 3.5',
