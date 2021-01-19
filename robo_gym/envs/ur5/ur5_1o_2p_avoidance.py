@@ -84,9 +84,30 @@ class ObstacleAvoidance1Box2PointsUR5(MovingBoxTargetUR5):
         # Set initial state of the Robot Server
         
         string_params = {"object_0_function": "3d_spline"}
-        float_params = {"object_0_x_min": -0.7, "object_0_x_max": 0.7, "object_0_y_min": 0.2, "object_0_y_max": 1.0, \
-                        "object_0_z_min": 0.1, "object_0_z_max": 1.0, "object_0_n_points": 10, \
-                        "n_sampling_points": 4000}
+
+        r = np.random.uniform()
+
+        if r <= 0.75:
+            # object in front of the robot
+            float_params = {"object_0_x_min": -0.7, "object_0_x_max": 0.7, "object_0_y_min": 0.2, "object_0_y_max": 1.0, \
+                            "object_0_z_min": 0.1, "object_0_z_max": 1.0, "object_0_n_points": 10, \
+                            "n_sampling_points": 4000}
+        elif r <= 0.83:
+            # object behind robot
+            float_params = {"object_0_x_min": -0.7, "object_0_x_max": 0.7, "object_0_y_min": - 0.7, "object_0_y_max": -0.2, \
+                            "object_0_z_min": 0.1, "object_0_z_max": 1.0, "object_0_n_points": 10, \
+                            "n_sampling_points": 4000}
+        elif r <= 0.91:
+            # object on the left side of the  robot
+            float_params = {"object_0_x_min": 0.3, "object_0_x_max": 0.7, "object_0_y_min": - 0.7, "object_0_y_max": 0.7, \
+                            "object_0_z_min": 0.1, "object_0_z_max": 1.0, "object_0_n_points": 10, \
+                            "n_sampling_points": 4000}
+        else :
+            # object on the right side of the  robot
+            float_params = {"object_0_x_min": -0.2, "object_0_x_max": -0.7, "object_0_y_min": - 0.7, "object_0_y_max": 0.7, \
+                            "object_0_z_min": 0.1, "object_0_z_max": 1.0, "object_0_n_points": 10, \
+                            "n_sampling_points": 4000}
+        
         state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
         if not self.client.set_state_msg(state_msg):
             raise RobotServerError("set_state")
