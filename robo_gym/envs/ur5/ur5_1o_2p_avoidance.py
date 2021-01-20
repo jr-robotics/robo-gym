@@ -257,7 +257,7 @@ class ObstacleAvoidance1Box2PointsUR5(MovingBoxTargetUR5):
         # reward for being in the defined interval of minimum_distance and maximum_distance
         dr = 0
         if abs(env_state[-6:]).sum() < 0.5:
-            dr = 1 * (1 - (abs(delta_joint_pos).sum()/0.5)) * (1/1000)
+            dr = 2 * (1 - (abs(delta_joint_pos).sum()/0.5)) * (1/1000)
             reward += dr
         
         # reward moving as less as possible
