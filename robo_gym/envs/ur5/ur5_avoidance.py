@@ -435,7 +435,7 @@ class MovingBox3DSplineTargetUR5DoF5(MovingBox3DSplineTargetUR5):
     def _get_action_space(self):
         return spaces.Box(low=np.full((5), -1.0), high=np.full((5), 1.0), dtype=np.float32)
 
-# ? Complex Target Movement Environment for the Obstacle Avoidance Use Case
+# ? 2 Boxes Complex Target Movement Environment for the Obstacle Avoidance Use Case
 # * In this environment the target obstacle is moving in a complex randomized pattern in front of the robot.
 # * The goal in this environment is for the robot to stay as much as possible in it's initial joint configuration while keeping a minimum distance to the obstacle
 class Moving2Box3DSplineTargetUR5(MovingBoxTargetUR5):
@@ -823,7 +823,7 @@ class MovingBoxTargetUR5DoF5Rob(MovingBoxTargetUR5DoF5):
 
 
 
-# ? 2 Moving Box Target Environments (Complex)
+# ? Moving Box Target Environments (Complex)
 # * Avoidance environment where the obstacle only moves in a complex random pattern in front of the robot.
 # * There are three different environments for 3, 5 and 5 degrees of freedom
 

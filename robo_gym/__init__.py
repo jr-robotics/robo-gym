@@ -121,6 +121,70 @@ register(
     entry_point='robo_gym.envs:Moving2Box3DSplineTargetUR5DoF5Rob',
 )
 
+# 1 Box 2 Points
+
+register(
+    id='ObstacleAvoidance1Box2PointsUR5Sim-v0',
+    entry_point='robo_gym.envs:ObstacleAvoidance1Box2PointsUR5Sim',
+)
+
+register(
+    id='ObstacleAvoidance1Box2PointsUR5Rob-v0',
+    entry_point='robo_gym.envs:ObstacleAvoidance1Box2PointsUR5Rob',
+)
+
+register(
+    id='ObstacleAvoidance1Box2PointsUR5DoF3Sim-v0',
+    entry_point='robo_gym.envs:ObstacleAvoidance1Box2PointsUR5DoF3Sim',
+)
+
+register(
+    id='ObstacleAvoidance1Box2PointsUR5DoF3Rob-v0',
+    entry_point='robo_gym.envs:ObstacleAvoidance1Box2PointsUR5DoF3Rob',
+)
+
+register(
+    id='ObstacleAvoidance1Box2PointsUR5DoF5Sim-v0',
+    entry_point='robo_gym.envs:ObstacleAvoidance1Box2PointsUR5DoF5Sim',
+)
+
+register(
+    id='ObstacleAvoidance1Box2PointsUR5DoF5Rob-v0',
+    entry_point='robo_gym.envs:ObstacleAvoidance1Box2PointsUR5DoF5Rob',
+)
+
+# 2 Boxes 2 Points
+
+register(
+    id='ObstacleAvoidance2Box2PointsUR5Sim-v0',
+    entry_point='robo_gym.envs:ObstacleAvoidance2Box2PointsUR5Sim',
+)
+
+register(
+    id='ObstacleAvoidance2Box2PointsUR5Rob-v0',
+    entry_point='robo_gym.envs:ObstacleAvoidance2Box2PointsUR5Rob',
+)
+
+register(
+    id='ObstacleAvoidance2Box2PointsUR5DoF3Sim-v0',
+    entry_point='robo_gym.envs:ObstacleAvoidance2Box2PointsUR5DoF3Sim',
+)
+
+register(
+    id='ObstacleAvoidance2Box2PointsUR5DoF3Rob-v0',
+    entry_point='robo_gym.envs:ObstacleAvoidance2Box2PointsUR5DoF3Rob',
+)
+
+register(
+    id='ObstacleAvoidance2Box2PointsUR5DoF5Sim-v0',
+    entry_point='robo_gym.envs:ObstacleAvoidance2Box2PointsUR5DoF5Sim',
+)
+
+register(
+    id='ObstacleAvoidance2Box2PointsUR5DoF5Rob-v0',
+    entry_point='robo_gym.envs:ObstacleAvoidance2Box2PointsUR5DoF5Rob',
+)
+
 ## UR10 Environments
 register(
     id='EndEffectorPositioningUR10Sim-v0',
