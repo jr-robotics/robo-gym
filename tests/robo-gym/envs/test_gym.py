@@ -34,5 +34,5 @@ def test_env_initialization(env_name):
 
     assert env.observation_space.contains(observation)
 
-    env.kill_sim()
-    env.close()
+    # env.kill_sim()
+    # env.close()
