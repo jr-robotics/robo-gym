@@ -362,8 +362,8 @@ class ObstacleAvoidance1Box1PointsVoxelOccupancyUR5Sim(ObstacleAvoidance1Box1Poi
         object_0_model_name:=box100 \
         object_0_frame:=target \
         camera1_gazebo:=true \
-        camera1_link_y:=1 \
-        camera1_link_z:=1 \
+        camera1_link_y:=1.5 \
+        camera1_link_z:=2.0 \
         camera1_link_pitch:=1.0 \
         camera1_link_yaw:=-1.5 \
         use_voxel_occupancy:=True \
@@ -392,8 +392,8 @@ class ObstacleAvoidance1Box1PointsVoxelOccupancyUR5DoF3Sim(ObstacleAvoidance1Box
         object_0_model_name:=box100 \
         object_0_frame:=target \
         camera1_gazebo:=true \
-        camera1_link_y:=1 \
-        camera1_link_z:=1 \
+        camera1_link_y:=1.5 \
+        camera1_link_z:=2.0 \
         camera1_link_pitch:=1.0 \
         camera1_link_yaw:=-1.5 \
         use_voxel_occupancy:=True \
@@ -422,8 +422,8 @@ class ObstacleAvoidance1Box1PointsVoxelOccupancyUR5DoF5Sim(ObstacleAvoidance1Box
         object_0_model_name:=box100 \
         object_0_frame:=target \
         camera1_gazebo:=true \
-        camera1_link_y:=1 \
-        camera1_link_z:=1 \
+        camera1_link_y:=1.5 \
+        camera1_link_z:=2.0 \
         camera1_link_pitch:=1.0 \
         camera1_link_yaw:=-1.5 \
         use_voxel_occupancy:=True \
