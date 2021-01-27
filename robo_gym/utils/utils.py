@@ -137,7 +137,7 @@ def change_reference_frame(point, translation, quaternion):
         between  the two frames.
 
     Args:
-        point (array_like,shape(3,)): x,y,z coordinates of the point in the original frame
+        point (array_like,shape(3,) or shape(N,3)): x,y,z coordinates of the point in the original frame
         translation (array_like,shape(3,)): translation vector from the original frame to the new frame 
         quaternion (array_like,shape(4,)): quaternion from the original frame to the new frame
 
@@ -146,11 +146,14 @@ def change_reference_frame(point, translation, quaternion):
         
     """
 
-    # Apply translation
-    translated_point = np.add(np.array(point),np.array(translation))
+    #point = [1,2,3]
+    #point = np.array([1,2,3])
+    #point = np.array([[11,12,13],[21,22,23]]) # point.shape = (2,3) # point (11,12,13)  and point (21,22,23)
 
-    #Apply rotation
+    # Apply rotation
     r = R.from_quat(quaternion)
-    rotated_point = r.apply(translated_point)
+    rotated_point = r.apply(np.array(point))
+    # Apply translation
+    translated_point = np.add(rotated_point, np.array(translation))
 
-    return rotated_point
+    return translated_point
