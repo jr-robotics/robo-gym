@@ -138,7 +138,21 @@ class ObstacleAvoidance1Box1PointsVoxelOccupancyUR5(MovingBoxTargetUR5):
             for joint in range(len(joint_positions)):
                 if (joint_positions[joint]+tolerance < self.initial_joint_positions_low[joint]) or  (joint_positions[joint]-tolerance  > self.initial_joint_positions_high[joint]):
                     raise InvalidStateError('Reset joint positions are not within defined range')
-            
+        
+        num_voxel_x = 4
+        num_voxel_y = 2
+        num_voxel_z = 2
+        voxel_size = 0.5
+        voxel_centers_in_occupancy_frame = (voxel_size/2.0 + voxel_size * np.mgrid[0:num_voxel_x,0:num_voxel_y,0:num_voxel_z]).reshape(3,-1).T
+        quaternion_occupancy_to_base = R.from_euler('z', -2.356).as_quat()
+        translation_occupancy_to_base = np.array([0.706, 0.706, 0.0])
+        self.voxel_centers_in_base_frame = utils.change_reference_frame(voxel_centers_in_occupancy_frame, translation_occupancy_to_base, quaternion_occupancy_to_base)
+
+        # occ frame [1.25, 0.25, 0.25] -> base [0, -0.35, 0.25]
+        if DEBUG:
+            for i, v in enumerate(self.voxel_centers_in_base_frame):
+                print("voxel in base_frame ", i, v, voxel_centers_in_occupancy_frame[i])
+
         return self.state
     
     def _robot_server_state_to_env_state(self, rs_state):
@@ -236,6 +250,26 @@ class ObstacleAvoidance1Box1PointsVoxelOccupancyUR5(MovingBoxTargetUR5):
 
         distance_to_target_2 = env_state[-3]
         
+        # ee_to_base_translation = np.array(rs_state[18:21])
+        # ee_to_base_quaternion = np.array(rs_state[21:25])
+        # ee_to_base_rotation = R.from_quat(ee_to_base_quaternion)
+        # base_to_ee_rotation = ee_to_base_rotation.inv()
+        # base_to_ee_quaternion = base_to_ee_rotation.as_quat()
+        # base_to_ee_translation = - ee_to_base_translation
+        base_to_ee_translation = np.array(rs_state[18:21])
+        base_to_ee_quaternion = np.array(rs_state[21:25])
+
+        if DEBUG:
+            print('base_to_ee_translation', base_to_ee_translation)
+            print('base_to_ee_quaternion', base_to_ee_quaternion)
+        voxel_ee_distance = []
+        for voxel_index, voxel_center in enumerate(self.voxel_centers_in_base_frame):
+            # voxel_center_ee_frame = np.dot(base_to_ee_rotation.as_matrix(), voxel_center) + base_to_ee_translation
+            voxel_center_ee_frame = utils.change_reference_frame(voxel_center, base_to_ee_translation, base_to_ee_quaternion)
+            if DEBUG:
+                print(voxel_index, voxel_center_ee_frame, np.linalg.norm(voxel_center_ee_frame))
+            voxel_ee_distance.append(np.linalg.norm(voxel_center_ee_frame))
+
         # ! not used yet
         # ? we could train the robot to always "look" at the target just because it would look cool
         polar_1 = abs(env_state[1] * 180/math.pi)
