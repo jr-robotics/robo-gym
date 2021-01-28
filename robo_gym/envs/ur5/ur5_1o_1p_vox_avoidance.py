@@ -179,16 +179,6 @@ class ObstacleAvoidance1Box1PointsVoxelOccupancyUR5(MovingBoxTargetUR5):
         # Transform cartesian coordinates of target to polar coordinates 
         # with respect to the end effector frame
         target_coord = rs_state[0:3]
-        
-        ee_to_base_translation = rs_state[18:21]
-        ee_to_base_quaternion = rs_state[21:25]
-        ee_to_base_rotation = R.from_quat(ee_to_base_quaternion)
-        base_to_ee_rotation = ee_to_base_rotation.inv()
-        base_to_ee_quaternion = base_to_ee_rotation.as_quat()
-        base_to_ee_translation = - ee_to_base_translation
-
-        target_coord_ee_frame = utils.change_reference_frame(target_coord,base_to_ee_translation,base_to_ee_quaternion)
-        target_polar = utils.cartesian_to_polar_3d(target_coord_ee_frame)
 
         # Transform joint positions and joint velocities from ROS indexing to
         # standard indexing
@@ -205,19 +195,9 @@ class ObstacleAvoidance1Box1PointsVoxelOccupancyUR5(MovingBoxTargetUR5):
         # Transform cartesian coordinates of target to polar coordinates 
         # with respect to the forearm
 
-        forearm_to_base_translation = rs_state[26:29]
-        forearm_to_base_quaternion = rs_state[29:33]
-        forearm_to_base_rotation = R.from_quat(forearm_to_base_quaternion)
-        base_to_forearm_rotation = forearm_to_base_rotation.inv()
-        base_to_forearm_quaternion = base_to_forearm_rotation.as_quat()
-        base_to_forearm_translation = - forearm_to_base_translation
-
-        target_coord_forearm_frame = utils.change_reference_frame(target_coord,base_to_forearm_translation,base_to_forearm_quaternion)
-        target_polar_forearm = utils.cartesian_to_polar_3d(target_coord_forearm_frame)
-
         voxel_occupancy = rs_state[33:49]
         # Compose environment state
-        state = np.concatenate((ur_j_pos_norm, delta_joints, voxel_occupancy)) # target_polar, target_polar_forearm, 
+        state = np.concatenate((ur_j_pos_norm, delta_joints, voxel_occupancy))
 
         return state
     
@@ -258,14 +238,15 @@ class ObstacleAvoidance1Box1PointsVoxelOccupancyUR5(MovingBoxTargetUR5):
 
         distance_to_target_2 = env_state[-3]
         
-        # ee_to_base_translation = np.array(rs_state[18:21])
-        # ee_to_base_quaternion = np.array(rs_state[21:25])
-        # ee_to_base_rotation = R.from_quat(ee_to_base_quaternion)
-        # base_to_ee_rotation = ee_to_base_rotation.inv()
-        # base_to_ee_quaternion = base_to_ee_rotation.as_quat()
-        # base_to_ee_translation = - ee_to_base_translation
-        base_to_ee_translation = np.array(rs_state[18:21])
-        base_to_ee_quaternion = np.array(rs_state[21:25])
+        ee_to_base_translation = np.array(rs_state[18:21])
+        ee_to_base_quaternion = np.array(rs_state[21:25])
+        ee_to_base_rotation = R.from_quat(ee_to_base_quaternion)
+        base_to_ee_rotation = ee_to_base_rotation.inv()
+        # to invert the homogeneous transformation
+        # R' = R^-1
+        base_to_ee_quaternion = base_to_ee_rotation.as_quat()
+        # t' = - R^-1 * t
+        base_to_ee_translation = -base_to_ee_rotation.apply(ee_to_base_translation)
 
         if DEBUG:
             print('base_to_ee_translation', base_to_ee_translation)
