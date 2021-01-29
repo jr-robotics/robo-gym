@@ -228,7 +228,7 @@ class ObstacleAvoidance1Box1PointsVoxelOccupancyUR5(MovingBoxTargetUR5):
         info = {}
 
         # minimum and maximum distance the robot should keep to the obstacle
-        minimum_distance = 0.35 # m
+        minimum_distance = 0.45 # m
         maximum_distance = 0.6 # m
 
         # calculate distance to the target
@@ -258,6 +258,21 @@ class ObstacleAvoidance1Box1PointsVoxelOccupancyUR5(MovingBoxTargetUR5):
                 print(voxel_index, voxel_center_ee_frame, np.linalg.norm(voxel_center_ee_frame))
             voxel_ee_distance.append(np.linalg.norm(voxel_center_ee_frame))
 
+
+        voxels = env_state[12:27]
+        print('voxels', voxels)
+        print('vox_dist', voxel_ee_distance)
+        # if DEBUG: 
+        #     print('Voxels:', voxels, 'SumVox:', sum(voxels))
+        #     assert sum(voxels) <= 1
+
+        # voxels = np.array(voxels)
+        # voxel_index = voxels.where(voxels == 1)
+
+        # distance_to_target = voxel_ee_distance[voxel_index]
+
+        print('distance to target', distance_to_target)
+    
         # ! not used yet
         # ? we could train the robot to always "look" at the target just because it would look cool
         polar_1 = abs(env_state[1] * 180/math.pi)
@@ -413,7 +428,7 @@ class ObstacleAvoidance1Box1PointsVoxelOccupancyUR5DoF3Sim(ObstacleAvoidance1Box
         n_objects:=1.0 \
         object_0_model_name:=box100 \
         object_0_frame:=target \
-        camera1_gazebo:=true \
+        camera1_gazebo:=True \
         camera1_link_y:=1.5 \
         camera1_link_z:=2.0 \
         camera1_link_pitch:=1.0 \
