@@ -218,6 +218,27 @@ register(
     entry_point='robo_gym.envs:ObstacleAvoidance1Box1PointsVoxelOccupancyUR5DoF5Rob',
 )
 
+# Fixed Trajectory Avoidance
+
+register(
+    id='FixedTraj1Box1PointsUR5Sim-v0',
+    entry_point='robo_gym.envs:FixedTraj1Box1PointsUR5Sim',
+)
+
+register(
+    id='FixedTraj1Box1PointsUR5Rob-v0',
+    entry_point='robo_gym.envs:FixedTraj1Box1PointsUR5Rob',
+)
+
+register(
+    id='FixedTraj1Box1PointsUR5DoF5Sim-v0',
+    entry_point='robo_gym.envs:FixedTraj1Box1PointsUR5DoF5Sim',
+)
+
+register(
+    id='FixedTraj1Box1PointsUR5DoF5Rob-v0',
+    entry_point='robo_gym.envs:FixedTraj1Box1PointsUR5DoF5Rob',
+)
 
 ## UR10 Environments
 register(
