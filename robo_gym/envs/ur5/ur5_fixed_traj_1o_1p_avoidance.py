@@ -87,14 +87,6 @@ class FixedTraj1Box1PointsUR5(MovingBoxTargetUR5):
         if not self.observation_space.contains(self.state):
             raise InvalidStateError()
         
-        # check if current position is in the range of the initial joint positions
-        if (len(self.last_position_on_success) == 0) or (type=='random'):
-            joint_positions = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
-            tolerance = 0.1
-            for joint in range(len(joint_positions)):
-                if (joint_positions[joint]+tolerance < self.initial_joint_positions_low[joint]) or  (joint_positions[joint]-tolerance  > self.initial_joint_positions_high[joint]):
-                    raise InvalidStateError('Reset joint positions are not within defined range')
-            
         return self.state
     
     def step(self, action):
