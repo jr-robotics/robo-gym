@@ -146,9 +146,9 @@ class ObstacleAvoidance1Box1PointsVoxelOccupancyUR5(MovingBoxTargetUR5):
         voxel_centers_in_occupancy_frame = (voxel_size/2.0 + voxel_size * np.mgrid[0:num_voxel_x,0:num_voxel_y,0:num_voxel_z]).reshape(3,-1).T
         if self.real_robot:
             # make sure this transform matches the static_transform_publisher in the robot server (i.e. in the launch file)
-            quaternion_occupancy_to_base = R.from_euler('z', -2.356).as_quat()
-            translation_occupancy_to_base = np.array([0.706, 0.706, 0.0])
-            self.voxel_centers_in_reference_frame = utils.change_reference_frame(voxel_centers_in_occupancy_frame, translation_occupancy_to_base, quaternion_occupancy_to_base)
+            quaternion_occupancy_to_ref_frame = R.from_euler('z', -2.356).as_quat()
+            translation_occupancy_to_ref_frame = np.array([0.706, 0.706, 0.0])
+            self.voxel_centers_in_reference_frame = utils.change_reference_frame(voxel_centers_in_occupancy_frame, translation_occupancy_to_ref_frame, quaternion_occupancy_to_ref_frame)
         else:
             # 
             quaternion_occupancy_to_world = R.identity().as_quat()
@@ -156,10 +156,10 @@ class ObstacleAvoidance1Box1PointsVoxelOccupancyUR5(MovingBoxTargetUR5):
             self.voxel_centers_in_reference_frame = utils.change_reference_frame(voxel_centers_in_occupancy_frame, translation_occupancy_to_world, quaternion_occupancy_to_world)
         
 
-        # occ frame [1.25, 0.25, 0.25] -> base [0, -0.35, 0.25]
+        # occ frame [1.25, 0.25, 0.25] -> ref_frame [0, -0.35, 0.25]
         if DEBUG:
             for i, v in enumerate(self.voxel_centers_in_reference_frame):
-                print("voxel in base_frame ", i, v, voxel_centers_in_occupancy_frame[i])
+                print("voxel in ref_frame_frame ", i, v, voxel_centers_in_occupancy_frame[i])
 
         return self.state
     
@@ -238,22 +238,22 @@ class ObstacleAvoidance1Box1PointsVoxelOccupancyUR5(MovingBoxTargetUR5):
 
         distance_to_target_2 = env_state[-3]
         
-        ee_to_base_translation = np.array(rs_state[18:21])
-        ee_to_base_quaternion = np.array(rs_state[21:25])
-        ee_to_base_rotation = R.from_quat(ee_to_base_quaternion)
-        base_to_ee_rotation = ee_to_base_rotation.inv()
+        ee_to_ref_frame_translation = np.array(rs_state[18:21])
+        ee_to_ref_frame_quaternion = np.array(rs_state[21:25])
+        ee_to_ref_frame_rotation = R.from_quat(ee_to_ref_frame_quaternion)
+        ref_frame_to_ee_rotation = ee_to_ref_frame_rotation.inv()
         # to invert the homogeneous transformation
         # R' = R^-1
-        base_to_ee_quaternion = base_to_ee_rotation.as_quat()
+        ref_frame_to_ee_quaternion = ref_frame_to_ee_rotation.as_quat()
         # t' = - R^-1 * t
-        base_to_ee_translation = -base_to_ee_rotation.apply(ee_to_base_translation)
+        ref_frame_to_ee_translation = -ref_frame_to_ee_rotation.apply(ee_to_ref_frame_translation)
 
         if DEBUG:
-            print('base_to_ee_translation', base_to_ee_translation)
-            print('base_to_ee_quaternion', base_to_ee_quaternion)
+            print('ref_frame_to_ee_translation', ref_frame_to_ee_translation)
+            print('ref_frame_to_ee_quaternion', ref_frame_to_ee_quaternion)
         voxel_ee_distance = []
         for voxel_index, voxel_center in enumerate(self.voxel_centers_in_reference_frame):
-            voxel_center_ee_frame = utils.change_reference_frame(voxel_center, base_to_ee_translation, base_to_ee_quaternion)
+            voxel_center_ee_frame = utils.change_reference_frame(voxel_center, ref_frame_to_ee_translation, ref_frame_to_ee_quaternion)
             if DEBUG:
                 print(voxel_index, voxel_center_ee_frame, np.linalg.norm(voxel_center_ee_frame))
             voxel_ee_distance.append(np.linalg.norm(voxel_center_ee_frame))
@@ -366,11 +366,11 @@ class ObstacleAvoidance1Box1PointsVoxelOccupancyUR5(MovingBoxTargetUR5):
         target = [0.0]*6
         ur_j_pos = [0.0]*6
         ur_j_vel = [0.0]*6
-        ee_to_base_transform = [0.0]*7
+        ee_to_ref_frame_transform = [0.0]*7
         ur_collision = [0.0]
-        forearm_to_base_transform = [0.0]*7
+        forearm_to_ref_frame_transform = [0.0]*7
         voxel_occupancy = [0.0]*16
-        rs_state = target + ur_j_pos + ur_j_vel + ee_to_base_transform + ur_collision + forearm_to_base_transform + voxel_occupancy
+        rs_state = target + ur_j_pos + ur_j_vel + ee_to_ref_frame_transform + ur_collision + forearm_to_ref_frame_transform + voxel_occupancy
         
 
         return len(rs_state)

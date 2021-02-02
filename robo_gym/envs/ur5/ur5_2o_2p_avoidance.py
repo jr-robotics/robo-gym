@@ -139,14 +139,17 @@ class ObstacleAvoidance2Box2PointsUR5(MovingBoxTargetUR5):
         # with respect to the end effector frame
         target_coord = rs_state[0:3]
         
-        ee_to_base_translation = rs_state[18:21]
-        ee_to_base_quaternion = rs_state[21:25]
-        ee_to_base_rotation = R.from_quat(ee_to_base_quaternion)
-        base_to_ee_rotation = ee_to_base_rotation.inv()
-        base_to_ee_quaternion = base_to_ee_rotation.as_quat()
-        base_to_ee_translation = - ee_to_base_translation
+        ee_to_ref_frame_translation = np.array(rs_state[18:21])
+        ee_to_ref_frame_quaternion = np.array(rs_state[21:25])
+        ee_to_ref_frame_rotation = R.from_quat(ee_to_ref_frame_quaternion)
+        ref_frame_to_ee_rotation = ee_to_ref_frame_rotation.inv()
+        # to invert the homogeneous transformation
+        # R' = R^-1
+        ref_frame_to_ee_quaternion = ref_frame_to_ee_rotation.as_quat()
+        # t' = - R^-1 * t
+        ref_frame_to_ee_translation = -ref_frame_to_ee_rotation.apply(ee_to_ref_frame_translation)
 
-        target_coord_ee_frame = utils.change_reference_frame(target_coord,base_to_ee_translation,base_to_ee_quaternion)
+        target_coord_ee_frame = utils.change_reference_frame(target_coord,ref_frame_to_ee_translation,ref_frame_to_ee_quaternion)
         target_polar = utils.cartesian_to_polar_3d(target_coord_ee_frame)
 
         # Transform joint positions and joint velocities from ROS indexing to
@@ -165,26 +168,29 @@ class ObstacleAvoidance2Box2PointsUR5(MovingBoxTargetUR5):
         # with respect to the end effector frame
         object2_coord = rs_state[26:29]
 
-        object2_coord_ee_frame = utils.change_reference_frame(object2_coord,base_to_ee_translation,base_to_ee_quaternion)
+        object2_coord_ee_frame = utils.change_reference_frame(object2_coord,ref_frame_to_ee_translation,ref_frame_to_ee_quaternion)
         object2_polar = utils.cartesian_to_polar_3d(object2_coord_ee_frame)
 
         # Transform cartesian coordinates of target to polar coordinates 
         # with respect to the forearm
 
-        forearm_to_base_translation = rs_state[29:32]
-        forearm_to_base_quaternion = rs_state[32:36]
-        forearm_to_base_rotation = R.from_quat(forearm_to_base_quaternion)
-        base_to_forearm_rotation = forearm_to_base_rotation.inv()
-        base_to_forearm_quaternion = base_to_forearm_rotation.as_quat()
-        base_to_forearm_translation = - forearm_to_base_translation
+        forearm_to_ref_frame_translation = rs_state[29:32]
+        forearm_to_ref_frame_quaternion = rs_state[32:36]
+        forearm_to_ref_frame_rotation = R.from_quat(forearm_to_ref_frame_quaternion)
+        ref_frame_to_forearm_rotation = forearm_to_ref_frame_rotation.inv()
+        # to invert the homogeneous transformation
+        # R' = R^-1
+        ref_frame_to_forearm_quaternion = ref_frame_to_forearm_rotation.as_quat()
+        # t' = - R^-1 * t
+        ref_frame_to_forearm_translation = -ref_frame_to_forearm_rotation.apply(forearm_to_ref_frame_translation)
 
-        target_coord_forearm_frame = utils.change_reference_frame(target_coord,base_to_forearm_translation,base_to_forearm_quaternion)
+        target_coord_forearm_frame = utils.change_reference_frame(target_coord,ref_frame_to_forearm_translation,ref_frame_to_forearm_quaternion)
         target_polar_forearm = utils.cartesian_to_polar_3d(target_coord_forearm_frame)
 
          # Transform cartesian coordinates of object2 to polar coordinates 
         # with respect to the end effector frame
 
-        object2_coord_forearm_frame = utils.change_reference_frame(object2_coord,base_to_forearm_translation,base_to_forearm_quaternion)
+        object2_coord_forearm_frame = utils.change_reference_frame(object2_coord,ref_frame_to_forearm_translation,ref_frame_to_forearm_quaternion)
         object2_polar_forearm = utils.cartesian_to_polar_3d(object2_coord_forearm_frame)
 
 
@@ -326,11 +332,11 @@ class ObstacleAvoidance2Box2PointsUR5(MovingBoxTargetUR5):
         target = [0.0]*6
         ur_j_pos = [0.0]*6
         ur_j_vel = [0.0]*6
-        ee_to_base_transform = [0.0]*7
+        ee_to_ref_frame_transform = [0.0]*7
         ur_collision = [0.0]
         object_2 = [0.0]*6 
-        forearm_to_base_transform = [0.0]*7
-        rs_state = target + ur_j_pos + ur_j_vel + ee_to_base_transform + ur_collision + object_2 + forearm_to_base_transform
+        forearm_to_ref_frame_transform = [0.0]*7
+        rs_state = target + ur_j_pos + ur_j_vel + ee_to_ref_frame_transform + ur_collision + object_2 + forearm_to_ref_frame_transform
 
         return len(rs_state)
 

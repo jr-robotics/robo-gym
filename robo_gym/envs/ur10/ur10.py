@@ -171,9 +171,9 @@ class UR10Env(gym.Env):
         target = [0.0]*6
         ur_j_pos = [0.0]*6
         ur_j_vel = [0.0]*6
-        ee_to_base_transform = [0.0]*7
+        ee_to_ref_frame_transform = [0.0]*7
         ur_collision = [0.0]
-        rs_state = target + ur_j_pos + ur_j_vel + ee_to_base_transform + ur_collision
+        rs_state = target + ur_j_pos + ur_j_vel + ee_to_ref_frame_transform + ur_collision
 
         return len(rs_state)
 
@@ -238,14 +238,17 @@ class UR10Env(gym.Env):
         # with respect to the end effector frame
         target_coord = rs_state[0:3]
         
-        ee_to_base_translation = rs_state[18:21]
-        ee_to_base_quaternion = rs_state[21:25]
-        ee_to_base_rotation = R.from_quat(ee_to_base_quaternion)
-        base_to_ee_rotation = ee_to_base_rotation.inv()
-        base_to_ee_quaternion = base_to_ee_rotation.as_quat()
-        base_to_ee_translation = - ee_to_base_translation
+        ee_to_ref_frame_translation = np.array(rs_state[18:21])
+        ee_to_ref_frame_quaternion = np.array(rs_state[21:25])
+        ee_to_ref_frame_rotation = R.from_quat(ee_to_ref_frame_quaternion)
+        ref_frame_to_ee_rotation = ee_to_ref_frame_rotation.inv()
+        # to invert the homogeneous transformation
+        # R' = R^-1
+        ref_frame_to_ee_quaternion = ref_frame_to_ee_rotation.as_quat()
+        # t' = - R^-1 * t
+        ref_frame_to_ee_translation = -ref_frame_to_ee_rotation.apply(ee_to_ref_frame_translation)
 
-        target_coord_ee_frame = utils.change_reference_frame(target_coord,base_to_ee_translation,base_to_ee_quaternion)
+        target_coord_ee_frame = utils.change_reference_frame(target_coord,ref_frame_to_ee_translation,ref_frame_to_ee_quaternion)
         target_polar = utils.cartesian_to_polar_3d(target_coord_ee_frame)
 
         # Transform joint positions and joint velocities from ROS indexing to
