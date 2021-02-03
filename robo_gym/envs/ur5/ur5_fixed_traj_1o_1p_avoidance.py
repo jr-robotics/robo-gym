@@ -59,7 +59,7 @@ class FixedTraj1Box1PointsUR5(MovingBoxTargetUR5):
         z_amplitude = np.random.default_rng().uniform(low=0.09, high=0.35)
         z_frequency = 0.125
         z_offset = np.random.default_rng().uniform(low=0.2, high=0.6)
-        n_sampling_points = int(np.random.default_rng().uniform(low= 4000, high=50000))
+        n_sampling_points = int(np.random.default_rng().uniform(low= 4000, high=12000))
         
         string_params = {"object_0_function": "3d_spline"}
         float_params = {"object_0_x_min": -0.7, "object_0_x_max": 0.7, "object_0_y_min": 0.2, "object_0_y_max": 1.0, \
@@ -264,13 +264,13 @@ class FixedTraj1Box1PointsUR5(MovingBoxTargetUR5):
         # reward for being in the defined interval of minimum_distance and maximum_distance
         dr = 0
         if abs(env_state[-6:]).sum() < 0.5:
-            dr = 1.5 * (1 - (abs(delta_joint_pos).sum()/0.5)) * (1/1000)
+            dr = 1.2 * (1 - (abs(delta_joint_pos).sum()/0.5)) * (1/1000)
             reward += dr
         
         # reward moving as less as possible
         act_r = 0 
         if abs(action).sum() <= action.size:
-            act_r = 1.5 * (1 - (np.square(action).sum()/action.size)) * (1/1000)
+            act_r = 1.2 * (1 - (np.square(action).sum()/action.size)) * (1/1000)
             reward += act_r
 
         # punish big deltas in action
@@ -279,7 +279,7 @@ class FixedTraj1Box1PointsUR5(MovingBoxTargetUR5):
             if abs(action[i] - self.last_action[i]) > 0.5:
                 a_r = - 0.2 * (1/1000)
                 act_delta += a_r
-                # reward += a_r
+                reward += a_r
             
 
 
