@@ -133,14 +133,11 @@ class ObstacleAvoidanceVarB1Box1PointUR5(MovingBox3DSplineTargetUR5):
             reward = -1
             done = True
             info['final_status'] = 'collision'
-            info['target_coord'] = target_coord
-            self.last_position_on_success = []
 
         if self.elapsed_steps >= self.max_episode_steps:
             done = True
             info['final_status'] = 'success'
-            info['target_coord'] = target_coord
-            self.last_position_on_success = []
+
         
 
         if DEBUG: self.print_state_action_info(rs_state, action)
