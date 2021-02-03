@@ -217,7 +217,7 @@ class UR5Env(gym.Env):
 
         """
         # Random initial joint positions
-        joint_positions = np.random.default_rng().uniform(low=self.initial_joint_positions_low, high=self.initial_joint_positions_high)
+        joint_positions = np.random.default_rng().uniform(low=np.array([-0.65, -2.75, 1.0, -3.14, -1.7, -3.14]), high=np.array([0.65, -2.0, 2.5, 3.14, -1.0, 3.14]))
 
         return joint_positions
 
