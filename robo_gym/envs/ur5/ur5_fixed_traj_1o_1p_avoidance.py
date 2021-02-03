@@ -45,13 +45,13 @@ class FixedTraj1Box1PointsUR5(MovingBoxTargetUR5):
         # Set initial robot joint positions
         if initial_joint_positions:
             assert len(initial_joint_positions) == 6
-            ur_initial_joint_positions = initial_joint_positions
+            self.initial_joint_positions = initial_joint_positions
         elif (len(self.last_position_on_success) != 0) and (type=='continue'):
-            ur_initial_joint_positions = self.last_position_on_success
+            self.initial_joint_positions = self.last_position_on_success
         else:
-            ur_initial_joint_positions = self._get_initial_joint_positions()
+            self.initial_joint_positions = self._get_initial_joint_positions()
 
-        rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(ur_initial_joint_positions)
+        rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self.initial_joint_positions)
 
 
         # TODO: We should create some kind of helper function depending on how dynamic these settings should be
@@ -86,6 +86,12 @@ class FixedTraj1Box1PointsUR5(MovingBoxTargetUR5):
         # Check if the environment state is contained in the observation space
         if not self.observation_space.contains(self.state):
             raise InvalidStateError()
+
+        # check if current position is in the range of the initial joint positions
+        if (len(self.last_position_on_success) == 0) or (type=='random'):
+            joint_positions = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
+            if not np.isclose(joint_positions, self.initial_joint_positions, atol=0.1).all():
+                raise InvalidStateError('Reset joint positions are not within defined range')
         
         return self.state
     

@@ -40,7 +40,6 @@ class UR5Env(gym.Env):
         self.seed()
         self.distance_threshold = 0.1
         self.abs_joint_pos_range = self.ur.get_max_joint_positions()
-        self._set_initial_joint_positions_range()
         self.last_position_on_success = []
         self.prev_rs_state = None
         self.last_action = None
@@ -82,13 +81,13 @@ class UR5Env(gym.Env):
         # Set initial robot joint positions
         if initial_joint_positions:
             assert len(initial_joint_positions) == 6
-            ur_initial_joint_positions = initial_joint_positions
+            self.initial_joint_positions = initial_joint_positions
         elif (len(self.last_position_on_success) != 0) and (type=='continue'):
-            ur_initial_joint_positions = self.last_position_on_success
+            self.initial_joint_positions = self.last_position_on_success
         else:
-            ur_initial_joint_positions = self._get_initial_joint_positions()
+            self.initial_joint_positions = self._get_initial_joint_positions()
 
-        rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(ur_initial_joint_positions)
+        rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self.initial_joint_positions)
 
         # Set target End Effector pose
         if ee_target_pose:
@@ -121,11 +120,8 @@ class UR5Env(gym.Env):
         # check if current position is in the range of the initial joint positions
         if (len(self.last_position_on_success) == 0) or (type=='random'):
             joint_positions = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
-            tolerance = 0.1
-            for joint in range(len(joint_positions)):
-                if (joint_positions[joint]+tolerance < self.initial_joint_positions_low[joint]) or  (joint_positions[joint]-tolerance  > self.initial_joint_positions_high[joint]):
-                    raise InvalidStateError('Reset joint positions are not within defined range')
-
+            if not np.isclose(joint_positions, self.initial_joint_positions, atol=0.1).all():
+                raise InvalidStateError('Reset joint positions are not within defined range')
 
         # go one empty action and check if there is a collision
         if not self.real_robot:
@@ -212,10 +208,6 @@ class UR5Env(gym.Env):
         env_state = target_polar + ur_j_pos + ur_j_vel
 
         return len(env_state)
-
-    def _set_initial_joint_positions_range(self):
-        self.initial_joint_positions_low = np.array([-0.65, -2.75, 1.0, -3.14, -1.7, -3.14])
-        self.initial_joint_positions_high = np.array([0.65, -2.0, 2.5, 3.14, -1.0, 3.14])
 
     def _get_initial_joint_positions(self):
         """Generate random initial robot joint positions.
@@ -392,14 +384,14 @@ class EndEffectorPositioningUR5DoF5(UR5Env):
         # Set initial robot joint positions
         if initial_joint_positions:
             assert len(initial_joint_positions) == 6
-            ur_initial_joint_positions = initial_joint_positions
+            self.initial_joint_positions = initial_joint_positions
         elif (len(self.last_position_on_success) != 0) and (type=='continue'):
-            ur_initial_joint_positions = self.last_position_on_success
+            self.initial_joint_positions = self.last_position_on_success
         else:
-            ur_initial_joint_positions = self._get_initial_joint_positions()
+            self.initial_joint_positions = self._get_initial_joint_positions()
 
-        print(ur_initial_joint_positions)
-        rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(ur_initial_joint_positions)
+        rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self.initial_joint_positions)
+
         # Set target End Effector pose
         if ee_target_pose:
             assert len(ee_target_pose) == 6
@@ -427,13 +419,11 @@ class EndEffectorPositioningUR5DoF5(UR5Env):
         if not self.observation_space.contains(self.state):
             raise InvalidStateError()
         
-        # check if current position is in the range of the initial joint positions
+         # check if current position is in the range of the initial joint positions
         if (len(self.last_position_on_success) == 0) or (type=='random'):
             joint_positions = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
-            tolerance = 0.1
-            for joint in range(len(joint_positions)):
-                if (joint_positions[joint]+tolerance < self.initial_joint_positions_low[joint]) or  (joint_positions[joint]-tolerance  > self.initial_joint_positions_high[joint]):
-                    raise InvalidStateError('Reset joint positions are not within defined range')
+            if not np.isclose(joint_positions, self.initial_joint_positions, atol=0.1).all():
+                raise InvalidStateError('Reset joint positions are not within defined range')
 
         # go one empty action and check if there is a collision
         if not self.real_robot:
@@ -444,11 +434,6 @@ class EndEffectorPositioningUR5DoF5(UR5Env):
                 raise InvalidStateError('Reset started in a collision state')
             
         return self.state
-
-
-    def _set_initial_joint_positions_range(self):
-        self.initial_joint_positions_low = np.array([-0.65, -2.75, 1.0, -3.14, -1.7, 0.0])
-        self.initial_joint_positions_high = np.array([0.65, -2.0, 2.5, 3.14, -1.3, 0.0])
 
     def _reward(self, rs_state, action):
         reward = 0
