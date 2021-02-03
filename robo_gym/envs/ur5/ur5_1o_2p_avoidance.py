@@ -182,8 +182,8 @@ class ObstacleAvoidance1Box2PointsUR5(MovingBoxTargetUR5):
         # Transform cartesian coordinates of target to polar coordinates 
         # with respect to the forearm
 
-        forearm_to_ref_frame_translation = rs_state[29:32]
-        forearm_to_ref_frame_quaternion = rs_state[32:36]
+        forearm_to_ref_frame_translation = rs_state[26:29]
+        forearm_to_ref_frame_quaternion = rs_state[29:33]
         forearm_to_ref_frame_rotation = R.from_quat(forearm_to_ref_frame_quaternion)
         ref_frame_to_forearm_rotation = forearm_to_ref_frame_rotation.inv()
         # to invert the homogeneous transformation
