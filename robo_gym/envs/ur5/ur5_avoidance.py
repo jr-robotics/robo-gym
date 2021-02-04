@@ -252,12 +252,8 @@ class MovingBoxTargetUR5(UR5Env):
 
         # Convert action indexing from ur to ros
         rs_action = self.ur._ur_joint_list_to_ros_joint_list(rs_action)
-        # Send action to Robot Server
-        if not self.client.send_action(rs_action.tolist()):
-            raise RobotServerError("send_action")
-
-        # Get state from Robot Server
-        rs_state = self.client.get_state_msg().state
+        # Send action to Robot Server and get state
+        rs_state = self.client.send_action_get_state(rs_action.tolist()).state
         self.prev_rs_state = copy.deepcopy(rs_state)
 
         # Convert the state from Robot Server format to environment format

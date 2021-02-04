@@ -148,12 +148,8 @@ class UR5Env(gym.Env):
         rs_action = np.multiply(rs_action, self.abs_joint_pos_range)
         # Convert action indexing from ur to ros
         rs_action = self.ur._ur_joint_list_to_ros_joint_list(rs_action)
-        # Send action to Robot Server
-        if not self.client.send_action(rs_action.tolist()):
-            raise RobotServerError("send_action")
-
-        # Get state from Robot Server
-        rs_state = self.client.get_state_msg().state
+        # Send action to Robot Server and get state
+        rs_state = self.client.send_action_get_state(rs_action.tolist()).state
         # Convert the state from Robot Server format to environment format
         self.state = self._robot_server_state_to_env_state(rs_state)
 
@@ -496,12 +492,8 @@ class EndEffectorPositioningUR5DoF5(UR5Env):
         rs_action = np.multiply(rs_action, self.abs_joint_pos_range)
         # Convert action indexing from ur to ros
         rs_action = self.ur._ur_joint_list_to_ros_joint_list(rs_action)
-        # Send action to Robot Server
-        if not self.client.send_action(rs_action.tolist()):
-            raise RobotServerError("send_action")
-
-        # Get state from Robot Server
-        rs_state = self.client.get_state_msg().state
+        # Send action to Robot Server and get state
+        rs_state = self.client.send_action_get_state(rs_action.tolist()).state
         # Convert the state from Robot Server format to environment format
         self.state = self._robot_server_state_to_env_state(rs_state)
 
