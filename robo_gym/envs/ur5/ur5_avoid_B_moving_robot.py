@@ -19,6 +19,77 @@ from robo_gym.envs.ur5.ur5_avoidance import MovingBox3DSplineTargetUR5
 DEBUG = True
 
 class ObstacleAvoidanceVarB1Box1PointUR5(MovingBox3DSplineTargetUR5):
+        # TODO: The only difference to MovingBoxTargetUR5 are the settings of the target right? If so maybe we can find a cleaner solution later so we dont have to have the same reset twice
+    def reset(self, initial_joint_positions = None, type='random'):
+        """Environment reset.
+
+        Args:
+            initial_joint_positions (list[6] or np.array[6]): robot joint positions in radians.
+            ee_target_pose (list[6] or np.array[6]): [x,y,z,r,p,y] target end effector pose.
+
+        Returns:
+            np.array: Environment state.
+
+        """
+        self.elapsed_steps = 0
+
+        # Initialize environment state
+        self.state = np.zeros(self._get_env_state_len())
+        rs_state = np.zeros(self._get_robot_server_state_len())
+        
+        # NOTE: maybe we can find a cleaner version when we have the final envs (we could prob remove it for the avoidance task altogether)
+        # Set initial robot joint positions
+        if initial_joint_positions:
+            assert len(initial_joint_positions) == 6
+            self.initial_joint_positions = initial_joint_positions
+        elif (len(self.last_position_on_success) != 0) and (type=='continue'):
+            self.initial_joint_positions = self.last_position_on_success
+        else:
+            self.initial_joint_positions = self._get_initial_joint_positions()
+
+        rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self.initial_joint_positions)
+
+
+        # TODO: We should create some kind of helper function depending on how dynamic these settings should be
+        # Set initial state of the Robot Server
+        z_amplitude = np.random.default_rng().uniform(low=0.09, high=0.35)
+        z_frequency = 0.125
+        z_offset = np.random.default_rng().uniform(low=0.2, high=0.6)
+        n_sampling_points = int(np.random.default_rng().uniform(low= 4000, high=8000))
+        
+        string_params = {"object_0_function": "3d_spline"}
+        float_params = {"object_0_x_min": -0.7, "object_0_x_max": 0.7, "object_0_y_min": 0.2, "object_0_y_max": 1.0, \
+                        "object_0_z_min": 0.1, "object_0_z_max": 1.0, "object_0_n_points": 10, \
+                        "n_sampling_points": n_sampling_points}
+        state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
+        if not self.client.set_state_msg(state_msg):
+            raise RobotServerError("set_state")
+
+        # Get Robot Server state
+        rs_state = copy.deepcopy(np.nan_to_num(np.array(self.client.get_state_msg().state)))
+        self.prev_rs_state = copy.deepcopy(rs_state)
+
+        # Check if the length of the Robot Server state received is correct
+        if not len(rs_state)== self._get_robot_server_state_len():
+            raise InvalidStateError("Robot Server state received has wrong length")
+
+        # Convert the initial state from Robot Server format to environment format
+        self.state = self._robot_server_state_to_env_state(rs_state)
+
+        # save start position
+        self.start_position = self.state[3:9]
+
+        # Check if the environment state is contained in the observation space
+        if not self.observation_space.contains(self.state):
+            raise InvalidStateError()
+        
+        # check if current position is in the range of the initial joint positions
+        if (len(self.last_position_on_success) == 0) or (type=='random'):
+            joint_positions = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
+            if not np.isclose(joint_positions, self.initial_joint_positions, atol=0.1).all():
+                raise InvalidStateError('Reset joint positions are not within defined range')
+            
+        return self.state
 
     def _get_initial_joint_positions(self):
         """Get initial robot joint positions.
