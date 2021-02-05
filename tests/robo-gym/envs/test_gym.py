@@ -18,7 +18,8 @@ envs = [
     'Moving2Box3DSplineTargetUR5Sim-v0',
     'ObstacleAvoidance1Box2PointsUR5Sim-v0',
     'ObstacleAvoidance2Box2PointsUR5Sim-v0',
-    'FixedTraj1Box1PointsUR5Sim-v0'
+    'FixedTraj1Box1PointsUR5Sim-v0',
+    'ObstacleAvoidanceVarB1Box1PointUR5Sim-v0'
 
 ]
 

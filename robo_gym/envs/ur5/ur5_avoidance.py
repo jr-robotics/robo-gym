@@ -73,13 +73,13 @@ class MovingBoxTargetUR5(UR5Env):
         # Set initial robot joint positions
         if initial_joint_positions:
             assert len(initial_joint_positions) == 6
-            ur_initial_joint_positions = initial_joint_positions
+            self.initial_joint_positions = initial_joint_positions
         elif (len(self.last_position_on_success) != 0) and (type=='continue'):
-            ur_initial_joint_positions = self.last_position_on_success
+            self.initial_joint_positions = self.last_position_on_success
         else:
-            ur_initial_joint_positions = self._get_initial_joint_positions()
+            self.initial_joint_positions = self._get_initial_joint_positions()
 
-        rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(ur_initial_joint_positions)
+        rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self.initial_joint_positions)
 
 
         # Set initial state of the Robot Server
@@ -115,10 +115,8 @@ class MovingBoxTargetUR5(UR5Env):
         # check if current position is in the range of the initial joint positions
         if (len(self.last_position_on_success) == 0) or (type=='random'):
             joint_positions = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
-            tolerance = 0.1
-            for joint in range(len(joint_positions)):
-                if (joint_positions[joint]+tolerance < self.initial_joint_positions_low[joint]) or  (joint_positions[joint]-tolerance  > self.initial_joint_positions_high[joint]):
-                    raise InvalidStateError('Reset joint positions are not within defined range')
+            if not np.isclose(joint_positions, self.initial_joint_positions, atol=0.1).all():
+                raise InvalidStateError('Reset joint positions are not within defined range')        
 
         return self.state
 
@@ -254,12 +252,8 @@ class MovingBoxTargetUR5(UR5Env):
 
         # Convert action indexing from ur to ros
         rs_action = self.ur._ur_joint_list_to_ros_joint_list(rs_action)
-        # Send action to Robot Server
-        if not self.client.send_action(rs_action.tolist()):
-            raise RobotServerError("send_action")
-
-        # Get state from Robot Server
-        rs_state = self.client.get_state_msg().state
+        # Send action to Robot Server and get state
+        rs_state = self.client.send_action_get_state(rs_action.tolist()).state
         self.prev_rs_state = copy.deepcopy(rs_state)
 
         # Convert the state from Robot Server format to environment format
@@ -277,11 +271,6 @@ class MovingBoxTargetUR5(UR5Env):
 
         return self.state, reward, done, info
     
-    # TODO: remove if we don't want to use it in the avoidance envs
-    def _set_initial_joint_positions_range(self):
-        self.initial_joint_positions_low = np.array([-0.9, -1.5, -1.5, -3.14, 1.3, 0.0])
-        self.initial_joint_positions_high = np.array([-0.7, -1.1, -1.1, 3.14, 1.7, 0.0])
-
     def _get_initial_joint_positions(self):
         """Get initial robot joint positions.
 
@@ -289,7 +278,6 @@ class MovingBoxTargetUR5(UR5Env):
             np.array: Joint positions with standard indexing.
 
         """
-        self._set_initial_joint_positions_range()
         # Fixed initial joint positions
         joint_positions = np.array([-0.78,-1.31,-1.31,-2.18,1.57,0.0])
 
@@ -378,13 +366,13 @@ class MovingBox3DSplineTargetUR5(MovingBoxTargetUR5):
         # Set initial robot joint positions
         if initial_joint_positions:
             assert len(initial_joint_positions) == 6
-            ur_initial_joint_positions = initial_joint_positions
+            self.initial_joint_positions = initial_joint_positions
         elif (len(self.last_position_on_success) != 0) and (type=='continue'):
-            ur_initial_joint_positions = self.last_position_on_success
+            self.initial_joint_positions = self.last_position_on_success
         else:
-            ur_initial_joint_positions = self._get_initial_joint_positions()
+            self.initial_joint_positions = self._get_initial_joint_positions()
 
-        rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(ur_initial_joint_positions)
+        rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self.initial_joint_positions)
 
 
         # TODO: We should create some kind of helper function depending on how dynamic these settings should be
@@ -423,10 +411,8 @@ class MovingBox3DSplineTargetUR5(MovingBoxTargetUR5):
         # check if current position is in the range of the initial joint positions
         if (len(self.last_position_on_success) == 0) or (type=='random'):
             joint_positions = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
-            tolerance = 0.1
-            for joint in range(len(joint_positions)):
-                if (joint_positions[joint]+tolerance < self.initial_joint_positions_low[joint]) or  (joint_positions[joint]-tolerance  > self.initial_joint_positions_high[joint]):
-                    raise InvalidStateError('Reset joint positions are not within defined range')
+            if not np.isclose(joint_positions, self.initial_joint_positions, atol=0.1).all():
+                raise InvalidStateError('Reset joint positions are not within defined range')
             
         return self.state
 
@@ -496,13 +482,13 @@ class Moving2Box3DSplineTargetUR5(MovingBoxTargetUR5):
         # Set initial robot joint positions
         if initial_joint_positions:
             assert len(initial_joint_positions) == 6
-            ur_initial_joint_positions = initial_joint_positions
+            self.initial_joint_positions = initial_joint_positions
         elif (len(self.last_position_on_success) != 0) and (type=='continue'):
-            ur_initial_joint_positions = self.last_position_on_success
+            self.initial_joint_positions = self.last_position_on_success
         else:
-            ur_initial_joint_positions = self._get_initial_joint_positions()
+            self.initial_joint_positions = self._get_initial_joint_positions()
 
-        rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(ur_initial_joint_positions)
+        rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self.initial_joint_positions)
 
 
         # TODO: We should create some kind of helper function depending on how dynamic these settings should be
@@ -543,10 +529,8 @@ class Moving2Box3DSplineTargetUR5(MovingBoxTargetUR5):
         # check if current position is in the range of the initial joint positions
         if (len(self.last_position_on_success) == 0) or (type=='random'):
             joint_positions = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
-            tolerance = 0.1
-            for joint in range(len(joint_positions)):
-                if (joint_positions[joint]+tolerance < self.initial_joint_positions_low[joint]) or  (joint_positions[joint]-tolerance  > self.initial_joint_positions_high[joint]):
-                    raise InvalidStateError('Reset joint positions are not within defined range')
+            if not np.isclose(joint_positions, self.initial_joint_positions, atol=0.1).all():
+                raise InvalidStateError('Reset joint positions are not within defined range')
             
         return self.state
     
