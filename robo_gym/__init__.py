@@ -272,6 +272,39 @@ register(
     entry_point='robo_gym.envs:ObstacleAvoidanceVarB1Box1PointUR5DoF5Rob',
 )
 
+# ? Variant B 10 Points - Nice Environment with the position that the robot should keep that is changing over time. 
+
+register(
+    id='ObstacleAvoidanceVarB10Points1Box1PointUR5Sim-v0',
+    entry_point='robo_gym.envs:ObstacleAvoidanceVarB10Points1Box1PointUR5Sim',
+)
+
+register(
+    id='ObstacleAvoidanceVarB10Points1Box1PointUR5Rob-v0',
+    entry_point='robo_gym.envs:ObstacleAvoidanceVarB10Points1Box1PointUR5Rob',
+)
+
+register(
+    id='ObstacleAvoidanceVarB10Points1Box1PointUR5DoF3Sim-v0',
+    entry_point='robo_gym.envs:ObstacleAvoidanceVarB10Points1Box1PointUR5DoF3Sim',
+)
+
+register(
+    id='ObstacleAvoidanceVarB10Points1Box1PointUR5DoF3Rob-v0',
+    entry_point='robo_gym.envs:ObstacleAvoidanceVarB10Points1Box1PointUR5DoF3Rob',
+)
+
+register(
+    id='ObstacleAvoidanceVarB10Points1Box1PointUR5DoF5Sim-v0',
+    entry_point='robo_gym.envs:ObstacleAvoidanceVarB10Points1Box1PointUR5DoF5Sim',
+)
+
+register(
+    id='ObstacleAvoidanceVarB10Points1Box1PointUR5DoF5Rob-v0',
+    entry_point='robo_gym.envs:ObstacleAvoidanceVarB10Points1Box1PointUR5DoF5Rob',
+)
+
+
 
 ## UR10 Environments
 register(
