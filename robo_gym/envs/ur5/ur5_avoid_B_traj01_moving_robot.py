@@ -19,8 +19,8 @@ from robo_gym.envs.ur5.ur5_avoid_B_moving_robot import ObstacleAvoidanceVarB1Box
 DEBUG = True
 
 class ObstacleAvoidanceVarBTraj011Box1PointUR5(ObstacleAvoidanceVarB1Box1PointUR5):
-    def _get_initial_joint_positions(self):
-        """Get initial robot joint positions.
+    def _get_desired_joint_positions(self):
+        """Get desired robot joint positions.
 
         Returns:
             np.array: Joint positions with standard indexing.

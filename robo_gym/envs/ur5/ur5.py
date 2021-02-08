@@ -85,7 +85,7 @@ class UR5Env(gym.Env):
         elif (len(self.last_position_on_success) != 0) and (type=='continue'):
             self.initial_joint_positions = self.last_position_on_success
         else:
-            self.initial_joint_positions = self._get_initial_joint_positions()
+            self.initial_joint_positions = self._get_desired_joint_positions()
 
         rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self.initial_joint_positions)
 
@@ -205,14 +205,14 @@ class UR5Env(gym.Env):
 
         return len(env_state)
 
-    def _get_initial_joint_positions(self):
-        """Generate random initial robot joint positions.
+    def _get_desired_joint_positions(self):
+        """Generate random desired robot joint positions.
 
         Returns:
             np.array: Joint positions with standard indexing.
 
         """
-        # Random initial joint positions
+        # Random desired joint positions
         joint_positions = np.random.default_rng().uniform(low=np.array([-0.65, -2.75, 1.0, -3.14, -1.7, -3.14]), high=np.array([0.65, -2.0, 2.5, 3.14, -1.0, 3.14]))
 
         return joint_positions
@@ -384,7 +384,7 @@ class EndEffectorPositioningUR5DoF5(UR5Env):
         elif (len(self.last_position_on_success) != 0) and (type=='continue'):
             self.initial_joint_positions = self.last_position_on_success
         else:
-            self.initial_joint_positions = self._get_initial_joint_positions()
+            self.initial_joint_positions = self._get_desired_joint_positions()
 
         rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self.initial_joint_positions)
 

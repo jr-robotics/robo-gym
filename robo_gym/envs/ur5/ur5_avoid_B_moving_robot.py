@@ -70,7 +70,7 @@ class ObstacleAvoidanceVarB1Box1PointUR5(MovingBox3DSplineTargetUR5):
         elif (len(self.last_position_on_success) != 0) and (type=='continue'):
             self.initial_joint_positions = self.last_position_on_success
         else:
-            self.initial_joint_positions = self._get_initial_joint_positions()
+            self.initial_joint_positions = self._get_desired_joint_positions()
 
         rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self.initial_joint_positions)
 
@@ -174,7 +174,7 @@ class ObstacleAvoidanceVarB1Box1PointUR5(MovingBox3DSplineTargetUR5):
         ur_j_pos_norm = self.ur.normalize_joint_values(joints=ur_j_pos)
 
         # start joint positions
-        start_joints = self.ur.normalize_joint_values(self._get_initial_joint_positions())
+        start_joints = self.ur.normalize_joint_values(self._get_desired_joint_positions())
         delta_joints = ur_j_pos_norm - start_joints
 
         # Compose environment state
@@ -182,14 +182,14 @@ class ObstacleAvoidanceVarB1Box1PointUR5(MovingBox3DSplineTargetUR5):
 
         return state
 
-    def _get_initial_joint_positions(self):
-        """Get initial robot joint positions.
+    def _get_desired_joint_positions(self):
+        """Get desired robot joint positions.
 
         Returns:
             np.array: Joint positions with standard indexing.
 
         """
-        # Fixed initial joint positions
+        
         if self.elapsed_steps < 250:
             joint_positions = np.array([-0.78,-1.31,-1.31,-2.18,1.57,0.0])
         elif self.elapsed_steps < 500:

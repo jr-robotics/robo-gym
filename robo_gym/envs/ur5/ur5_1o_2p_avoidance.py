@@ -73,7 +73,7 @@ class ObstacleAvoidance1Box2PointsUR5(MovingBoxTargetUR5):
         elif (len(self.last_position_on_success) != 0) and (type=='continue'):
             self.initial_joint_positions = self.last_position_on_success
         else:
-            self.initial_joint_positions = self._get_initial_joint_positions()
+            self.initial_joint_positions = self._get_desired_joint_positions()
 
         rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self.initial_joint_positions)
 
@@ -174,7 +174,7 @@ class ObstacleAvoidance1Box2PointsUR5(MovingBoxTargetUR5):
         ur_j_pos_norm = self.ur.normalize_joint_values(joints=ur_j_pos)
 
         # start joint positions
-        start_joints = self.ur.normalize_joint_values(self._get_initial_joint_positions())
+        start_joints = self.ur.normalize_joint_values(self._get_desired_joint_positions())
         delta_joints = ur_j_pos_norm - start_joints
 
         # Transform cartesian coordinates of target to polar coordinates 

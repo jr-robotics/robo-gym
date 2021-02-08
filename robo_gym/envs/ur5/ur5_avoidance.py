@@ -77,7 +77,7 @@ class MovingBoxTargetUR5(UR5Env):
         elif (len(self.last_position_on_success) != 0) and (type=='continue'):
             self.initial_joint_positions = self.last_position_on_success
         else:
-            self.initial_joint_positions = self._get_initial_joint_positions()
+            self.initial_joint_positions = self._get_desired_joint_positions()
 
         rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self.initial_joint_positions)
 
@@ -240,15 +240,15 @@ class MovingBoxTargetUR5(UR5Env):
             self.last_action = action
         
         # Convert environment action to Robot Server action
-        initial_joint_positions = self._get_initial_joint_positions()
+        desired_joint_positions = self._get_desired_joint_positions()
         if action.size == 3:
-            initial_joint_positions[1:4] = initial_joint_positions[1:4] + action
+            desired_joint_positions[1:4] = desired_joint_positions[1:4] + action
         elif action.size == 5:
-            initial_joint_positions[0:5] = initial_joint_positions[0:5] + action
+            desired_joint_positions[0:5] = desired_joint_positions[0:5] + action
         elif action.size == 6:
-            initial_joint_positions = initial_joint_positions + action
+            desired_joint_positions = desired_joint_positions + action
 
-        rs_action = initial_joint_positions
+        rs_action = desired_joint_positions
 
         # Convert action indexing from ur to ros
         rs_action = self.ur._ur_joint_list_to_ros_joint_list(rs_action)
@@ -271,14 +271,14 @@ class MovingBoxTargetUR5(UR5Env):
 
         return self.state, reward, done, info
     
-    def _get_initial_joint_positions(self):
-        """Get initial robot joint positions.
+    def _get_desired_joint_positions(self):
+        """Get desired robot joint positions.
 
         Returns:
             np.array: Joint positions with standard indexing.
 
         """
-        # Fixed initial joint positions
+        # Fixed desired joint positions
         joint_positions = np.array([-0.78,-1.31,-1.31,-2.18,1.57,0.0])
 
         return joint_positions
@@ -322,7 +322,7 @@ class MovingBoxTargetUR5(UR5Env):
         ur_j_pos_norm = self.ur.normalize_joint_values(joints=ur_j_pos)
 
         # start joint positions
-        start_joints = self.ur.normalize_joint_values(self._get_initial_joint_positions())
+        start_joints = self.ur.normalize_joint_values(self._get_desired_joint_positions())
         delta_joints = ur_j_pos_norm - start_joints
 
         # Compose environment state
@@ -370,7 +370,7 @@ class MovingBox3DSplineTargetUR5(MovingBoxTargetUR5):
         elif (len(self.last_position_on_success) != 0) and (type=='continue'):
             self.initial_joint_positions = self.last_position_on_success
         else:
-            self.initial_joint_positions = self._get_initial_joint_positions()
+            self.initial_joint_positions = self._get_desired_joint_positions()
 
         rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self.initial_joint_positions)
 
@@ -486,7 +486,7 @@ class Moving2Box3DSplineTargetUR5(MovingBoxTargetUR5):
         elif (len(self.last_position_on_success) != 0) and (type=='continue'):
             self.initial_joint_positions = self.last_position_on_success
         else:
-            self.initial_joint_positions = self._get_initial_joint_positions()
+            self.initial_joint_positions = self._get_desired_joint_positions()
 
         rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self.initial_joint_positions)
 
@@ -573,7 +573,7 @@ class Moving2Box3DSplineTargetUR5(MovingBoxTargetUR5):
         ur_j_pos_norm = self.ur.normalize_joint_values(joints=ur_j_pos)
 
         # start joint positions
-        start_joints = self.ur.normalize_joint_values(self._get_initial_joint_positions())
+        start_joints = self.ur.normalize_joint_values(self._get_desired_joint_positions())
         delta_joints = ur_j_pos_norm - start_joints
 
         # Transform cartesian coordinates of object2 to polar coordinates 
