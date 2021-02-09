@@ -37,6 +37,7 @@ class ObstacleAvoidanceVarCPickplace31Box1PointUR5(ObstacleAvoidanceVarB1Box1Poi
         self.state_n = 0 
         self.elapsed_steps_in_current_state = 0 
         self.target_reached = 0
+        self.target_reached_counter = 0
 
         # Initialize environment state
         self.state = np.zeros(self._get_env_state_len())
@@ -162,12 +163,13 @@ class ObstacleAvoidanceVarCPickplace31Box1PointUR5(ObstacleAvoidanceVarB1Box1Poi
 
         # Check if the robot is at the target position
         if self.target_point_flag:
-            if np.isclose(self._get_desired_joint_positions(), self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12]), atol = 0.05).all():
+            if np.isclose(self._get_desired_joint_positions(), self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12]), atol = 0.1).all():
                 self.target_reached = 1
                 self.state_n +=1
                 # Restart from state 0 if the full trajectory has been completed
                 self.state_n = self.state_n % len(TRAJECTORY)
                 self.elapsed_steps_in_current_state = 0
+                self.target_reached_counter += 1
         if DEBUG:
             print("Target Reached: ")
             print(self.target_reached)
@@ -182,6 +184,23 @@ class ObstacleAvoidanceVarCPickplace31Box1PointUR5(ObstacleAvoidanceVarB1Box1Poi
         self.target_reached = 0
 
         return self.state, reward, done, info
+
+    def print_state_action_info(self, rs_state, action):
+        env_state = self._robot_server_state_to_env_state(rs_state)
+
+        print('Action:', action)
+        print('Last A:', self.last_action)
+        print('Distance: {:.2f}'.format(env_state[0]))
+        # print('Polar 1 (degree): {:.2f}'.format(env_state[1] * 180/math.pi))
+        # print('Polar 2 (degree): {:.2f}'.format(env_state[2] * 180/math.pi))
+        print('Joint Positions: [1]:{:.2e} [2]:{:.2e} [3]:{:.2e} [4]:{:.2e} [5]:{:.2e} [6]:{:.2e}'.format(*env_state[3:9]))
+        print('Joint PosDeltas: [1]:{:.2e} [2]:{:.2e} [3]:{:.2e} [4]:{:.2e} [5]:{:.2e} [6]:{:.2e}'.format(*env_state[9:15]))
+        print('Current Desired: [1]:{:.2e} [2]:{:.2e} [3]:{:.2e} [4]:{:.2e} [5]:{:.2e} [6]:{:.2e}'.format(*env_state[15:21]))
+        print('Is current disred a target?', env_state[21])
+        print('Targets reached', self.target_reached_counter)
+        print('Sum of Deltas: {:.2e}'.format(sum(abs(env_state[9:15]))))
+        print('Square of Deltas: {:.2e}'.format(np.square(env_state[9:15]).sum()))
+        print()
        
     def _reward(self, rs_state, action):
         # TODO: remove print when not needed anymore
@@ -193,8 +212,7 @@ class ObstacleAvoidanceVarCPickplace31Box1PointUR5(ObstacleAvoidanceVarB1Box1Poi
         info = {}
 
         # minimum and maximum distance the robot should keep to the obstacle
-        minimum_distance = 0.3 # m
-        maximum_distance = 0.6 # m
+        minimum_distance = 0.45 # m
         
         distance_to_target = env_state[0]   
         delta_joint_pos = env_state[9:15]
@@ -209,27 +227,30 @@ class ObstacleAvoidanceVarCPickplace31Box1PointUR5(ObstacleAvoidanceVarB1Box1Poi
         # reward moving as less as possible
         act_r = 0 
         if abs(action).sum() <= action.size:
-            act_r = 1.5 * (1 - (np.square(action).sum()/action.size)) * (1/1000)
+            act_r = 2.0 * (1 - (np.square(action).sum()/action.size)) * (1/1000)
             reward += act_r
 
         # punish big deltas in action
         act_delta = 0
         for i in range(len(action)):
             if abs(action[i] - self.last_action[i]) > 0.4:
-                a_r = - 0.3 * (1/1000)
+                a_r = - 0.5 * (1/1000)
                 act_delta += a_r
                 reward += a_r
         
         dist_1 = 0
         if (distance_to_target < minimum_distance):
-            dist_1 = -3 * (1/1000) # -2
+            dist_1 = -4 * (1/1000) # -2
             reward += dist_1
+
+        if self.target_reached:
+            reward += 0.05
 
         # TODO: we could remove this if we do not need to punish failure or reward success
         # Check if robot is in collision
         collision = True if rs_state[25] == 1 else False
         if collision:
-            # reward = -1
+            reward = -0.1
             done = True
             info['final_status'] = 'collision'
 
