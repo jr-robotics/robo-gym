@@ -336,6 +336,39 @@ register(
     entry_point='robo_gym.envs:ObstacleAvoidanceVarBTraj011Box1PointUR5DoF5Rob',
 )
 
+# ? Variant C - 3 different target points that the robot should reach while staying as close as 
+# ? possible to the original trajectory
+
+register(
+    id='ObstacleAvoidanceVarCPickplace31Box1PointUR5Sim-v0',
+    entry_point='robo_gym.envs:ObstacleAvoidanceVarCPickplace31Box1PointUR5Sim',
+)
+
+register(
+    id='ObstacleAvoidanceVarCPickplace31Box1PointUR5Rob-v0',
+    entry_point='robo_gym.envs:ObstacleAvoidanceVarCPickplace31Box1PointUR5Rob',
+)
+
+register(
+    id='ObstacleAvoidanceVarCPickplace31Box1PointUR5DoF3Sim-v0',
+    entry_point='robo_gym.envs:ObstacleAvoidanceVarCPickplace31Box1PointUR5DoF3Sim',
+)
+
+register(
+    id='ObstacleAvoidanceVarCPickplace31Box1PointUR5DoF3Rob-v0',
+    entry_point='robo_gym.envs:ObstacleAvoidanceVarCPickplace31Box1PointUR5DoF3Rob',
+)
+
+register(
+    id='ObstacleAvoidanceVarCPickplace31Box1PointUR5DoF5Sim-v0',
+    entry_point='robo_gym.envs:ObstacleAvoidanceVarCPickplace31Box1PointUR5DoF5Sim',
+)
+
+register(
+    id='ObstacleAvoidanceVarCPickplace31Box1PointUR5DoF5Rob-v0',
+    entry_point='robo_gym.envs:ObstacleAvoidanceVarCPickplace31Box1PointUR5DoF5Rob',
+)
+
 ## UR10 Environments
 register(
     id='EndEffectorPositioningUR10Sim-v0',
