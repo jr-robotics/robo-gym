@@ -68,15 +68,20 @@ class ObstacleAvoidanceVarCPickplace31Box1PointUR5(ObstacleAvoidanceVarB1Box1Poi
             float_params = {"object_0_x_min": -0.7, "object_0_x_max": 0.7, "object_0_y_min": 0.2, "object_0_y_max": 1.0, \
                             "object_0_z_min": 0.1, "object_0_z_max": 1.0, "object_0_n_points": 10, \
                             "n_sampling_points": n_sampling_points}
-        elif r <= 0.83:
+        elif r <= 0.81:
             # object behind robot
             float_params = {"object_0_x_min": -0.7, "object_0_x_max": 0.7, "object_0_y_min": - 0.7, "object_0_y_max": -0.2, \
                             "object_0_z_min": 0.1, "object_0_z_max": 1.0, "object_0_n_points": 10, \
                             "n_sampling_points": n_sampling_points}
-        elif r <= 0.91:
+        elif r <= 0.87:
             # object on the left side of the  robot
             float_params = {"object_0_x_min": 0.3, "object_0_x_max": 0.7, "object_0_y_min": - 0.7, "object_0_y_max": 0.7, \
                             "object_0_z_min": 0.1, "object_0_z_max": 1.0, "object_0_n_points": 10, \
+                            "n_sampling_points": n_sampling_points}
+        elif r <= 0.93:
+            # object on top of the  robot
+            float_params = {"object_0_x_min": -0.7, "object_0_x_max": 0.7, "object_0_y_min": - 0.7, "object_0_y_max": 0.7, \
+                            "object_0_z_min": 0.6, "object_0_z_max": 1.0, "object_0_n_points": 10, \
                             "n_sampling_points": n_sampling_points}
         else :
             # object on the right side of the  robot
