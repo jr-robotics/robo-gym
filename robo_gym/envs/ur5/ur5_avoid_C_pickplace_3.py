@@ -202,6 +202,84 @@ class ObstacleAvoidanceVarCPickplace31Box1PointUR5(ObstacleAvoidanceVarB1Box1Poi
         print('Square of Deltas: {:.2e}'.format(np.square(env_state[9:15]).sum()))
         print()
        
+    # # semi working
+    # def _reward(self, rs_state, action):
+    #     # TODO: remove print when not needed anymore
+    #     # print('action', action)
+    #     env_state = self._robot_server_state_to_env_state(rs_state)
+
+    #     reward = 0
+    #     done = False
+    #     info = {}
+
+    #     # minimum and maximum distance the robot should keep to the obstacle
+    #     minimum_distance = 0.45 # m
+        
+    #     distance_to_target = env_state[0]   
+    #     delta_joint_pos = env_state[9:15]
+
+
+    #     # reward for being in the defined interval of minimum_distance and maximum_distance
+    #     dr = 0
+    #     # if abs(delta_joint_pos).sum() < 0.5:
+    #     #     dr = 1.5 * (1 - (sum(abs(delta_joint_pos))/0.5)) * (1/1000)
+    #     #     reward += dr
+    #     for delta in delta_joint_pos:
+    #         if abs(delta) < 0.1:
+    #             dr = 1.5 * (1 - (abs(delta))/0.1) * (1/1000)
+    #             reward += dr
+        
+        
+    #     # reward moving as less as possible
+    #     act_r = 0 
+    #     if abs(action).sum() <= action.size:
+    #         act_r = 1.5 * (1 - (np.square(action).sum()/action.size)) * (1/1000)
+    #         reward += act_r
+
+    #     for a in action:
+    #         if a < 0.1:
+    #             reward += 0.1 * (1/1000)
+
+        
+
+    #     # punish big deltas in action
+    #     act_delta = 0
+    #     for i in range(len(action)):
+    #         if abs(action[i] - self.last_action[i]) > 0.4:
+    #             a_r = - 0.5 * (1/1000)
+    #             act_delta += a_r
+    #             reward += a_r
+        
+    #     dist_1 = 0
+    #     if (distance_to_target < minimum_distance):
+    #         dist_1 = -4 * (1/1000) # -2
+    #         reward += dist_1
+
+    #     if self.target_reached:
+    #         reward += 0.05
+
+    #     # TODO: we could remove this if we do not need to punish failure or reward success
+    #     # Check if robot is in collision
+    #     collision = True if rs_state[25] == 1 else False
+    #     if collision:
+    #         reward = -0.05
+    #         done = True
+    #         info['final_status'] = 'collision'
+
+    #     if self.elapsed_steps >= self.max_episode_steps:
+    #         done = True
+    #         info['final_status'] = 'success'
+
+        
+
+    #     if DEBUG: self.print_state_action_info(rs_state, action)
+    #     # ? DEBUG PRINT
+    #     if DEBUG: print('reward composition:', 'dr =', round(dr, 5), 'no_act =', round(act_r, 5), 'min_dist_1 =', round(dist_1, 5), 'min_dist_2 =', 'delta_act', round(act_delta, 5))
+
+
+    #     return reward, done, info
+
+    # semi working
     def _reward(self, rs_state, action):
         # TODO: remove print when not needed anymore
         # print('action', action)
@@ -245,13 +323,13 @@ class ObstacleAvoidanceVarCPickplace31Box1PointUR5(ObstacleAvoidanceVarB1Box1Poi
         act_delta = 0
         for i in range(len(action)):
             if abs(action[i] - self.last_action[i]) > 0.4:
-                a_r = - 0.5 * (1/1000)
+                a_r = - 1.0 * (1/1000)
                 act_delta += a_r
                 reward += a_r
         
         dist_1 = 0
         if (distance_to_target < minimum_distance):
-            dist_1 = -4 * (1/1000) # -2
+            dist_1 = -10 * (1/1000) # -2
             reward += dist_1
 
         if self.target_reached:
