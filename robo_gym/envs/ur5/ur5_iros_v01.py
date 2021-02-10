@@ -201,14 +201,33 @@ class IrosEnv01UR5(ObstacleAvoidanceVarB1Box1PointUR5):
         print('Distance: {:.2f}'.format(env_state[0]))
         # print('Polar 1 (degree): {:.2f}'.format(env_state[1] * 180/math.pi))
         # print('Polar 2 (degree): {:.2f}'.format(env_state[2] * 180/math.pi))
-        print('Joint Positions: [1]:{:.2e} [2]:{:.2e} [3]:{:.2e} [4]:{:.2e} [5]:{:.2e} [6]:{:.2e}'.format(*env_state[3:9]))
-        print('Joint PosDeltas: [1]:{:.2e} [2]:{:.2e} [3]:{:.2e} [4]:{:.2e} [5]:{:.2e} [6]:{:.2e}'.format(*env_state[9:15]))
-        print('Current Desired: [1]:{:.2e} [2]:{:.2e} [3]:{:.2e} [4]:{:.2e} [5]:{:.2e} [6]:{:.2e}'.format(*env_state[15:21]))
+        print('Joint Positions: [1]:{:.2f} [2]:{:.2f} [3]:{:.2f} [4]:{:.2f} [5]:{:.2f} [6]:{:.2f}'.format(*env_state[3:9]))
+        print('Joint PosDeltas: [1]:{:.2f} [2]:{:.2f} [3]:{:.2f} [4]:{:.2f} [5]:{:.2f} [6]:{:.2f}'.format(*env_state[9:15]))
+        print('Current Desired: [1]:{:.2f} [2]:{:.2f} [3]:{:.2f} [4]:{:.2f} [5]:{:.2f} [6]:{:.2f}'.format(*env_state[15:21]))
         print('Is current disred a target?', env_state[21])
         print('Targets reached', self.target_reached_counter)
-        print('Sum of Deltas: {:.2e}'.format(sum(abs(env_state[9:15]))))
-        print('Square of Deltas: {:.2e}'.format(np.square(env_state[9:15]).sum()))
+        print('Sum of Deltas: {:.2f}'.format(sum(abs(env_state[9:15]))))
+        print('Square of Deltas: {:.2f}'.format(np.square(env_state[9:15]).sum()))
         print()
+
+    def print_reward_composition(self):
+        # self.reward_composition.append([dr, act_r, small_actions, act_delta, dist_1, self.target_reached, collision_reward])
+        dr = [r[0] for r in self.reward_composition]
+        act_r = [r[1] for r in self.reward_composition]
+        small_actions = [r[2] for r in self.reward_composition]
+        act_delta = [r[3] for r in self.reward_composition]
+        dist_1 = [r[4] for r in self.reward_composition]
+        target_reached = [r[5] for r in self.reward_composition]
+        collision_reward = [r[6] for r in self.reward_composition]
+
+        print('Reward Composition of Episode:')
+        print('Reward for keeping low delta joints: SUM={} MIN={}, MAX={}'.format(np.sum(dr), np.min(dr), np.max(dr)))
+        print('Reward for as less as possible: SUM={} MIN={}, MAX={}'.format(np.sum(act_r), np.min(act_r), np.max(act_r)))
+        print('Reward minor actions: SUM={} MIN={}, MAX={}'.format(np.sum(small_actions), np.min(small_actions), np.max(small_actions)))
+        print('Punishment for rapid movement: SUM={} MIN={}, MAX={}'.format(np.sum(act_delta), np.min(act_delta), np.max(act_delta)))
+        print('Punishment for target distance: SUM={} MIN={}, MAX={}'.format(np.sum(dist_1), np.min(dist_1), np.max(dist_1)))
+        print('Reward for target reached: SUM={} MIN={}, MAX={}'.format(np.sum(target_reached), np.min(target_reached), np.max(target_reached)))
+        print('Punishment for collision: SUM={} MIN={}, MAX={}'.format(np.sum(collision_reward), np.min(collision_reward), np.max(collision_reward)))
        
     # # semi working
     # def _reward(self, rs_state, action):
@@ -311,7 +330,8 @@ class IrosEnv01UR5(ObstacleAvoidanceVarB1Box1PointUR5):
         #     reward += dr
         for delta in delta_joint_pos:
             if abs(delta) < 0.1:
-                dr = 1.5 * (1 - (abs(delta))/0.1) * (1/1000)
+                dr = 1.5 * (1 - (abs(delta))/0.1) * (1/1000) 
+                dr = dr/5
                 reward += dr
         
         
@@ -321,8 +341,10 @@ class IrosEnv01UR5(ObstacleAvoidanceVarB1Box1PointUR5):
             act_r = 1.5 * (1 - (np.square(action).sum()/action.size)) * (1/1000)
             reward += act_r
 
+        small_actions = 0
         for a in action:
             if a < 0.1:
+                small_actions += 0.1 * (1/1000)
                 reward += 0.1 * (1/1000)
 
         
@@ -331,22 +353,28 @@ class IrosEnv01UR5(ObstacleAvoidanceVarB1Box1PointUR5):
         act_delta = 0
         for i in range(len(action)):
             if abs(action[i] - self.last_action[i]) > 0.4:
-                a_r = - 1.0 * (1/1000)
+                a_r = - 0.5 * (1/1000)
                 act_delta += a_r
                 reward += a_r
         
         dist_1 = 0
         if (distance_to_target < minimum_distance):
-            dist_1 = -10 * (1/1000) # -2
+            dist_1 = -8 * (1/1000) # -2
             reward += dist_1
 
+        tr_reward = 0
         if self.target_reached:
+            tr_reward += 0.05
             reward += 0.05
+
+        
 
         # TODO: we could remove this if we do not need to punish failure or reward success
         # Check if robot is in collision
+        collision_reward = 0
         collision = True if rs_state[25] == 1 else False
         if collision:
+            collision_reward = -0.5
             reward = - 0.5
             done = True
             info['final_status'] = 'collision'
@@ -354,10 +382,13 @@ class IrosEnv01UR5(ObstacleAvoidanceVarB1Box1PointUR5):
         if self.elapsed_steps >= self.max_episode_steps:
             done = True
             info['final_status'] = 'success'
-
         
 
-        if DEBUG: self.print_state_action_info(rs_state, action)
+        self.reward_composition.append([dr, act_r, small_actions, act_delta, dist_1, tr_reward, collision_reward])
+        if done:
+            self.print_reward_composition()
+
+        self.print_state_action_info(rs_state, action)
         # ? DEBUG PRINT
         if DEBUG: print('reward composition:', 'dr =', round(dr, 5), 'no_act =', round(act_r, 5), 'min_dist_1 =', round(dist_1, 5), 'min_dist_2 =', 'delta_act', round(act_delta, 5))
 
