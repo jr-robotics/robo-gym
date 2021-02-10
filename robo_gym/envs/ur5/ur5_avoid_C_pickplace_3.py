@@ -339,7 +339,7 @@ class ObstacleAvoidanceVarCPickplace31Box1PointUR5(ObstacleAvoidanceVarB1Box1Poi
         # Check if robot is in collision
         collision = True if rs_state[25] == 1 else False
         if collision:
-            reward = -0.05
+            reward = - 0.5
             done = True
             info['final_status'] = 'collision'
 
