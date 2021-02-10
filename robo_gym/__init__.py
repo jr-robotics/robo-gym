@@ -369,6 +369,39 @@ register(
     entry_point='robo_gym.envs:ObstacleAvoidanceVarCPickplace31Box1PointUR5DoF5Rob',
 )
 
+# ? Iros Env 01 - 3 different target points that the robot should reach while staying as close as 
+# ? possible to the original trajectory
+
+register(
+    id='IrosEnv01UR5Sim-v0',
+    entry_point='robo_gym.envs:IrosEnv01UR5Sim',
+)
+
+register(
+    id='IrosEnv01UR5Rob-v0',
+    entry_point='robo_gym.envs:IrosEnv01UR5Rob',
+)
+
+register(
+    id='IrosEnv01UR5DoF3Sim-v0',
+    entry_point='robo_gym.envs:IrosEnv01UR5DoF3Sim',
+)
+
+register(
+    id='IrosEnv01UR5DoF3Rob-v0',
+    entry_point='robo_gym.envs:IrosEnv01UR5DoF3Rob',
+)
+
+register(
+    id='IrosEnv01UR5DoF5Sim-v0',
+    entry_point='robo_gym.envs:IrosEnv01UR5DoF5Sim',
+)
+
+register(
+    id='IrosEnv01UR5DoF5Rob-v0',
+    entry_point='robo_gym.envs:IrosEnv01UR5DoF5Rob',
+)
+
 ## UR10 Environments
 register(
     id='EndEffectorPositioningUR10Sim-v0',
