@@ -17,7 +17,7 @@ from robo_gym.envs.ur5.ur5_avoid_B_moving_robot import ObstacleAvoidanceVarB1Box
 # ? Variant C - 3 different target points that the robot should reach while staying as close as 
 # ? possible to the original trajectory
 
-DEBUG = True
+DEBUG = False
 
 class ObstacleAvoidanceVarCPickplace31Box1PointUR5(ObstacleAvoidanceVarB1Box1PointUR5):
     def reset(self, initial_joint_positions = None, type='random'):
@@ -220,15 +220,26 @@ class ObstacleAvoidanceVarCPickplace31Box1PointUR5(ObstacleAvoidanceVarB1Box1Poi
 
         # reward for being in the defined interval of minimum_distance and maximum_distance
         dr = 0
-        if abs(delta_joint_pos).sum() < 0.5:
-            dr = 1 * (1 - (sum(abs(delta_joint_pos))/0.5)) * (1/1000)
-            reward += dr
+        # if abs(delta_joint_pos).sum() < 0.5:
+        #     dr = 1.5 * (1 - (sum(abs(delta_joint_pos))/0.5)) * (1/1000)
+        #     reward += dr
+        for delta in delta_joint_pos:
+            if abs(delta) < 0.1:
+                dr = 1.5 * (1 - (abs(delta))/0.1) * (1/1000)
+                reward += dr
+        
         
         # reward moving as less as possible
         act_r = 0 
         if abs(action).sum() <= action.size:
-            act_r = 2.0 * (1 - (np.square(action).sum()/action.size)) * (1/1000)
+            act_r = 1.5 * (1 - (np.square(action).sum()/action.size)) * (1/1000)
             reward += act_r
+
+        for a in action:
+            if a < 0.1:
+                reward += 0.1 * (1/1000)
+
+        
 
         # punish big deltas in action
         act_delta = 0
@@ -250,7 +261,7 @@ class ObstacleAvoidanceVarCPickplace31Box1PointUR5(ObstacleAvoidanceVarB1Box1Poi
         # Check if robot is in collision
         collision = True if rs_state[25] == 1 else False
         if collision:
-            reward = -0.1
+            reward = -0.05
             done = True
             info['final_status'] = 'collision'
 
