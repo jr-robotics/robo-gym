@@ -328,8 +328,8 @@ class IrosEnv01UR5(ObstacleAvoidanceVarB1Box1PointUR5):
         # if abs(delta_joint_pos).sum() < 0.5:
         #     dr = 1.5 * (1 - (sum(abs(delta_joint_pos))/0.5)) * (1/1000)
         #     reward += dr
-        for delta in delta_joint_pos:
-            if abs(delta) < 0.1:
+        for delta in range(len(delta_joint_pos)-1):
+            if abs(delta[i]) < 0.1:
                 dr = 1.5 * (1 - (abs(delta))/0.1) * (1/1000) 
                 dr = dr/5
                 reward += dr
@@ -378,6 +378,7 @@ class IrosEnv01UR5(ObstacleAvoidanceVarB1Box1PointUR5):
             reward = - 0.5
             done = True
             info['final_status'] = 'collision'
+            
 
         if self.elapsed_steps >= self.max_episode_steps:
             done = True
@@ -387,6 +388,7 @@ class IrosEnv01UR5(ObstacleAvoidanceVarB1Box1PointUR5):
         self.reward_composition.append([dr, act_r, small_actions, act_delta, dist_1, tr_reward, collision_reward])
         if done:
             self.print_reward_composition()
+            info['reward_composition'] = self.reward_composition
 
         self.print_state_action_info(rs_state, action)
         # ? DEBUG PRINT
