@@ -92,3 +92,10 @@ from robo_gym.envs.ur5.ur5_iros_v01 import IrosEnv01UR5DoF3Sim
 from robo_gym.envs.ur5.ur5_iros_v01 import IrosEnv01UR5DoF3Rob
 from robo_gym.envs.ur5.ur5_iros_v01 import IrosEnv01UR5DoF5Sim
 from robo_gym.envs.ur5.ur5_iros_v01 import IrosEnv01UR5DoF5Rob
+
+from robo_gym.envs.ur5.ur5_iros_v02 import IrosEnv02UR5Sim
+from robo_gym.envs.ur5.ur5_iros_v02 import IrosEnv02UR5Rob
+from robo_gym.envs.ur5.ur5_iros_v02 import IrosEnv02UR5DoF3Sim
+from robo_gym.envs.ur5.ur5_iros_v02 import IrosEnv02UR5DoF3Rob
+from robo_gym.envs.ur5.ur5_iros_v02 import IrosEnv02UR5DoF5Sim
+from robo_gym.envs.ur5.ur5_iros_v02 import IrosEnv02UR5DoF5Rob
