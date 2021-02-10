@@ -39,6 +39,9 @@ class IrosEnv01UR5(ObstacleAvoidanceVarB1Box1PointUR5):
         self.target_reached = 0
         self.target_reached_counter = 0
 
+        # Random 2
+        self.r2 = np.random.uniform()
+
         # Initialize environment state
         self.state = np.zeros(self._get_env_state_len())
         rs_state = np.zeros(self._get_robot_server_state_len())
@@ -368,15 +371,19 @@ class IrosEnv01UR5(ObstacleAvoidanceVarB1Box1PointUR5):
             np.array: Joint positions with standard indexing.
 
         """
-        
-        if self.elapsed_steps_in_current_state < len(TRAJECTORY[self.state_n]):
-            joint_positions = copy.deepcopy(TRAJECTORY[self.state_n][self.elapsed_steps_in_current_state])
-            self.target_point_flag = 0
+        if self.r2<=0.9:
+            if self.elapsed_steps_in_current_state < len(TRAJECTORY[self.state_n]):
+                joint_positions = copy.deepcopy(TRAJECTORY[self.state_n][self.elapsed_steps_in_current_state])
+                self.target_point_flag = 0
+            else:
+                # Get last point of the trajectory segment
+                joint_positions = copy.deepcopy(TRAJECTORY[self.state_n][-1])
+                self.target_point_flag = 1
         else:
-            # Get last point of the trajectory segment
-            joint_positions = copy.deepcopy(TRAJECTORY[self.state_n][-1])
-            self.target_point_flag = 1 
-        
+            # Get fixed joint positions
+            joint_positions = np.array([-0.78,-1.31,-1.31,-2.18,1.57,0.0])
+            self.target_point_flag = 0
+
         return joint_positions
 
     def _robot_server_state_to_env_state(self, rs_state):
