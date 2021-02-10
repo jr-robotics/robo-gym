@@ -17,7 +17,9 @@ envs = [
     # 'MovingBox3DSplineTargetUR5DoF3Sim-v0',
     # 'Moving2Box3DSplineTargetUR5Sim-v0',
     # 'ObstacleAvoidance1Box2PointsUR5Sim-v0',
-    'IrosEnv01UR5Sim-v0'
+    'IrosEnv01UR5Sim-v0',
+    'IrosEnv02UR5Sim-v0'
+
 
 ]
 
