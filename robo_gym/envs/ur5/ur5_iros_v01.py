@@ -328,9 +328,9 @@ class IrosEnv01UR5(ObstacleAvoidanceVarB1Box1PointUR5):
         # if abs(delta_joint_pos).sum() < 0.5:
         #     dr = 1.5 * (1 - (sum(abs(delta_joint_pos))/0.5)) * (1/1000)
         #     reward += dr
-        for delta in range(len(delta_joint_pos)-1):
-            if abs(delta[i]) < 0.1:
-                dr = 1.5 * (1 - (abs(delta))/0.1) * (1/1000) 
+        for i in range(len(delta_joint_pos)-1):
+            if abs(delta_joint_pos[i]) < 0.1:
+                dr = 1.5 * (1 - (abs(delta_joint_pos[i]))/0.1) * (1/1000) 
                 dr = dr/5
                 reward += dr
         
