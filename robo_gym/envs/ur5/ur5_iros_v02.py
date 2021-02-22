@@ -21,6 +21,144 @@ from robo_gym.envs.ur5.ur5_iros_v01 import IrosEnv01UR5
 
 DEBUG = False
 class IrosEnv02UR5(IrosEnv01UR5):
+    def print_reward_composition(self):
+        # self.reward_composition.append([dr, act_r, small_actions, act_delta, dist_1, self.target_reached, collision_reward])
+        dr = [r[0] for r in self.reward_composition]
+        act_r = [r[1] for r in self.reward_composition]
+        # small_actions = [r[2] for r in self.reward_composition]
+        act_delta = [r[2] for r in self.reward_composition]
+        dist_1 = [r[3] for r in self.reward_composition]
+        # target_reached = [r[5] for r in self.reward_composition]
+        collision_reward = [r[4] for r in self.reward_composition]
+        joint_delta_r = [r[5] for r in self.reward_composition]
+
+        print('sanity check', dr, act_r, act_delta)
+
+        print('Reward Composition of Episode:')
+        print('Reward for keeping low delta joints: SUM={} MIN={}, MAX={}'.format(np.sum(dr), np.min(dr), np.max(dr)))
+        print('Reward for as less as possible: SUM={} MIN={}, MAX={}'.format(np.sum(act_r), np.min(act_r), np.max(act_r)))
+        # print('Reward minor actions: SUM={} MIN={}, MAX={}'.format(np.sum(small_actions), np.min(small_actions), np.max(small_actions)))
+        print('Punishment for rapid movement: SUM={} MIN={}, MAX={}'.format(np.sum(act_delta), np.min(act_delta), np.max(act_delta)))
+        print('Punishment for target distance: SUM={} MIN={}, MAX={}'.format(np.sum(dist_1), np.min(dist_1), np.max(dist_1)))
+        # print('Reward for target reached: SUM={} MIN={}, MAX={}'.format(np.sum(target_reached), np.min(target_reached), np.max(target_reached)))
+        print('Punishment for collision: SUM={} MIN={}, MAX={}'.format(np.sum(collision_reward), np.min(collision_reward), np.max(collision_reward)))
+        print('Punishment for joint delta: SUM={} MIN={}, MAX={}'.format(np.sum(joint_delta_r), np.min(joint_delta_r), np.max(joint_delta_r)))
+
+
+    def _reward(self, rs_state, action):
+        # TODO: remove print when not needed anymore
+        # print('action', action)
+        env_state = self._robot_server_state_to_env_state(rs_state)
+
+        reward = 0
+        done = False
+        info = {}
+
+        # minimum and maximum distance the robot should keep to the obstacle
+        minimum_distance = 0.45 # m
+        
+        distance_to_target = env_state[0]
+        distance_to_target_2 = env_state[-3]   
+        delta_joint_pos = env_state[9:15]
+
+
+        distance_weight = -2.0
+        delta_weight = 1.0
+        action_usage_weight = 1.5
+        act_delta_weight = -0.2
+        collison_weight = -0.1
+        target_reached_weight = 0.05
+        joint_delta_weight = 0.0
+
+        # reward for being in the defined interval of minimum_distance and maximum_distance
+        dr = 0
+        # if abs(delta_joint_pos).sum() < 0.5:
+        #     dr = 1.5 * (1 - (sum(abs(delta_joint_pos))/0.5)) * (1/1000)
+        #     reward += dr
+        for i in range(len(delta_joint_pos)-1):
+            if abs(delta_joint_pos[i]) < 0.1:
+                dr = delta_weight * (1 - (abs(delta_joint_pos[i]))/0.1) * (1/1000) 
+                dr = dr/5
+                reward += dr
+        
+        
+        # reward moving as less as possible
+        act_r = 0 
+        if abs(action).sum() <= action.size:
+            act_r = action_usage_weight * (1 - (np.square(action).sum()/action.size)) * (1/1000)
+            reward += act_r
+
+        self.movement_direction
+
+        joint_delta_r = 0
+        # punish direction change in joint positions
+        current_joint_positions = env_state[3:9]
+        for joint in range(len(current_joint_positions)):
+            if self.last_joint_positions[joint] < current_joint_positions[joint]:
+                if self.movement_direction[joint] == 'positive':
+                    joint_delta_r += 0
+                else:
+                    joint_delta_r = joint_delta_weight * (1/1000)
+                self.movement_direction[joint] = 'positive'
+            elif self.last_joint_positions[joint] > current_joint_positions[joint]:
+                if self.movement_direction[joint] == 'negative':
+                    joint_delta_r += 0
+                else:
+                    joint_delta_r = joint_delta_weight * (1/1000)
+                self.movement_direction[joint] = 'negative'
+
+
+
+        # punish big deltas in action
+        act_delta = 0
+        for i in range(len(action)):
+            if abs(action[i] - self.last_action[i]) > 0.4:
+                a_r = act_delta_weight * (1/1000)
+                act_delta += a_r
+                reward += a_r
+        
+        dist_1 = 0
+        if (distance_to_target < minimum_distance) or (distance_to_target_2 < minimum_distance):
+            dist_1 = distance_weight * (1/1000) # -2
+            reward += dist_1
+
+        tr_reward = 0
+        if self.target_reached:
+            tr_reward += target_reached_weight
+            reward += target_reached_weight
+
+        
+
+        # TODO: we could remove this if we do not need to punish failure or reward success
+        # Check if robot is in collision
+        collision_reward = 0
+        collision = True if rs_state[25] == 1 else False
+        if collision:
+            collision_reward = collison_weight
+            reward = collison_weight
+            done = True
+            info['final_status'] = 'collision'
+            
+
+        if self.elapsed_steps >= self.max_episode_steps:
+            done = True
+            info['final_status'] = 'success'
+        
+        self.reward_composition.append([dr, act_r, act_delta, dist_1, collision_reward, joint_delta_r])
+        # self.reward_composition.append([dr, act_r, small_actions, act_delta, dist_1, tr_reward, collision_reward])
+        if done:
+            self.print_reward_composition()
+            info['reward_composition'] = self.reward_composition
+            info['targets_reached'] = self.target_reached_counter
+
+        self.print_state_action_info(rs_state, action)
+        # ? DEBUG PRINT
+        print('Distance 1: {:.2f} Distance 2: {:.2f}'.format(distance_to_target, distance_to_target_2))
+        # if DEBUG: print('reward composition:', 'dr =', round(dr, 5), 'no_act =', round(act_r, 5), 'min_dist_1 =', round(dist_1, 5), 'min_dist_2 =', 'delta_act', round(act_delta, 5))
+        
+        self.last_joint_positions = env_state[3:9]
+
+        return reward, done, info
 
     def _robot_server_state_to_env_state(self, rs_state):
         """Transform state from Robot Server to environment format.

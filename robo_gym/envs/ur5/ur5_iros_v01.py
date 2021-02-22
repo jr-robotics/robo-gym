@@ -20,7 +20,7 @@ from robo_gym.envs.ur5.ur5_avoid_B_moving_robot import ObstacleAvoidanceVarB1Box
 DEBUG = False
 
 class IrosEnv01UR5(ObstacleAvoidanceVarB1Box1PointUR5):
-    def reset(self, initial_joint_positions = None, type='random'):
+    def reset(self, initial_joint_positions = None, type='random', reward_weights=[0.0]*7):
         """Environment reset.
 
         Args:
@@ -32,6 +32,10 @@ class IrosEnv01UR5(ObstacleAvoidanceVarB1Box1PointUR5):
 
         """
         self.elapsed_steps = 0
+
+        self.last_joint_positions = np.zeros(6)
+        self.movement_direction = ['positive', 'positive', 'positive', 'positive', 'positive', 'positive']
+
 
         # Initialize state machine variables
         self.state_n = 0 
@@ -405,7 +409,7 @@ class IrosEnv01UR5(ObstacleAvoidanceVarB1Box1PointUR5):
             np.array: Joint positions with standard indexing.
 
         """
-        if self.r2<=0.9:
+        if self.r2<=1.0:
             if self.elapsed_steps_in_current_state < len(TRAJECTORY[self.state_n]):
                 joint_positions = copy.deepcopy(TRAJECTORY[self.state_n][self.elapsed_steps_in_current_state])
                 self.target_point_flag = 0
