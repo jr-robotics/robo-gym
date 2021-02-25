@@ -99,3 +99,6 @@ from robo_gym.envs.ur5.ur5_iros_v02 import IrosEnv02UR5DoF3Sim
 from robo_gym.envs.ur5.ur5_iros_v02 import IrosEnv02UR5DoF3Rob
 from robo_gym.envs.ur5.ur5_iros_v02 import IrosEnv02UR5DoF5Sim
 from robo_gym.envs.ur5.ur5_iros_v02 import IrosEnv02UR5DoF5Rob
+
+from robo_gym.envs.ur5.ur5_iros_v02 import IrosEnv02UR5FixObstacleTrajDoF5Sim
+from robo_gym.envs.ur5.ur5_iros_v02 import IrosEnv02UR5FixObstacleTrajDoF5Rob

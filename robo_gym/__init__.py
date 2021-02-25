@@ -438,6 +438,16 @@ register(
     entry_point='robo_gym.envs:IrosEnv02UR5DoF5Rob',
 )
 
+register(
+    id='IrosEnv02UR5FixObstacleTrajDoF5Sim-v0',
+    entry_point='robo_gym.envs:IrosEnv02UR5FixObstacleTrajDoF5Sim',
+)
+
+register(
+    id='IrosEnv02UR5FixObstacleTrajDoF5Rob-v0',
+    entry_point='robo_gym.envs:IrosEnv02UR5FixObstacleTrajDoF5Rob',
+)
+
 ## UR10 Environments
 register(
     id='EndEffectorPositioningUR10Sim-v0',
