@@ -374,7 +374,7 @@ class IrosEnv02UR5FixObstacleTraj(IrosEnv02UR5):
         self.last_joint_positions = np.zeros(6)
         self.movement_direction = ['positive', 'positive', 'positive', 'positive', 'positive', 'positive']
 
-
+        self.obstacle_coords = []
         # Initialize state machine variables
         self.state_n = 0 
         self.elapsed_steps_in_current_state = 0 
