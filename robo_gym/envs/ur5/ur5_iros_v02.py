@@ -357,7 +357,7 @@ class IrosEnv02UR5DoF5Rob(IrosEnv02UR5DoF5):
 # ? Environments with fixed trajectories
 
 class IrosEnv02UR5FixObstacleTraj(IrosEnv02UR5):
-    ep_n = 1 
+    ep_n = 0 
     def reset(self, initial_joint_positions = None, type='random', reward_weights=[0.0]*7):
         """Environment reset.
 
