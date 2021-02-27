@@ -43,6 +43,8 @@ class IrosEnv01UR5(ObstacleAvoidanceVarB1Box1PointUR5):
         self.target_reached = 0
         self.target_reached_counter = 0
 
+        self.obstacle_coords = []
+
         self.reward_composition = []
         # Random 2
         self.r2 = np.random.uniform()
