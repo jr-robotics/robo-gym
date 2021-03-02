@@ -107,36 +107,11 @@ class IrosEnv03UR5Training(IrosEnv01UR5):
         # Set initial state of the Robot Server
         n_sampling_points = int(np.random.default_rng().uniform(low= 4000, high=8000))
         
-        string_params = {"object_0_function": "3d_spline"}
-
-        r = np.random.uniform()
-
-        if r <= 0.75:
-            # object in front of the robot
-            float_params = {"object_0_x_min": -0.7, "object_0_x_max": 0.7, "object_0_y_min": 0.2, "object_0_y_max": 1.1, \
-                            "object_0_z_min": 0.1, "object_0_z_max": 1.0, "object_0_n_points": 10, \
-                            "n_sampling_points": n_sampling_points}
-        elif r <= 0.81:
-            # object behind robot
-            float_params = {"object_0_x_min": -0.7, "object_0_x_max": 0.7, "object_0_y_min": - 1.1, "object_0_y_max": -0.2, \
-                            "object_0_z_min": 0.1, "object_0_z_max": 1.0, "object_0_n_points": 10, \
-                            "n_sampling_points": n_sampling_points}
-        elif r <= 0.87:
-            # object on the left side of the  robot
-            float_params = {"object_0_x_min": 0.3, "object_0_x_max": 1.1, "object_0_y_min": - 0.7, "object_0_y_max": 0.7, \
-                            "object_0_z_min": 0.1, "object_0_z_max": 1.0, "object_0_n_points": 10, \
-                            "n_sampling_points": n_sampling_points}
-        elif r <= 0.93:
-            # object on top of the  robot
-            float_params = {"object_0_x_min": -0.7, "object_0_x_max": 0.7, "object_0_y_min": - 0.7, "object_0_y_max": 0.7, \
-                            "object_0_z_min": 0.6, "object_0_z_max": 1.0, "object_0_n_points": 10, \
-                            "n_sampling_points": n_sampling_points}
-        else :
-            # object on the right side of the  robot
-            float_params = {"object_0_x_min": -0.2, "object_0_x_max": -1.1, "object_0_y_min": - 0.7, "object_0_y_max": 0.7, \
-                            "object_0_z_min": 0.1, "object_0_z_max": 1.0, "object_0_n_points": 10, \
-                            "n_sampling_points": n_sampling_points}
-
+        string_params = {"object_0_function": "3d_spline_excluding_cylinder"}
+        
+        float_params = {"object_0_x_min": -1.2, "object_0_x_max": 1.2, "object_0_y_min": -1.2, "object_0_y_max": 1.2, \
+                        "object_0_z_min": 0.1, "object_0_z_max": 1.0, "object_0_r_min": 0.1, "object_0_n_points": 10, \
+                        "n_sampling_points": n_sampling_points}
 
         state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
         if not self.client.set_state_msg(state_msg):
@@ -479,7 +454,7 @@ class IrosEnv03UR5TrainingDoF5(IrosEnv03UR5Training):
 
 class IrosEnv03UR5TrainingSim(IrosEnv03UR5Training, Simulation):
     cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
-        world_name:=box100.world \
+        world_name:=tabletop_box100.world \
         yaw:=-0.78\
         reference_frame:=world \
         max_velocity_scale_factor:=0.2 \
@@ -497,7 +472,7 @@ class IrosEnv03UR5TrainingSim(IrosEnv03UR5Training, Simulation):
 
 class IrosEnv03UR5TrainingDoF5Sim(IrosEnv03UR5TrainingDoF5, Simulation):
     cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
-        world_name:=box100.world \
+        world_name:=tabletop_box100.world \
         yaw:=-0.78\
         reference_frame:=world \
         max_velocity_scale_factor:=0.2 \
