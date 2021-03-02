@@ -452,6 +452,17 @@ register(
     id='AblationTestEnvDoF5Sim-v0',
     entry_point='robo_gym.envs:AblationTestEnvDoF5Sim',
 )
+# ? Iros Env 03
+
+register(
+    id='IrosEnv03UR5TrainingDoF5Sim-v0',
+    entry_point='robo_gym.envs:IrosEnv03UR5TrainingDoF5Sim',
+)
+
+register(
+    id='IrosEnv03UR5TrainingDoF5Rob-v0',
+    entry_point='robo_gym.envs:IrosEnv03UR5TrainingDoF5Rob',
+)
 
 ## UR10 Environments
 register(

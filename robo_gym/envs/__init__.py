@@ -104,3 +104,6 @@ from robo_gym.envs.ur5.ur5_iros_v02 import IrosEnv02UR5FixObstacleTrajDoF5Sim
 from robo_gym.envs.ur5.ur5_iros_v02 import IrosEnv02UR5FixObstacleTrajDoF5Rob
 
 from robo_gym.envs.ur5.ur5_iros_ablation_models_test import AblationTestEnvDoF5Sim
+
+from robo_gym.envs.ur5.ur5_iros_v03 import IrosEnv03UR5TrainingDoF5Sim
+from robo_gym.envs.ur5.ur5_iros_v03 import IrosEnv03UR5TrainingDoF5Rob
