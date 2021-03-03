@@ -148,6 +148,70 @@ class IrosEnv03UR5Training(IrosEnv01UR5):
             
         return self.state
 
+    def step(self, action):
+        self.elapsed_steps += 1
+        self.elapsed_steps_in_current_state += 1
+
+        # Check if the action is within the action space
+        assert self.action_space.contains(action), "%r (%s) invalid" % (action, type(action))
+        action = np.array(action)
+        if self.last_action is None:
+            self.last_action = action
+        
+        # Convert environment action to Robot Server action
+        desired_joint_positions = copy.deepcopy(self._get_desired_joint_positions())
+        if action.size == 3:
+            desired_joint_positions[1:4] = desired_joint_positions[1:4] + action
+        elif action.size == 5:
+            desired_joint_positions[0:5] = desired_joint_positions[0:5] + action
+        elif action.size == 6:
+            desired_joint_positions = desired_joint_positions + action
+
+        rs_action = desired_joint_positions
+
+        # Convert action indexing from ur to ros
+        rs_action = self.ur._ur_joint_list_to_ros_joint_list(rs_action)
+        # Send action to Robot Server and get state
+        rs_state = self.client.send_action_get_state(rs_action.tolist()).state
+        self.prev_rs_state = copy.deepcopy(rs_state)
+
+        # Convert the state from Robot Server format to environment format
+        self.state = self._robot_server_state_to_env_state(rs_state)
+        
+        # Check if the environment state is contained in the observation space
+        if not self.observation_space.contains(self.state):
+            raise InvalidStateError()
+        
+        if DEBUG:
+            print("Desired Joint Positions")
+            print(self._get_desired_joint_positions())
+            print("Joint Positions")
+            print(self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12]))
+
+        # Check if the robot is at the target position
+        if self.target_point_flag:
+            if np.isclose(self._get_desired_joint_positions(), self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12]), atol = 0.1).all():
+                self.target_reached = 1
+                self.state_n +=1
+                # Restart from state 0 if the full trajectory has been completed
+                self.state_n = self.state_n % len(self.trajectories[self.trajectory_id])
+                self.elapsed_steps_in_current_state = 0
+                self.target_reached_counter += 1
+        if DEBUG:
+            print("Target Reached: ")
+            print(self.target_reached)
+            print("State number: ")
+            print(self.state_n)
+    
+        # Assign reward
+        reward = 0
+        done = False
+        reward, done, info = self._reward(rs_state=rs_state, action=action)
+        self.last_action = action
+        self.target_reached = 0
+
+        return self.state, reward, done, info
+
     def print_state_action_info(self, rs_state, action):
         env_state = self._robot_server_state_to_env_state(rs_state)
 
