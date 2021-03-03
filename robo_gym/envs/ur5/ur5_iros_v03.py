@@ -689,3 +689,140 @@ class IrosEnv03UR5TestDoF5Rob(IrosEnv03UR5TestDoF5):
     real_robot = True
 
 # roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=1moving2points n_objects:=1.0 object_0_frame:=target
+
+# ? Test Environment with robot trajectories different from the ones on which it was trained
+# ? and fixed obstacle trajectories imported from file 
+
+class IrosEnv03UR5TestFixedSplines(IrosEnv03UR5Training):
+    ep_n = 0 
+
+    def reset(self, initial_joint_positions = None, type='random', reward_weights=[0.0]*7):
+        """Environment reset.
+
+        Args:
+            initial_joint_positions (list[6] or np.array[6]): robot joint positions in radians.
+            ee_target_pose (list[6] or np.array[6]): [x,y,z,r,p,y] target end effector pose.
+
+        Returns:
+            np.array: Environment state.
+
+        """
+
+        # Default Configuration 
+        # [obstacle_coordinates[3], current_joint[5], delta_joint[5], desired_joint[5], flag[1], obstacle_two_coordinates[3], [0.0]*3]
+
+        # 1.	[polar_coords]
+        # 2.    [obstacle_cartesian[3], current_joint[5], delta_joint[5], desired_joint[5], flag[1], ee_cartesian[3], elbow_cartesian[3]]
+        # 3.	[obstacle_coordinates[3], [0,0,0,0,0,0], delta_joint[5], [0,0,0,0,0,0], flag[1], obstacle_two_coordinates[3], [0.0]*3]
+        # 4.	[obstacle_coordinates[3], current_joint[5], [0,0,0,0,0,0], desired_joint[5], flag[1], obstacle_two_coordinates[3], [0.0]*3]
+        # 5. 	[obstacle_coordinates[3], current_joint[5], [0,0,0,0,0,0], desired_joint[5], [0], obstacle_two_coordinates[3], [0.0]*3]
+
+        self.mask_setting = 1
+
+        self.elapsed_steps = 0
+
+        self.obstacle_coords = []
+
+        # Initialize state machine variables
+        self.state_n = 0 
+        self.elapsed_steps_in_current_state = 0 
+        self.target_reached = 0
+        self.target_reached_counter = 0
+
+        self.reward_composition = []
+        
+        # Pick robot trajectory
+        self.trajectories_ids = ['trajectory_12', 'trajectory_13']
+        self.trajectory_id = random.choice(self.trajectories_ids)
+        if DEBUG:
+            print('Robot Trajectory ID: ' + self.trajectory_id)
+
+        # Initialize environment state
+        self.state = np.zeros(self._get_env_state_len())
+        rs_state = np.zeros(self._get_robot_server_state_len())
+        
+        # NOTE: maybe we can find a cleaner version when we have the final envs (we could prob remove it for the avoidance task altogether)
+        # Set initial robot joint positions
+        if initial_joint_positions:
+            assert len(initial_joint_positions) == 6
+            self.initial_joint_positions = initial_joint_positions
+        elif (len(self.last_position_on_success) != 0) and (type=='continue'):
+            self.initial_joint_positions = self.last_position_on_success
+        else:
+            self.initial_joint_positions = self._get_desired_joint_positions()
+
+        rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self.initial_joint_positions)
+
+
+        # TODO: We should create some kind of helper function depending on how dynamic these settings should be
+        # Set initial state of the Robot Server
+        n_sampling_points = int(np.random.default_rng().uniform(low= 4000, high=8000))
+        
+        string_params = {"object_0_function": "fixed_trajectory"}
+        float_params = {"object_0_trajectory_id": self.ep_n}
+        
+        print("Obstacle trajectory id: " + repr(self.ep_n))
+
+        state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
+        if not self.client.set_state_msg(state_msg):
+            raise RobotServerError("set_state")
+
+        # Get Robot Server state
+        rs_state = copy.deepcopy(np.nan_to_num(np.array(self.client.get_state_msg().state)))
+        self.prev_rs_state = copy.deepcopy(rs_state)
+
+        # Check if the length of the Robot Server state received is correct
+        if not len(rs_state)== self._get_robot_server_state_len():
+            raise InvalidStateError("Robot Server state received has wrong length")
+        
+        # Convert the initial state from Robot Server format to environment format
+        self.state = self._robot_server_state_to_env_state(rs_state)
+
+        # save start position
+        self.start_position = self.state[3:9]
+
+        # Check if the environment state is contained in the observation space
+        if not self.observation_space.contains(self.state):
+            raise InvalidStateError()
+        
+        # check if current position is in the range of the initial joint positions
+        if (len(self.last_position_on_success) == 0) or (type=='random'):
+            joint_positions = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
+            if DEBUG:
+                print("Initial Joint Positions")
+                print(self.initial_joint_positions)
+                print("Joint Positions")
+                print(joint_positions)
+            if not np.isclose(joint_positions, self.initial_joint_positions, atol=0.1).all():
+                raise InvalidStateError('Reset joint positions are not within defined range')
+        
+        self.ep_n +=1
+
+        return self.state
+
+class IrosEnv03UR5TestFixedSplinesDoF5(IrosEnv03UR5TestFixedSplines):
+    def _get_action_space(self):
+        return spaces.Box(low=np.full((5), -1.0), high=np.full((5), 1.0), dtype=np.float32)
+
+class IrosEnv03UR5TestFixedSplinesDoF5Sim(IrosEnv03UR5TestFixedSplinesDoF5, Simulation):
+    cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
+        world_name:=tabletop_box100.world \
+        yaw:=-0.78\
+        reference_frame:=world \
+        max_velocity_scale_factor:=0.2 \
+        action_cycle_rate:=20 \
+        rviz_gui:=false \
+        gazebo_gui:=true \
+        objects_controller:=true \
+        target_mode:=1moving2points \
+        n_objects:=1.0 \
+        object_0_model_name:=box100 \
+        object_0_frame:=target"
+    def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
+        Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
+        IrosEnv03UR5TestFixedSplinesDoF5.__init__(self, rs_address=self.robot_server_ip, **kwargs)
+
+class IrosEnv03UR5TestFixedSplinesDoF5Rob(IrosEnv03UR5TestFixedSplinesDoF5):
+    real_robot = True
+
+# roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=1moving2points n_objects:=1.0 object_0_frame:=target

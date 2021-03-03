@@ -476,6 +476,19 @@ register(
     entry_point='robo_gym.envs:IrosEnv03UR5TestDoF5Rob',
 )
 
+# ? Test Environment with robot trajectories different from the ones on which it was trained
+# ? and fixed obstacle trajectories imported from file 
+
+register(
+    id='IrosEnv03UR5TestFixedSplinesDoF5Sim-v0',
+    entry_point='robo_gym.envs:IrosEnv03UR5TestFixedSplinesDoF5Sim',
+)
+
+register(
+    id='IrosEnv03UR5TestFixedSplinesDoF5Rob-v0',
+    entry_point='robo_gym.envs:IrosEnv03UR5TestFixedSplinesDoF5Rob',
+)
+
 ## UR10 Environments
 register(
     id='EndEffectorPositioningUR10Sim-v0',
