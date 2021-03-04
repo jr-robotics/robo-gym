@@ -519,7 +519,7 @@ class IrosEnv03UR5TrainingDoF5(IrosEnv03UR5Training):
 
 class IrosEnv03UR5TrainingSim(IrosEnv03UR5Training, Simulation):
     cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
-        world_name:=tabletop_box100.world \
+        world_name:=tabletop_box50.world \
         yaw:=-0.78\
         reference_frame:=world \
         max_velocity_scale_factor:=0.2 \
@@ -529,7 +529,7 @@ class IrosEnv03UR5TrainingSim(IrosEnv03UR5Training, Simulation):
         objects_controller:=true \
         target_mode:=1moving2points \
         n_objects:=1.0 \
-        object_0_model_name:=box100 \
+        object_0_model_name:=box50 \
         object_0_frame:=target"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
@@ -537,7 +537,7 @@ class IrosEnv03UR5TrainingSim(IrosEnv03UR5Training, Simulation):
 
 class IrosEnv03UR5TrainingDoF5Sim(IrosEnv03UR5TrainingDoF5, Simulation):
     cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
-        world_name:=tabletop_box100.world \
+        world_name:=tabletop_box50.world \
         yaw:=-0.78\
         reference_frame:=world \
         max_velocity_scale_factor:=0.2 \
@@ -547,7 +547,7 @@ class IrosEnv03UR5TrainingDoF5Sim(IrosEnv03UR5TrainingDoF5, Simulation):
         objects_controller:=true \
         target_mode:=1moving2points \
         n_objects:=1.0 \
-        object_0_model_name:=box100 \
+        object_0_model_name:=box50 \
         object_0_frame:=target"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
@@ -669,7 +669,7 @@ class IrosEnv03UR5TestDoF5(IrosEnv03UR5Test):
 
 class IrosEnv03UR5TestDoF5Sim(IrosEnv03UR5TestDoF5, Simulation):
     cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
-        world_name:=tabletop_box100.world \
+        world_name:=tabletop_box50.world \
         yaw:=-0.78\
         reference_frame:=world \
         max_velocity_scale_factor:=0.2 \
@@ -679,7 +679,7 @@ class IrosEnv03UR5TestDoF5Sim(IrosEnv03UR5TestDoF5, Simulation):
         objects_controller:=true \
         target_mode:=1moving2points \
         n_objects:=1.0 \
-        object_0_model_name:=box100 \
+        object_0_model_name:=box50 \
         object_0_frame:=target"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
@@ -806,7 +806,7 @@ class IrosEnv03UR5TestFixedSplinesDoF5(IrosEnv03UR5TestFixedSplines):
 
 class IrosEnv03UR5TestFixedSplinesDoF5Sim(IrosEnv03UR5TestFixedSplinesDoF5, Simulation):
     cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
-        world_name:=tabletop_box100.world \
+        world_name:=tabletop_box50.world \
         yaw:=-0.78\
         reference_frame:=world \
         max_velocity_scale_factor:=0.2 \
@@ -816,7 +816,7 @@ class IrosEnv03UR5TestFixedSplinesDoF5Sim(IrosEnv03UR5TestFixedSplinesDoF5, Simu
         objects_controller:=true \
         target_mode:=1moving2points \
         n_objects:=1.0 \
-        object_0_model_name:=box100 \
+        object_0_model_name:=box50 \
         object_0_frame:=target"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
