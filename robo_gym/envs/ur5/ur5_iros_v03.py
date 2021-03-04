@@ -107,10 +107,10 @@ class IrosEnv03UR5Training(IrosEnv01UR5):
         # Set initial state of the Robot Server
         n_sampling_points = int(np.random.default_rng().uniform(low= 4000, high=8000))
         
-        string_params = {"object_0_function": "3d_spline_excluding_cylinder"}
+        string_params = {"object_0_function": "3d_spline_ur5_workspace"}
         
         float_params = {"object_0_x_min": -1.2, "object_0_x_max": 1.2, "object_0_y_min": -1.2, "object_0_y_max": 1.2, \
-                        "object_0_z_min": 0.1, "object_0_z_max": 1.0, "object_0_r_min": 0.1, "object_0_n_points": 10, \
+                        "object_0_z_min": 0.1, "object_0_z_max": 1.0, "object_0_n_points": 10, \
                         "n_sampling_points": n_sampling_points}
 
         state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
@@ -622,10 +622,10 @@ class IrosEnv03UR5Test(IrosEnv03UR5Training):
         # Set initial state of the Robot Server
         n_sampling_points = int(np.random.default_rng().uniform(low= 4000, high=8000))
         
-        string_params = {"object_0_function": "3d_spline_excluding_cylinder"}
+        string_params = {"object_0_function": "3d_spline_ur5_workspace"}
         
         float_params = {"object_0_x_min": -1.2, "object_0_x_max": 1.2, "object_0_y_min": -1.2, "object_0_y_max": 1.2, \
-                        "object_0_z_min": 0.1, "object_0_z_max": 1.0, "object_0_r_min": 0.1, "object_0_n_points": 10, \
+                        "object_0_z_min": 0.1, "object_0_z_max": 1.0, "object_0_n_points": 10, \
                         "n_sampling_points": n_sampling_points}
 
         state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
