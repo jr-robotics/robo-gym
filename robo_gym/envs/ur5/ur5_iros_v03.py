@@ -105,11 +105,11 @@ class IrosEnv03UR5Training(IrosEnv01UR5):
 
         # TODO: We should create some kind of helper function depending on how dynamic these settings should be
         # Set initial state of the Robot Server
-        n_sampling_points = int(np.random.default_rng().uniform(low= 8000, high=16000))
+        n_sampling_points = int(np.random.default_rng().uniform(low= 8000, high=12000))
         
         string_params = {"object_0_function": "3d_spline_ur5_workspace"}
         
-        float_params = {"object_0_x_min": -1.2, "object_0_x_max": 1.2, "object_0_y_min": -1.2, "object_0_y_max": 1.2, \
+        float_params = {"object_0_x_min": -1.0, "object_0_x_max": 1.0, "object_0_y_min": -1.0, "object_0_y_max": 1.0, \
                         "object_0_z_min": 0.1, "object_0_z_max": 1.0, "object_0_n_points": 10, \
                         "n_sampling_points": n_sampling_points}
 
@@ -620,11 +620,11 @@ class IrosEnv03UR5Test(IrosEnv03UR5Training):
 
         # TODO: We should create some kind of helper function depending on how dynamic these settings should be
         # Set initial state of the Robot Server
-        n_sampling_points = int(np.random.default_rng().uniform(low= 8000, high=16000))
+        n_sampling_points = int(np.random.default_rng().uniform(low= 8000, high=12000))
         
         string_params = {"object_0_function": "3d_spline_ur5_workspace"}
         
-        float_params = {"object_0_x_min": -1.2, "object_0_x_max": 1.2, "object_0_y_min": -1.2, "object_0_y_max": 1.2, \
+        float_params = {"object_0_x_min": -1.0, "object_0_x_max": 1.0, "object_0_y_min": -1.0, "object_0_y_max": 1.0, \
                         "object_0_z_min": 0.1, "object_0_z_max": 1.0, "object_0_n_points": 10, \
                         "n_sampling_points": n_sampling_points}
 
@@ -756,7 +756,7 @@ class IrosEnv03UR5TestFixedSplines(IrosEnv03UR5Training):
 
         # TODO: We should create some kind of helper function depending on how dynamic these settings should be
         # Set initial state of the Robot Server
-        n_sampling_points = int(np.random.default_rng().uniform(low= 8000, high=16000))
+        n_sampling_points = int(np.random.default_rng().uniform(low= 8000, high=12000))
         
         string_params = {"object_0_function": "fixed_trajectory"}
         float_params = {"object_0_trajectory_id": self.ep_n}
