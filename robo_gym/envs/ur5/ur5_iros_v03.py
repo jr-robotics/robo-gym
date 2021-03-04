@@ -732,8 +732,8 @@ class IrosEnv03UR5TestFixedSplines(IrosEnv03UR5Training):
         self.reward_composition = []
         
         # Pick robot trajectory
-        self.trajectories_ids = ['trajectory_12', 'trajectory_13']
-        self.trajectory_id = random.choice(self.trajectories_ids)
+        self.trajectories_ids = ['trajectory_3', 'trajectory_7', 'trajectory_8', 'trajectory_9', 'trajectory_10', 'trajectory_11']
+        self.trajectory_id = self.trajectories_ids[int(self.ep_n/50)]
         if DEBUG:
             print('Robot Trajectory ID: ' + self.trajectory_id)
 
@@ -759,9 +759,9 @@ class IrosEnv03UR5TestFixedSplines(IrosEnv03UR5Training):
         n_sampling_points = int(np.random.default_rng().uniform(low= 8000, high=12000))
         
         string_params = {"object_0_function": "fixed_trajectory"}
-        float_params = {"object_0_trajectory_id": self.ep_n}
+        float_params = {"object_0_trajectory_id": self.ep_n%50}
         
-        print("Obstacle trajectory id: " + repr(self.ep_n))
+        print("Obstacle trajectory id: " + repr(self.ep_n%50))
 
         state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
         if not self.client.set_state_msg(state_msg):
@@ -816,6 +816,7 @@ class IrosEnv03UR5TestFixedSplinesDoF5Sim(IrosEnv03UR5TestFixedSplinesDoF5, Simu
         objects_controller:=true \
         target_mode:=1moving2points \
         n_objects:=1.0 \
+        object_trajectory_file_name:=splines_ur5 \
         object_0_model_name:=box50 \
         object_0_frame:=target"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
