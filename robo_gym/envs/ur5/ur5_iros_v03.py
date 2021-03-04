@@ -105,7 +105,7 @@ class IrosEnv03UR5Training(IrosEnv01UR5):
 
         # TODO: We should create some kind of helper function depending on how dynamic these settings should be
         # Set initial state of the Robot Server
-        n_sampling_points = int(np.random.default_rng().uniform(low= 4000, high=8000))
+        n_sampling_points = int(np.random.default_rng().uniform(low= 8000, high=16000))
         
         string_params = {"object_0_function": "3d_spline_ur5_workspace"}
         
@@ -620,7 +620,7 @@ class IrosEnv03UR5Test(IrosEnv03UR5Training):
 
         # TODO: We should create some kind of helper function depending on how dynamic these settings should be
         # Set initial state of the Robot Server
-        n_sampling_points = int(np.random.default_rng().uniform(low= 4000, high=8000))
+        n_sampling_points = int(np.random.default_rng().uniform(low= 8000, high=16000))
         
         string_params = {"object_0_function": "3d_spline_ur5_workspace"}
         
@@ -756,7 +756,7 @@ class IrosEnv03UR5TestFixedSplines(IrosEnv03UR5Training):
 
         # TODO: We should create some kind of helper function depending on how dynamic these settings should be
         # Set initial state of the Robot Server
-        n_sampling_points = int(np.random.default_rng().uniform(low= 4000, high=8000))
+        n_sampling_points = int(np.random.default_rng().uniform(low= 8000, high=16000))
         
         string_params = {"object_0_function": "fixed_trajectory"}
         float_params = {"object_0_trajectory_id": self.ep_n}
