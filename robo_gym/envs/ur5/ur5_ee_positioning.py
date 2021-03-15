@@ -66,7 +66,7 @@ class EndEffectorPositioningUR5(UR5BaseEnv):
 
     def step(self, action):
         if IGNORE_WRIST_3:
-            action =  np.append(action, [0.0])
+            action = np.append(action, [0.0])
 
         super().step(action)
 

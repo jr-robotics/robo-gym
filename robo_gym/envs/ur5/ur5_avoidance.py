@@ -1147,3 +1147,65 @@ class IrosEnv03UR5TestFixedSplinesDoF5Rob(IrosEnv03UR5TestFixedSplinesDoF5):
     real_robot = True
 
 # roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=1moving2points n_objects:=1.0 object_0_frame:=target
+class MovingBoxTargetUR5Sim(MovingBoxTargetUR5, Simulation):
+    cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
+        world_name:=box100.world \
+        yaw:=3.14\
+        reference_frame:=world \
+        max_velocity_scale_factor:=0.2 \
+        action_cycle_rate:=20 \
+        rviz_gui:=false \
+        gazebo_gui:=true \
+        objects_controller:=true \
+        target_mode:=moving \
+        n_objects:=1.0 \
+        object_0_model_name:=box100 \
+        object_0_frame:=target"
+    def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
+        Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
+        MovingBoxTargetUR5.__init__(self, rs_address=self.robot_server_ip, **kwargs)
+
+class MovingBoxTargetUR5Rob(MovingBoxTargetUR5):
+    real_robot = True 
+
+class MovingBoxTargetUR5DoF3Sim(MovingBoxTargetUR5DoF3, Simulation):
+    cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
+        world_name:=box100.world \
+        yaw:=3.14\
+        reference_frame:=world \
+        max_velocity_scale_factor:=0.2 \
+        action_cycle_rate:=20 \
+        rviz_gui:=false \
+        gazebo_gui:=true \
+        objects_controller:=true \
+        target_mode:=moving \
+        n_objects:=1.0 \
+        object_0_model_name:=box100 \
+        object_0_frame:=target"
+    def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
+        Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
+        MovingBoxTargetUR5DoF3.__init__(self, rs_address=self.robot_server_ip, **kwargs)
+
+class MovingBoxTargetUR5DoF3Rob(MovingBoxTargetUR5DoF3):
+    real_robot = True
+
+class MovingBoxTargetUR5DoF5Sim(MovingBoxTargetUR5DoF5, Simulation):
+    cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
+        world_name:=box100.world \
+        yaw:=3.14\
+        reference_frame:=world \
+        max_velocity_scale_factor:=0.2 \
+        action_cycle_rate:=20 \
+        rviz_gui:=false \
+        gazebo_gui:=true \
+        objects_controller:=true \
+        target_mode:=moving \
+        n_objects:=1.0 \
+        object_0_model_name:=box100 \
+        object_0_frame:=target"
+    def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
+        Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
+        MovingBoxTargetUR5DoF5.__init__(self, rs_address=self.robot_server_ip, **kwargs)
+
+class MovingBoxTargetUR5DoF5Rob(MovingBoxTargetUR5DoF5):
+    real_robot = True
