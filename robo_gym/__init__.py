@@ -369,6 +369,126 @@ register(
     entry_point='robo_gym.envs:ObstacleAvoidanceVarCPickplace31Box1PointUR5DoF5Rob',
 )
 
+# ? Iros Env 01 - 3 different target points that the robot should reach while staying as close as 
+# ? possible to the original trajectory
+
+register(
+    id='IrosEnv01UR5Sim-v0',
+    entry_point='robo_gym.envs:IrosEnv01UR5Sim',
+)
+
+register(
+    id='IrosEnv01UR5Rob-v0',
+    entry_point='robo_gym.envs:IrosEnv01UR5Rob',
+)
+
+register(
+    id='IrosEnv01UR5DoF3Sim-v0',
+    entry_point='robo_gym.envs:IrosEnv01UR5DoF3Sim',
+)
+
+register(
+    id='IrosEnv01UR5DoF3Rob-v0',
+    entry_point='robo_gym.envs:IrosEnv01UR5DoF3Rob',
+)
+
+register(
+    id='IrosEnv01UR5DoF5Sim-v0',
+    entry_point='robo_gym.envs:IrosEnv01UR5DoF5Sim',
+)
+
+register(
+    id='IrosEnv01UR5DoF5Rob-v0',
+    entry_point='robo_gym.envs:IrosEnv01UR5DoF5Rob',
+)
+
+# ? Iros Env 02 - 
+# ? 3 different target points that the robot should reach while staying as close as 
+# ? possible to the original trajectory
+# ? 2 Points on robot
+# ? 10% of cases fixed point
+
+register(
+    id='IrosEnv02UR5Sim-v0',
+    entry_point='robo_gym.envs:IrosEnv02UR5Sim',
+)
+
+register(
+    id='IrosEnv02UR5Rob-v0',
+    entry_point='robo_gym.envs:IrosEnv02UR5Rob',
+)
+
+register(
+    id='IrosEnv02UR5DoF3Sim-v0',
+    entry_point='robo_gym.envs:IrosEnv02UR5DoF3Sim',
+)
+
+register(
+    id='IrosEnv02UR5DoF3Rob-v0',
+    entry_point='robo_gym.envs:IrosEnv02UR5DoF3Rob',
+)
+
+register(
+    id='IrosEnv02UR5DoF5Sim-v0',
+    entry_point='robo_gym.envs:IrosEnv02UR5DoF5Sim',
+)
+
+register(
+    id='IrosEnv02UR5DoF5Rob-v0',
+    entry_point='robo_gym.envs:IrosEnv02UR5DoF5Rob',
+)
+
+register(
+    id='IrosEnv02UR5FixObstacleTrajDoF5Sim-v0',
+    entry_point='robo_gym.envs:IrosEnv02UR5FixObstacleTrajDoF5Sim',
+)
+
+register(
+    id='IrosEnv02UR5FixObstacleTrajDoF5Rob-v0',
+    entry_point='robo_gym.envs:IrosEnv02UR5FixObstacleTrajDoF5Rob',
+)
+
+register(
+    id='AblationTestEnvDoF5Sim-v0',
+    entry_point='robo_gym.envs:AblationTestEnvDoF5Sim',
+)
+# ? Iros Env 03
+
+register(
+    id='IrosEnv03UR5TrainingDoF5Sim-v0',
+    entry_point='robo_gym.envs:IrosEnv03UR5TrainingDoF5Sim',
+)
+
+register(
+    id='IrosEnv03UR5TrainingDoF5Rob-v0',
+    entry_point='robo_gym.envs:IrosEnv03UR5TrainingDoF5Rob',
+)
+
+# ? Test Environment with robot trajectories different from the ones on which it was trained.
+
+register(
+    id='IrosEnv03UR5TestDoF5Sim-v0',
+    entry_point='robo_gym.envs:IrosEnv03UR5TestDoF5Sim',
+)
+
+register(
+    id='IrosEnv03UR5TestDoF5Rob-v0',
+    entry_point='robo_gym.envs:IrosEnv03UR5TestDoF5Rob',
+)
+
+# ? Test Environment with robot trajectories different from the ones on which it was trained
+# ? and fixed obstacle trajectories imported from file 
+
+register(
+    id='IrosEnv03UR5TestFixedSplinesDoF5Sim-v0',
+    entry_point='robo_gym.envs:IrosEnv03UR5TestFixedSplinesDoF5Sim',
+)
+
+register(
+    id='IrosEnv03UR5TestFixedSplinesDoF5Rob-v0',
+    entry_point='robo_gym.envs:IrosEnv03UR5TestFixedSplinesDoF5Rob',
+)
+
 ## UR10 Environments
 register(
     id='EndEffectorPositioningUR10Sim-v0',

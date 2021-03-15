@@ -85,3 +85,31 @@ from robo_gym.envs.ur5.ur5_avoid_C_pickplace_3 import ObstacleAvoidanceVarCPickp
 from robo_gym.envs.ur5.ur5_avoid_C_pickplace_3 import ObstacleAvoidanceVarCPickplace31Box1PointUR5DoF3Rob
 from robo_gym.envs.ur5.ur5_avoid_C_pickplace_3 import ObstacleAvoidanceVarCPickplace31Box1PointUR5DoF5Sim
 from robo_gym.envs.ur5.ur5_avoid_C_pickplace_3 import ObstacleAvoidanceVarCPickplace31Box1PointUR5DoF5Rob
+
+from robo_gym.envs.ur5.ur5_iros_v01 import IrosEnv01UR5Sim
+from robo_gym.envs.ur5.ur5_iros_v01 import IrosEnv01UR5Rob
+from robo_gym.envs.ur5.ur5_iros_v01 import IrosEnv01UR5DoF3Sim
+from robo_gym.envs.ur5.ur5_iros_v01 import IrosEnv01UR5DoF3Rob
+from robo_gym.envs.ur5.ur5_iros_v01 import IrosEnv01UR5DoF5Sim
+from robo_gym.envs.ur5.ur5_iros_v01 import IrosEnv01UR5DoF5Rob
+
+from robo_gym.envs.ur5.ur5_iros_v02 import IrosEnv02UR5Sim
+from robo_gym.envs.ur5.ur5_iros_v02 import IrosEnv02UR5Rob
+from robo_gym.envs.ur5.ur5_iros_v02 import IrosEnv02UR5DoF3Sim
+from robo_gym.envs.ur5.ur5_iros_v02 import IrosEnv02UR5DoF3Rob
+from robo_gym.envs.ur5.ur5_iros_v02 import IrosEnv02UR5DoF5Sim
+from robo_gym.envs.ur5.ur5_iros_v02 import IrosEnv02UR5DoF5Rob
+
+from robo_gym.envs.ur5.ur5_iros_v02 import IrosEnv02UR5FixObstacleTrajDoF5Sim
+from robo_gym.envs.ur5.ur5_iros_v02 import IrosEnv02UR5FixObstacleTrajDoF5Rob
+
+from robo_gym.envs.ur5.ur5_iros_ablation_models_test import AblationTestEnvDoF5Sim
+
+from robo_gym.envs.ur5.ur5_iros_v03 import IrosEnv03UR5TrainingDoF5Sim
+from robo_gym.envs.ur5.ur5_iros_v03 import IrosEnv03UR5TrainingDoF5Rob
+
+from robo_gym.envs.ur5.ur5_iros_v03 import IrosEnv03UR5TestDoF5Sim
+from robo_gym.envs.ur5.ur5_iros_v03 import IrosEnv03UR5TestDoF5Rob
+
+from robo_gym.envs.ur5.ur5_iros_v03 import IrosEnv03UR5TestFixedSplinesDoF5Sim
+from robo_gym.envs.ur5.ur5_iros_v03 import IrosEnv03UR5TestFixedSplinesDoF5Rob
