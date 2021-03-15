@@ -103,8 +103,8 @@ from robo_gym.envs.ur5.ur5_ee_positioning import EndEffectorPositioningUR5Rob
 
 # from robo_gym.envs.ur5.ur5_iros_ablation_models_test import AblationTestEnvDoF5Sim
 
-# from robo_gym.envs.ur5.ur5_iros_v03 import IrosEnv03UR5TrainingDoF5Sim
-# from robo_gym.envs.ur5.ur5_iros_v03 import IrosEnv03UR5TrainingDoF5Rob
+from robo_gym.envs.ur5.ur5_avoidance import IrosEnv03UR5TrainingDoF5Sim
+from robo_gym.envs.ur5.ur5_avoidance import IrosEnv03UR5TrainingDoF5Rob
 
 # from robo_gym.envs.ur5.ur5_iros_v03 import IrosEnv03UR5TestDoF5Sim
 # from robo_gym.envs.ur5.ur5_iros_v03 import IrosEnv03UR5TestDoF5Rob
