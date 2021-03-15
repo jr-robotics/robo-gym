@@ -68,7 +68,7 @@ class EndEffectorPositioningUR5(UR5BaseEnv):
         if IGNORE_WRIST_3:
             action = np.append(action, [0.0])
 
-        super().step(action)
+        return super().step(action)
 
     def _get_action_space(self):
         """Get environment action space.
