@@ -14,7 +14,7 @@ from robo_gym.envs.ur5.ur5_base_env import UR5BaseEnv
 
 IGNORE_WRIST_3 = True
 
-class EndEffectorPositioningUR5(UR5Env):
+class EndEffectorPositioningUR5(UR5BaseEnv):
 
     def _reward(self, rs_state, action):
         reward = 0
