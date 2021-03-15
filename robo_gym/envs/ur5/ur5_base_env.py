@@ -55,12 +55,15 @@ class UR5BaseEnv(gym.Env):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
-    def reset(self, initial_joint_positions = None, ee_target_pose = None, type='random'):
+    def reset(self, initial_joint_positions = None, ee_target_pose = None, type='continue'):
         """Environment reset.
 
         Args:
             initial_joint_positions (list[6] or np.array[6]): robot joint positions in radians.
             ee_target_pose (list[6] or np.array[6]): [x,y,z,r,p,y] target end effector pose.
+            type (random or continue):
+                random: reset at a random position within the range defined in _set_initial_joint_positions_range
+                continue: if the episode terminated with success the robot starts the next episode from this location, otherwise it starts at a random position
 
         Returns:
             np.array: Environment state.
@@ -126,7 +129,7 @@ class UR5BaseEnv(gym.Env):
         # go one empty action and check if there is a collision
         if not self.real_robot:
             action = self.state[3:3+len(self.action_space.sample())]
-            _, _, done, info = self.step(action)
+            _, _, done, _ = self.step(action)
             self.elapsed_steps = 0
             if done:
                 raise InvalidStateError('Reset started in a collision state')
@@ -138,9 +141,6 @@ class UR5BaseEnv(gym.Env):
 
     def step(self, action):
         self.elapsed_steps += 1
-
-        # Check if the action is within the action space
-        assert self.action_space.contains(action), "%r (%s) invalid" % (action, type(action))
 
         # Convert environment action to Robot Server action
         rs_action = copy.deepcopy(action)

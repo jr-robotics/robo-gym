@@ -35,16 +35,6 @@ register(
 )
 
 register(
-    id='EndEffectorPositioningUR5DoF5Sim-v0',
-    entry_point='robo_gym.envs:EndEffectorPositioningUR5DoF5Sim',
-)
-
-register(
-    id='EndEffectorPositioningUR5DoF5Rob-v0',
-    entry_point='robo_gym.envs:EndEffectorPositioningUR5DoF5Rob',
-)
-
-register(
     id='MovingBoxTargetUR5Sim-v0',
     entry_point='robo_gym.envs:MovingBoxTargetUR5Sim',
 )

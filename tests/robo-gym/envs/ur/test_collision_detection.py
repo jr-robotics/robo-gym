@@ -11,7 +11,6 @@ envs = [
     'EndEffectorPositioningUR10Sim-v0', 
     'EndEffectorPositioningUR10DoF5Sim-v0',
     'EndEffectorPositioningUR5Sim-v0',
-    'EndEffectorPositioningUR5DoF5Sim-v0'
 ]
 
 
