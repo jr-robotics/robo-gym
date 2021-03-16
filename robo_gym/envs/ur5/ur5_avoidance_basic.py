@@ -13,7 +13,7 @@ from robo_gym.envs.simulation_wrapper import Simulation
 from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
 
 DEBUG = True
-DOF = 5 # degrees of freedom the robotic arm can use
+DOF = 5 # degrees of freedom the robotic arm can use [3, 5, 6]
 MINIMUM_DISTANCE = 0.3 # the distance [cm] the robot should keep to the obstacle
 
 # ? Base Environment for the Obstacle Avoidance Use Case
@@ -22,6 +22,9 @@ MINIMUM_DISTANCE = 0.3 # the distance [cm] the robot should keep to the obstacle
 class MovingBoxTargetUR5(UR5BaseEnv):
     
     max_episode_steps = 1000
+
+    def _get_action_space(self):
+        return spaces.Box(low=np.full((DOF), -1.0), high=np.full((DOF), 1.0), dtype=np.float32)
             
     def _get_observation_space(self):
         """Get environment observation space.
@@ -94,7 +97,6 @@ class MovingBoxTargetUR5(UR5BaseEnv):
 
         # Get Robot Server state
         rs_state = copy.deepcopy(np.nan_to_num(np.array(self.client.get_state_msg().state)))
-        self.prev_rs_state = copy.deepcopy(rs_state)
 
         # Check if the length of the Robot Server state received is correct
         if not len(rs_state)== self._get_robot_server_state_len():
@@ -126,34 +128,34 @@ class MovingBoxTargetUR5(UR5BaseEnv):
         done = False
         info = {}
         
-        # reward weights
+        # Reward weights
         close_distance_weight = -2
         delta_joint_weight = 1
         action_usage_weight = 1
         rapid_action_weight = -0.2
 
-        # difference in joint position current vs. starting position
+        # Difference in joint position current vs. starting position
         delta_joint_pos = env_state[9:15]
 
-        # calculate distance to the target
+        # Calculate distance to the target
         target_coord = np.array(rs_state[0:3])
         ee_coord = np.array(rs_state[18:21])
         distance_to_target = np.linalg.norm(target_coord - ee_coord)   
                 
-        # reward staying close to the predefined joint position
+        # Reward staying close to the predefined joint position
         if abs(env_state[-6:]).sum() < 0.1 * action.size:
             reward += delta_joint_weight * (1 - (abs(delta_joint_pos).sum()/(0.1 * action.size))) * (1/1000)
         
-        # reward for not acting
+        # Reward for not acting
         if abs(action).sum() <= action.size:
             reward += action_usage_weight * (1 - (np.square(action).sum()/action.size)) * (1/1000)
 
-        # negative reward if actions change to rapidly between steps
+        # Negative reward if actions change to rapidly between steps
         for i in range(len(action)):
             if abs(action[i] - self.last_action[i]) > 0.5:
                 reward += rapid_action_weight * (1/1000)
             
-        # negative reward if the obstacle is close than the predefined minimum distance
+        # Negative reward if the obstacle is close than the predefined minimum distance
         if distance_to_target < MINIMUM_DISTANCE:
             reward += close_distance_weight * (1/self.max_episode_steps) 
 
@@ -188,7 +190,20 @@ class MovingBoxTargetUR5(UR5BaseEnv):
         print('Sum of Deltas: {:.2e}'.format(sum(abs(env_state[9:15]))))
         print()
 
+    def _action_to_delta_joint_pos(self, action):
+        # Convert environment action to Robot Server action
+        desired_joint_positions = self._get_desired_joint_positions()
+        if action.size == 3:
+            desired_joint_positions[1:4] = desired_joint_positions[1:4] + action
+        elif action.size == 5:
+            desired_joint_positions[0:5] = desired_joint_positions[0:5] + action
+        elif action.size == 6:
+            desired_joint_positions = desired_joint_positions + action
+        else:
+            raise InvalidStateError('DOF setting has unsupported value [3, 5, 6]')
+        
 
+    # TODO: once normalization is gone this method can be merged with URBaseEnv
     def step(self, action):
         self.elapsed_steps += 1
 
@@ -198,21 +213,14 @@ class MovingBoxTargetUR5(UR5BaseEnv):
             self.last_action = action
         
         # Convert environment action to Robot Server action
-        desired_joint_positions = self._get_desired_joint_positions()
-        if action.size == 3:
-            desired_joint_positions[1:4] = desired_joint_positions[1:4] + action
-        elif action.size == 5:
-            desired_joint_positions[0:5] = desired_joint_positions[0:5] + action
-        elif action.size == 6:
-            desired_joint_positions = desired_joint_positions + action
+        rs_action = self._action_to_delta_joint_pos(action)
 
-        rs_action = desired_joint_positions
+        # ? Scaling in URBaseEnv
 
         # Convert action indexing from ur to ros
         rs_action = self.ur._ur_joint_list_to_ros_joint_list(rs_action)
         # Send action to Robot Server and get state
         rs_state = self.client.send_action_get_state(rs_action.tolist()).state
-        self.prev_rs_state = copy.deepcopy(rs_state)
 
         # Convert the state from Robot Server format to environment format
         self.state = self._robot_server_state_to_env_state(rs_state)
@@ -288,14 +296,6 @@ class MovingBoxTargetUR5(UR5BaseEnv):
 
         return state
 
-class MovingBoxTargetUR5DoF3(MovingBoxTargetUR5):
-    def _get_action_space(self):
-        return spaces.Box(low=np.full((3), -1.0), high=np.full((3), 1.0), dtype=np.float32)
-
-class MovingBoxTargetUR5DoF5(MovingBoxTargetUR5):
-    def _get_action_space(self):
-        return spaces.Box(low=np.full((5), -1.0), high=np.full((5), 1.0), dtype=np.float32)
-
 
 class MovingBoxTargetUR5Sim(MovingBoxTargetUR5, Simulation):
     cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
@@ -317,45 +317,3 @@ class MovingBoxTargetUR5Sim(MovingBoxTargetUR5, Simulation):
 
 class MovingBoxTargetUR5Rob(MovingBoxTargetUR5):
     real_robot = True 
-
-class MovingBoxTargetUR5DoF3Sim(MovingBoxTargetUR5DoF3, Simulation):
-    cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
-        world_name:=box100.world \
-        yaw:=3.14\
-        reference_frame:=world \
-        max_velocity_scale_factor:=0.2 \
-        action_cycle_rate:=20 \
-        rviz_gui:=false \
-        gazebo_gui:=true \
-        objects_controller:=true \
-        target_mode:=moving \
-        n_objects:=1.0 \
-        object_0_model_name:=box100 \
-        object_0_frame:=target"
-    def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
-        Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
-        MovingBoxTargetUR5DoF3.__init__(self, rs_address=self.robot_server_ip, **kwargs)
-
-class MovingBoxTargetUR5DoF3Rob(MovingBoxTargetUR5DoF3):
-    real_robot = True
-
-class MovingBoxTargetUR5DoF5Sim(MovingBoxTargetUR5DoF5, Simulation):
-    cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
-        world_name:=box100.world \
-        yaw:=3.14\
-        reference_frame:=world \
-        max_velocity_scale_factor:=0.2 \
-        action_cycle_rate:=20 \
-        rviz_gui:=false \
-        gazebo_gui:=true \
-        objects_controller:=true \
-        target_mode:=moving \
-        n_objects:=1.0 \
-        object_0_model_name:=box100 \
-        object_0_frame:=target"
-    def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
-        Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
-        MovingBoxTargetUR5DoF5.__init__(self, rs_address=self.robot_server_ip, **kwargs)
-
-class MovingBoxTargetUR5DoF5Rob(MovingBoxTargetUR5DoF5):
-    real_robot = True

@@ -158,6 +158,7 @@ class UR5BaseEnv(gym.Env):
         reward = 0
         done = False
         reward, done, info = self._reward(rs_state=rs_state, action=action)
+        self.last_action = action
 
         return self.state, reward, done, info
 
