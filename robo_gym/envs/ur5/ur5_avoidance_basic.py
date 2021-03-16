@@ -52,8 +52,8 @@ class MovingBoxTargetUR5(UR5BaseEnv):
 
         return spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
 
-    # TODO: All the stuff we only needed for the positioning task have to be removed in the final avoidance envs
-    def reset(self, initial_joint_positions = None, type='random') -> np.array:
+
+    def reset(self) -> np.array:
         """Environment reset.
 
         Args:
@@ -74,13 +74,7 @@ class MovingBoxTargetUR5(UR5BaseEnv):
         rs_state = np.zeros(self._get_robot_server_state_len())
         
         # Set initial robot joint positions
-        if initial_joint_positions:
-            assert len(initial_joint_positions) == 6
-            self.initial_joint_positions = initial_joint_positions
-        elif (len(self.last_position_on_success) != 0) and (type=='continue'):
-            self.initial_joint_positions = self.last_position_on_success
-        else:
-            self.initial_joint_positions = self._get_desired_joint_positions()
+        self.initial_joint_positions = self._get_desired_joint_positions()
 
         rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self.initial_joint_positions)
 
@@ -91,8 +85,11 @@ class MovingBoxTargetUR5(UR5BaseEnv):
         z_offset = np.random.default_rng().uniform(low=0.2, high=0.6)
         
         string_params = {"object_0_function": "triangle_wave"}
-        float_params = {"object_0_x": 0.13, "object_0_y": -0.30, "object_0_z_amplitude": z_amplitude, \
-                        "object_0_z_frequency": z_frequency, "object_0_z_offset": z_offset}
+        float_params = {"object_0_x": 0.13, 
+                        "object_0_y": -0.30, 
+                        "object_0_z_amplitude": z_amplitude,
+                        "object_0_z_frequency": z_frequency, 
+                        "object_0_z_offset": z_offset}
         state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
         if not self.client.set_state_msg(state_msg):
             raise RobotServerError("set_state")
@@ -175,7 +172,7 @@ class MovingBoxTargetUR5(UR5BaseEnv):
             self.last_position_on_success = []
         
 
-        if DEBUG: self.print_state_action_info(rs_state, action)
+        if DEBUG: self.print_state_action(rs_state, action)
 
         return reward, done, info
 
@@ -204,6 +201,7 @@ class MovingBoxTargetUR5(UR5BaseEnv):
             desired_joint_positions = desired_joint_positions + action
         else:
             raise InvalidStateError('DOF setting has unsupported value [3, 5, 6]')
+        return desired_joint_positions
         
 
     # TODO: once normalization is gone this method can be merged with URBaseEnv
@@ -242,7 +240,7 @@ class MovingBoxTargetUR5(UR5BaseEnv):
     
     def _get_desired_joint_positions(self) -> np.array:
         """Get desired robot joint positions with standard indexing."""
-        return np.array([DESIRED_JOINT_POSITIONS])
+        return np.array(DESIRED_JOINT_POSITIONS)
 
 
     def _robot_server_state_to_env_state(self, rs_state) -> np.array:
@@ -292,7 +290,6 @@ class MovingBoxTargetUR5(UR5BaseEnv):
 
         return state
 
-
 class MovingBoxTargetUR5Sim(MovingBoxTargetUR5, Simulation):
     cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
         world_name:=box100.world \
@@ -313,3 +310,5 @@ class MovingBoxTargetUR5Sim(MovingBoxTargetUR5, Simulation):
 
 class MovingBoxTargetUR5Rob(MovingBoxTargetUR5):
     real_robot = True 
+
+# roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=moving
