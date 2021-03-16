@@ -1,11 +1,18 @@
-from copy import deepcopy
+"""
+Environment for basic obstacle avoidance controlling a robotic arm from UR.
+
+In this environment the obstacle is only moving up and down in a vertical line in front of the robot.
+The goal is for the robot to stay within a predefined minimum distance to the moving obstacle.
+When feasible the robot should continue to the original configuration, 
+otherwise wait for the obstacle to move away before proceeding
+"""
+
 import math, copy
 from robo_gym.envs.ur5.ur5_base_env import UR5BaseEnv
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 import gym
 from gym import spaces
-from gym.utils import seeding
 from robo_gym.utils import utils, ur_utils
 from robo_gym.utils.exceptions import InvalidStateError, RobotServerError
 import robo_gym_server_modules.robot_server.client as rs_client
@@ -17,6 +24,7 @@ DEBUG = True
 DOF = 5 # degrees of freedom the robotic arm can use [3, 5, 6]
 MINIMUM_DISTANCE = 0.3 # the distance [cm] the robot should keep to the obstacle
 DESIRED_JOINT_POSITIONS = [-0.78,-1.31,-1.31,-2.18,1.57,0.0]
+
 
 # ? Base Environment for the Obstacle Avoidance Use Case
 # * In the base environment the target obstacle is only moving up and down in a vertical line in front of the robot.
@@ -104,18 +112,14 @@ class MovingBoxTargetUR5(UR5BaseEnv):
         # Convert the initial state from Robot Server format to environment format
         self.state = self._robot_server_state_to_env_state(rs_state)
 
-        # save start position
-        self.start_position = self.state[3:9]
-
         # Check if the environment state is contained in the observation space
         if not self.observation_space.contains(self.state):
             raise InvalidStateError()
         
-        # check if current position is in the range of the initial joint positions
-        if (len(self.last_position_on_success) == 0) or (type=='random'):
-            joint_positions = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
-            if not np.isclose(joint_positions, self.initial_joint_positions, atol=0.1).all():
-                raise InvalidStateError('Reset joint positions are not within defined range')        
+        # Check if current position is in the range of the initial joint positions
+        joint_positions = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
+        if not np.isclose(joint_positions, self.initial_joint_positions, atol=0.1).all():
+            raise InvalidStateError('Reset joint positions are not within defined range')        
 
         return self.state
 
@@ -179,13 +183,13 @@ class MovingBoxTargetUR5(UR5BaseEnv):
     def print_state_action(self, rs_state, action) -> None:
         env_state = self._robot_server_state_to_env_state(rs_state)
 
+        print('Prev Action:', self.last_action)
         print('Action:', action)
-        print('Last A:', self.last_action)
-        print('Distance: {:.2f}'.format(env_state[0]))
-        print('Polar 1 (degree): {:.2f}'.format(env_state[1] * 180/math.pi))
-        print('Polar 2 (degree): {:.2f}'.format(env_state[2] * 180/math.pi))
-        print('Joint Positions: [1]:{:.2e} [2]:{:.2e} [3]:{:.2e} [4]:{:.2e} [5]:{:.2e} [6]:{:.2e}'.format(*env_state[3:9]))
-        print('Joint PosDeltas: [1]:{:.2e} [2]:{:.2e} [3]:{:.2e} [4]:{:.2e} [5]:{:.2e} [6]:{:.2e}'.format(*env_state[9:15]))
+        print('Distance: {:.3f}'.format(env_state[0]))
+        print('Polar 1 (degree): {:.3f}'.format(env_state[1] * 180/math.pi))
+        print('Polar 2 (degree): {:.3f}'.format(env_state[2] * 180/math.pi))
+        print('Joint Positions: [1]:{:.3f} [2]:{:.3f} [3]:{:.3f} [4]:{:.3f} [5]:{:.3f} [6]:{:.3f}'.format(*env_state[3:9]))
+        print('Joint PosDeltas: [1]:{:.3f} [2]:{:.3f} [3]:{:.3f} [4]:{:.3f} [5]:{:.3f} [6]:{:.3f}'.format(*env_state[9:15]))
         print('Sum of Deltas: {:.2e}'.format(sum(abs(env_state[9:15]))))
         print()
 
