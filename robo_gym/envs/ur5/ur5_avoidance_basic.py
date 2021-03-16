@@ -25,10 +25,6 @@ DOF = 5 # degrees of freedom the robotic arm can use [3, 5, 6]
 MINIMUM_DISTANCE = 0.3 # the distance [cm] the robot should keep to the obstacle
 DESIRED_JOINT_POSITIONS = [-0.78,-1.31,-1.31,-2.18,1.57,0.0]
 
-
-# ? Base Environment for the Obstacle Avoidance Use Case
-# * In the base environment the target obstacle is only moving up and down in a vertical line in front of the robot.
-# * The goal in this environment is for the robot to stay as much as possible in it's initial joint configuration while keeping a minimum distance to the obstacle
 class MovingBoxTargetUR5(UR5BaseEnv):
     
     max_episode_steps = 1000
