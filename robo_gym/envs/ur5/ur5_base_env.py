@@ -78,9 +78,6 @@ class UR5BaseEnv(gym.Env):
         self.state = np.zeros(self._get_env_state_len())
         rs_state = np.zeros(self._get_robot_server_state_len())
         
-
-        print(self.last_position_on_success)
-
         # Set initial robot joint positions
         if initial_joint_positions:
             assert len(initial_joint_positions) == 6
