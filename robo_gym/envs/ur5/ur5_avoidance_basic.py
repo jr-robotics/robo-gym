@@ -153,7 +153,7 @@ class MovingBoxTargetUR5(UR5BaseEnv):
             if abs(action[i] - self.last_action[i]) > 0.5:
                 reward += rapid_action_weight * (1/1000)
             
-        # Negative reward if the obstacle is close than the predefined minimum distance
+        # Negative reward if the obstacle is closer than the predefined minimum distance
         if distance_to_target < MINIMUM_DISTANCE:
             reward += close_distance_weight * (1/self.max_episode_steps) 
 

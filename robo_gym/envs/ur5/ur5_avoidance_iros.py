@@ -16,7 +16,7 @@ from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_p
 
 DEBUG = True
 DOF = 5 # degrees of freedom the robotic arm can use [5, 6]
-
+MINIMUM_DISTANCE = 0.45 # the distance [cm] the robot should keep to the obstacle
 
 class IrosEnv03UR5Training(UR5BaseEnv):
     max_episode_steps = 1000
@@ -27,9 +27,10 @@ class IrosEnv03UR5Training(UR5BaseEnv):
         file_name = 'trajectory_iros_2021.json'
         file_path = os.path.join(os.path.dirname(__file__), 'robot_trajectories', file_name)
         with open(file_path) as json_file:
-            self.trajectory = json.load(json_file)
+            self.trajectory = json.load(json_file)['trajectory']
 
-    def reset(self, initial_joint_positions = None, type='random', reward_weights=[0.0]*7):
+
+    def reset(self):
         """Environment reset.
 
         Args:
@@ -39,18 +40,6 @@ class IrosEnv03UR5Training(UR5BaseEnv):
         Returns:
             np.array: Environment state.
         """
-
-        # Default Configuration 
-        # [obstacle_coordinates[3], current_joint[5], delta_joint[5], desired_joint[5], flag[1], obstacle_two_coordinates[3], [0.0]*3]
-
-        # 1.	[polar_coords]
-        # 2.    [obstacle_cartesian[3], current_joint[5], delta_joint[5], desired_joint[5], flag[1], ee_cartesian[3], elbow_cartesian[3]]
-        # 3.	[obstacle_coordinates[3], [0,0,0,0,0,0], delta_joint[5], [0,0,0,0,0,0], flag[1], obstacle_two_coordinates[3], [0.0]*3]
-        # 4.	[obstacle_coordinates[3], current_joint[5], [0,0,0,0,0,0], desired_joint[5], flag[1], obstacle_two_coordinates[3], [0.0]*3]
-        # 5. 	[obstacle_coordinates[3], current_joint[5], [0,0,0,0,0,0], desired_joint[5], [0], obstacle_two_coordinates[3], [0.0]*3]
-
-        self.mask_setting = 1
-
         self.elapsed_steps = 0
 
         self.obstacle_coords = []
@@ -60,14 +49,7 @@ class IrosEnv03UR5Training(UR5BaseEnv):
         self.elapsed_steps_in_current_state = 0 
         self.target_reached = 0
         self.target_reached_counter = 0
-
-        self.reward_composition = []
         
-        # Pick robot trajectory
-        # self.trajectories_ids = ['trajectory_3', 'trajectory_7', 'trajectory_8', 'trajectory_9', 'trajectory_10', 'trajectory_11']
-        self.trajectory_id = 'trajectory'
-        if DEBUG:
-            print('Robot Trajectory ID: ' + self.trajectory_id)
 
         # Initialize environment state
         self.state = np.zeros(self._get_env_state_len())
@@ -75,20 +57,15 @@ class IrosEnv03UR5Training(UR5BaseEnv):
         
         # NOTE: maybe we can find a cleaner version when we have the final envs (we could prob remove it for the avoidance task altogether)
         # Set initial robot joint positions
-        if initial_joint_positions:
-            assert len(initial_joint_positions) == 6
-            self.initial_joint_positions = initial_joint_positions
-        elif (len(self.last_position_on_success) != 0) and (type=='continue'):
-            self.initial_joint_positions = self.last_position_on_success
-        else:
-            self.initial_joint_positions = self._get_desired_joint_positions()
+ 
+        self.initial_joint_positions = self._get_desired_joint_positions()
 
         rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self.initial_joint_positions)
 
 
         # TODO: We should create some kind of helper function depending on how dynamic these settings should be
         # Set initial state of the Robot Server
-        n_sampling_points = int(np.random.default_rng().uniform(low= 8000, high=12000))
+        n_sampling_points = int(np.random.default_rng().uniform(low=8000, high=12000))
         
         string_params = {"object_0_function": "3d_spline_ur5_workspace"}
         
@@ -111,23 +88,19 @@ class IrosEnv03UR5Training(UR5BaseEnv):
         # Convert the initial state from Robot Server format to environment format
         self.state = self._robot_server_state_to_env_state(rs_state)
 
-        # save start position
-        self.start_position = self.state[3:9]
-
         # Check if the environment state is contained in the observation space
         if not self.observation_space.contains(self.state):
             raise InvalidStateError()
         
         # check if current position is in the range of the initial joint positions
-        if (len(self.last_position_on_success) == 0) or (type=='random'):
-            joint_positions = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
-            if DEBUG:
-                print("Initial Joint Positions")
-                print(self.initial_joint_positions)
-                print("Joint Positions")
-                print(joint_positions)
-            if not np.isclose(joint_positions, self.initial_joint_positions, atol=0.1).all():
-                raise InvalidStateError('Reset joint positions are not within defined range')
+        joint_positions = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
+        if DEBUG:
+            print("Initial Joint Positions")
+            print(self.initial_joint_positions)
+            print("Joint Positions")
+            print(joint_positions)
+        if not np.isclose(joint_positions, self.initial_joint_positions, atol=0.1).all():
+            raise InvalidStateError('Reset joint positions are not within defined range')
             
         return self.state
 
@@ -165,6 +138,9 @@ class IrosEnv03UR5Training(UR5BaseEnv):
         if not self.observation_space.contains(self.state):
             raise InvalidStateError()
         
+        # Save obstacle position
+        self.obstacle_coords.append(rs_state[0:3])
+
         if DEBUG:
             print("Desired Joint Positions")
             print(self._get_desired_joint_positions())
@@ -177,7 +153,7 @@ class IrosEnv03UR5Training(UR5BaseEnv):
                 self.target_reached = 1
                 self.state_n +=1
                 # Restart from state 0 if the full trajectory has been completed
-                self.state_n = self.state_n % len(self.trajectory[self.trajectory_id])
+                self.state_n = self.state_n % len(self.trajectory)
                 self.elapsed_steps_in_current_state = 0
                 self.target_reached_counter += 1
         if DEBUG:
@@ -211,137 +187,74 @@ class IrosEnv03UR5Training(UR5BaseEnv):
         print('Targets reached', self.target_reached_counter)
 
         print()
-    # should not be used anyway
-    def print_reward_composition(self):
-        # self.reward_composition.append([dr, act_r, small_actions, act_delta, dist_1, self.target_reached, collision_reward])
-        dr = [r[0] for r in self.reward_composition]
-        act_r = [r[1] for r in self.reward_composition]
-        # small_actions = [r[2] for r in self.reward_composition]
-        act_delta = [r[2] for r in self.reward_composition]
-        dist_1 = [r[3] for r in self.reward_composition]
-        target_reached = [r[5] for r in self.reward_composition]
-        collision_reward = [r[4] for r in self.reward_composition]
-        # joint_delta_r = [r[5] for r in self.reward_composition]
 
-        print('sanity check', dr, act_r, act_delta)
-
-        print('Reward Composition of Episode:')
-        print('Reward for keeping low delta joints: SUM={} MIN={}, MAX={}'.format(np.sum(dr), np.min(dr), np.max(dr)))
-        print('Reward for as less as possible: SUM={} MIN={}, MAX={}'.format(np.sum(act_r), np.min(act_r), np.max(act_r)))
-        # print('Reward minor actions: SUM={} MIN={}, MAX={}'.format(np.sum(small_actions), np.min(small_actions), np.max(small_actions)))
-        print('Punishment for rapid movement: SUM={} MIN={}, MAX={}'.format(np.sum(act_delta), np.min(act_delta), np.max(act_delta)))
-        print('Punishment for target distance: SUM={} MIN={}, MAX={}'.format(np.sum(dist_1), np.min(dist_1), np.max(dist_1)))
-        print('Reward for target reached: SUM={} MIN={}, MAX={}'.format(np.sum(target_reached), np.min(target_reached), np.max(target_reached)))
-        print('Punishment for collision: SUM={} MIN={}, MAX={}'.format(np.sum(collision_reward), np.min(collision_reward), np.max(collision_reward)))
-        # print('Punishment for joint delta: SUM={} MIN={}, MAX={}'.format(np.sum(joint_delta_r), np.min(joint_delta_r), np.max(joint_delta_r)))
 
     def _reward(self, rs_state, action):
-        # TODO: remove print when not needed anymore
-        # print('action', action)
         env_state = self._robot_server_state_to_env_state(rs_state)
 
         reward = 0
         done = False
         info = {}
-
-        # minimum the robot should keep to the obstacle
-        minimum_distance = 0.45 # m
         
+        # Reward weights
+        close_distance_weight = -2.0
+        delta_joint_weight = 1.0
+        action_usage_weight = 1.5
+        rapid_action_weight = -0.2
+        collision_weight = -0.1
+        target_reached_weight = 0.05
+
+        # Calculate distance to the target
         target_coord = rs_state[0:3]
         ee_coord = rs_state[18:21]
         elbow_coord = rs_state[26:29]
-
-        self.obstacle_coords.append(target_coord)
-        
-        distance_to_target = np.linalg.norm(np.array(target_coord)-np.array(ee_coord))
-        distance_to_target_2 = np.linalg.norm(np.array(target_coord)-np.array(elbow_coord))
-
-        # Normalize joint position values
-        ur_j_pos = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
-        ur_j_pos_norm = self.ur.normalize_joint_values(joints=ur_j_pos)
-
-        # desired joint positions
-        desired_joints = self.ur.normalize_joint_values(self._get_desired_joint_positions())
-        delta_joint_pos = ur_j_pos_norm - desired_joints
-        target_point_flag = self.target_point_flag
-
-
-        distance_weight = -2.0
-        delta_weight = 1.0
-        action_usage_weight = 1.5
-        act_delta_weight = -0.2
-        collison_weight = -0.1
-        target_reached_weight = 0.05
-        joint_delta_weight = 0.0
-
-        # reward for being in the defined interval of minimum_distance and maximum_distance
-        dr = 0
-        # if abs(delta_joint_pos).sum() < 0.5:
-        #     dr = 1.5 * (1 - (sum(abs(delta_joint_pos))/0.5)) * (1/1000)
-        #     reward += dr
-        for i in range(len(delta_joint_pos)-1):
+        distance_to_ee = np.linalg.norm(np.array(target_coord)-np.array(ee_coord))
+        distance_to_elbow = np.linalg.norm(np.array(target_coord)-np.array(elbow_coord))
+            
+        # Reward staying close to the predefined joint position
+        delta_joint_pos = env_state[9:15]
+        for i in range(action.size):
             if abs(delta_joint_pos[i]) < 0.1:
-                dr = delta_weight * (1 - (abs(delta_joint_pos[i]))/0.1) * (1/1000) 
-                dr = dr/5
-                reward += dr
+                temp = delta_joint_weight * (1 - (abs(delta_joint_pos[i]))/0.1) * (1/1000) 
+                temp = temp/action.size
+                reward += temp
         
-        
-        # reward moving as less as possible
-        act_r = 0 
+        # Reward for not acting
         if abs(action).sum() <= action.size:
-            act_r = action_usage_weight * (1 - (np.square(action).sum()/action.size)) * (1/1000)
-            reward += act_r
+            reward += action_usage_weight * (1 - (np.square(action).sum()/action.size)) * (1/1000)
 
-
-        # punish big deltas in action
-        act_delta = 0
+        # Negative reward if actions change to rapidly between steps
         for i in range(len(action)):
             if abs(action[i] - self.last_action[i]) > 0.4:
-                a_r = act_delta_weight * (1/1000)
-                act_delta += a_r
-                reward += a_r
-        
-        dist_1 = 0
-        if (distance_to_target < minimum_distance) or (distance_to_target_2 < minimum_distance):
-            dist_1 = distance_weight * (1/1000) # -2
-            reward += dist_1
+                reward += rapid_action_weight * (1/1000)
 
-        tr_reward = 0
+        # Negative reward if the obstacle is closer than the predefined minimum distance
+        if (distance_to_ee < MINIMUM_DISTANCE) or (distance_to_elbow < MINIMUM_DISTANCE):
+            reward += close_distance_weight * (1/1000)
+
+        # Reward for reaching a predefined waypoint on the trajectory
         if self.target_reached:
-            tr_reward += target_reached_weight
             reward += target_reached_weight
 
-        
-        # TODO: we could remove this if we do not need to punish failure or reward success
         # Check if robot is in collision
-        collision_reward = 0
         collision = True if rs_state[25] == 1 else False
         if collision:
-            collision_reward = collison_weight
-            reward = collison_weight
+            # Negative reward for a collision with the robot itself, the obstacle or the scene
+            reward = collision_weight
             done = True
             info['final_status'] = 'collision'
-            
 
         if self.elapsed_steps >= self.max_episode_steps:
             done = True
             info['final_status'] = 'success'
         
-        self.reward_composition.append([dr, act_r, act_delta, dist_1, collision_reward, tr_reward])
-        # self.reward_composition.append([dr, act_r, small_actions, act_delta, dist_1, tr_reward, collision_reward])
         if done:
-            self.print_reward_composition()
-            info['reward_composition'] = self.reward_composition
             info['targets_reached'] = self.target_reached_counter
             info['obstacle_coords'] = self.obstacle_coords
-            info['trajectory_id'] = self.trajectory_id
 
-        self.print_state_action_info(rs_state, action)
-        # ? DEBUG PRINT
-        print('Distance 1: {:.2f} Distance 2: {:.2f}'.format(distance_to_target, distance_to_target_2))
-        # if DEBUG: print('reward composition:', 'dr =', round(dr, 5), 'no_act =', round(act_r, 5), 'min_dist_1 =', round(dist_1, 5), 'min_dist_2 =', 'delta_act', round(act_delta, 5))
-        
-        # self.last_joint_positions = env_state[3:9]
+        if DEBUG: 
+            self.print_state_action_info(rs_state, action)
+            print('Distance 1: {:.2f} Distance 2: {:.2f}'.format(distance_to_ee, distance_to_elbow))
 
         return reward, done, info
 
@@ -407,17 +320,6 @@ class IrosEnv03UR5Training(UR5BaseEnv):
         # Compose environment state
         state = np.concatenate((target_polar, ur_j_pos_norm, delta_joints, desired_joints, [target_point_flag], target_polar_forearm, [0.0]*3))
 
-        if self.mask_setting == 1: # polar
-            pass
-        elif self.mask_setting == 2: # cartesian and delete second polar
-            state = np.concatenate((target_coord, ur_j_pos_norm, delta_joints, desired_joints, [target_point_flag], ee_to_ref_frame_translation, forearm_to_ref_frame_translation))
-        elif self.mask_setting == 3: # no current no desired
-            state = np.concatenate((target_polar, [0.0]*6, delta_joints, [0.0]*6, [target_point_flag], target_polar_forearm, [0.0]*3))
-        elif self.mask_setting == 4: # no delta
-            state = np.concatenate((target_polar, ur_j_pos_norm, [0.0]*6, desired_joints, [target_point_flag], target_polar_forearm, [0.0]*3))
-        elif self.mask_setting == 5: # no flag for waypoint
-            state = np.concatenate((target_polar, ur_j_pos_norm, delta_joints, desired_joints, [0], target_polar_forearm, [0.0]*3))
-
         return state
 
     # observation space should be fine
@@ -460,7 +362,6 @@ class IrosEnv03UR5Training(UR5BaseEnv):
             int: Length of the Robot Server state.
 
         """
-
         target = [0.0]*6
         ur_j_pos = [0.0]*6
         ur_j_vel = [0.0]*6
@@ -478,16 +379,14 @@ class IrosEnv03UR5Training(UR5BaseEnv):
             np.array: Joint positions with standard indexing.
 
         """
-        
-        
-        if self.elapsed_steps_in_current_state < len(self.trajectory[self.trajectory_id][self.state_n]):
-            joint_positions = copy.deepcopy(self.trajectory[self.trajectory_id][self.state_n][self.elapsed_steps_in_current_state])
+        if self.elapsed_steps_in_current_state < len(self.trajectory[self.state_n]):
+            joint_positions = copy.deepcopy(self.trajectory[self.state_n][self.elapsed_steps_in_current_state])
             # Last Joint is set to 0
             joint_positions[5] = 0
             self.target_point_flag = 0
         else:
             # Get last point of the trajectory segment
-            joint_positions = copy.deepcopy(self.trajectory[self.trajectory_id][self.state_n][-1])
+            joint_positions = copy.deepcopy(self.trajectory[self.state_n][-1])
             # Last Joint is set to 0
             joint_positions[5] = 0
             self.target_point_flag = 1
@@ -760,9 +659,6 @@ class IrosEnv03UR5TestFixedSplines(IrosEnv03UR5Training):
         
         # Convert the initial state from Robot Server format to environment format
         self.state = self._robot_server_state_to_env_state(rs_state)
-
-        # save start position
-        self.start_position = self.state[3:9]
 
         # Check if the environment state is contained in the observation space
         if not self.observation_space.contains(self.state):
