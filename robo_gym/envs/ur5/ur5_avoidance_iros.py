@@ -1,4 +1,3 @@
-from copy import deepcopy
 import math, copy
 from robo_gym.envs.ur5.ur5_base_env import UR5BaseEnv
 import numpy as np
@@ -16,33 +15,19 @@ from robo_gym.envs.simulation_wrapper import Simulation
 from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
 
 DEBUG = True
-
+DOF = 5 # degrees of freedom the robotic arm can use [5, 6]
 
 
 class IrosEnv03UR5Training(UR5BaseEnv):
-    def __init__(self, rs_address=None, **kwargs):
-        self.ur = ur_utils.UR(model="ur5")
-        self.elapsed_steps = 0
-        self.observation_space = self._get_observation_space()
-        self.action_space = self._get_action_space()
-        self.seed()
-        self.distance_threshold = 0.1
-        self.abs_joint_pos_range = self.ur.get_max_joint_positions()
-        self.last_position_on_success = []
-        self.prev_rs_state = None
-        self.last_action = None
+    max_episode_steps = 1000
 
-        file_name = 'ur5_pickplace_trajectories.json'
+    def __init__(self, rs_address=None, **kwargs):
+        super().__init__(rs_address, **kwargs)
+
+        file_name = 'trajectory_iros_2021.json'
         file_path = os.path.join(os.path.dirname(__file__), 'robot_trajectories', file_name)
         with open(file_path) as json_file:
-            self.trajectories = json.load(json_file)
-        
-        # Connect to Robot Server
-        if rs_address:
-            self.client = rs_client.Client(rs_address)
-        else:
-            print("WARNING: No IP and Port passed. Simulation will not be started")
-            print("WARNING: Use this only to get environment shape")
+            self.trajectory = json.load(json_file)
 
     def reset(self, initial_joint_positions = None, type='random', reward_weights=[0.0]*7):
         """Environment reset.
@@ -53,7 +38,6 @@ class IrosEnv03UR5Training(UR5BaseEnv):
 
         Returns:
             np.array: Environment state.
-
         """
 
         # Default Configuration 
@@ -80,8 +64,8 @@ class IrosEnv03UR5Training(UR5BaseEnv):
         self.reward_composition = []
         
         # Pick robot trajectory
-        self.trajectories_ids = ['trajectory_3', 'trajectory_7', 'trajectory_8', 'trajectory_9', 'trajectory_10', 'trajectory_11']
-        self.trajectory_id = random.choice(self.trajectories_ids)
+        # self.trajectories_ids = ['trajectory_3', 'trajectory_7', 'trajectory_8', 'trajectory_9', 'trajectory_10', 'trajectory_11']
+        self.trajectory_id = 'trajectory'
         if DEBUG:
             print('Robot Trajectory ID: ' + self.trajectory_id)
 
@@ -193,7 +177,7 @@ class IrosEnv03UR5Training(UR5BaseEnv):
                 self.target_reached = 1
                 self.state_n +=1
                 # Restart from state 0 if the full trajectory has been completed
-                self.state_n = self.state_n % len(self.trajectories[self.trajectory_id])
+                self.state_n = self.state_n % len(self.trajectory[self.trajectory_id])
                 self.elapsed_steps_in_current_state = 0
                 self.target_reached_counter += 1
         if DEBUG:
@@ -496,14 +480,14 @@ class IrosEnv03UR5Training(UR5BaseEnv):
         """
         
         
-        if self.elapsed_steps_in_current_state < len(self.trajectories[self.trajectory_id][self.state_n]):
-            joint_positions = copy.deepcopy(self.trajectories[self.trajectory_id][self.state_n][self.elapsed_steps_in_current_state])
+        if self.elapsed_steps_in_current_state < len(self.trajectory[self.trajectory_id][self.state_n]):
+            joint_positions = copy.deepcopy(self.trajectory[self.trajectory_id][self.state_n][self.elapsed_steps_in_current_state])
             # Last Joint is set to 0
             joint_positions[5] = 0
             self.target_point_flag = 0
         else:
             # Get last point of the trajectory segment
-            joint_positions = copy.deepcopy(self.trajectories[self.trajectory_id][self.state_n][-1])
+            joint_positions = copy.deepcopy(self.trajectory[self.trajectory_id][self.state_n][-1])
             # Last Joint is set to 0
             joint_positions[5] = 0
             self.target_point_flag = 1
@@ -826,65 +810,3 @@ class IrosEnv03UR5TestFixedSplinesDoF5Rob(IrosEnv03UR5TestFixedSplinesDoF5):
     real_robot = True
 
 # roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=1moving2points n_objects:=1.0 object_0_frame:=target
-class MovingBoxTargetUR5Sim(MovingBoxTargetUR5, Simulation):
-    cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
-        world_name:=box100.world \
-        yaw:=3.14\
-        reference_frame:=world \
-        max_velocity_scale_factor:=0.2 \
-        action_cycle_rate:=20 \
-        rviz_gui:=false \
-        gazebo_gui:=true \
-        objects_controller:=true \
-        target_mode:=moving \
-        n_objects:=1.0 \
-        object_0_model_name:=box100 \
-        object_0_frame:=target"
-    def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
-        Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
-        MovingBoxTargetUR5.__init__(self, rs_address=self.robot_server_ip, **kwargs)
-
-class MovingBoxTargetUR5Rob(MovingBoxTargetUR5):
-    real_robot = True 
-
-class MovingBoxTargetUR5DoF3Sim(MovingBoxTargetUR5DoF3, Simulation):
-    cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
-        world_name:=box100.world \
-        yaw:=3.14\
-        reference_frame:=world \
-        max_velocity_scale_factor:=0.2 \
-        action_cycle_rate:=20 \
-        rviz_gui:=false \
-        gazebo_gui:=true \
-        objects_controller:=true \
-        target_mode:=moving \
-        n_objects:=1.0 \
-        object_0_model_name:=box100 \
-        object_0_frame:=target"
-    def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
-        Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
-        MovingBoxTargetUR5DoF3.__init__(self, rs_address=self.robot_server_ip, **kwargs)
-
-class MovingBoxTargetUR5DoF3Rob(MovingBoxTargetUR5DoF3):
-    real_robot = True
-
-class MovingBoxTargetUR5DoF5Sim(MovingBoxTargetUR5DoF5, Simulation):
-    cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
-        world_name:=box100.world \
-        yaw:=3.14\
-        reference_frame:=world \
-        max_velocity_scale_factor:=0.2 \
-        action_cycle_rate:=20 \
-        rviz_gui:=false \
-        gazebo_gui:=true \
-        objects_controller:=true \
-        target_mode:=moving \
-        n_objects:=1.0 \
-        object_0_model_name:=box100 \
-        object_0_frame:=target"
-    def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
-        Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
-        MovingBoxTargetUR5DoF5.__init__(self, rs_address=self.robot_server_ip, **kwargs)
-
-class MovingBoxTargetUR5DoF5Rob(MovingBoxTargetUR5DoF5):
-    real_robot = True

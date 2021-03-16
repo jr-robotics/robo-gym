@@ -120,7 +120,6 @@ class MovingBoxTargetUR5(UR5BaseEnv):
         return self.state
 
     def _reward(self, rs_state, action) -> Tuple[float, bool, dict]:
-        # TODO: remove print when not needed anymore
         env_state = self._robot_server_state_to_env_state(rs_state)
 
         reward = 0
@@ -176,6 +175,7 @@ class MovingBoxTargetUR5(UR5BaseEnv):
 
         return reward, done, info
 
+    # TODO: do we want to have a printing method like this? if so i would move it to the URBaseEnv
     def print_state_action(self, rs_state, action) -> None:
         env_state = self._robot_server_state_to_env_state(rs_state)
 
