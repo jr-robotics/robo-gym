@@ -11,10 +11,12 @@ from robo_gym.utils.exceptions import InvalidStateError, RobotServerError
 import robo_gym_server_modules.robot_server.client as rs_client
 from robo_gym.envs.simulation_wrapper import Simulation
 from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
+from typing import Tuple
 
 DEBUG = True
 DOF = 5 # degrees of freedom the robotic arm can use [3, 5, 6]
 MINIMUM_DISTANCE = 0.3 # the distance [cm] the robot should keep to the obstacle
+DESIRED_JOINT_POSITIONS = [-0.78,-1.31,-1.31,-2.18,1.57,0.0]
 
 # ? Base Environment for the Obstacle Avoidance Use Case
 # * In the base environment the target obstacle is only moving up and down in a vertical line in front of the robot.
@@ -23,10 +25,10 @@ class MovingBoxTargetUR5(UR5BaseEnv):
     
     max_episode_steps = 1000
 
-    def _get_action_space(self):
+    def _get_action_space(self) -> spaces.Box:
         return spaces.Box(low=np.full((DOF), -1.0), high=np.full((DOF), 1.0), dtype=np.float32)
             
-    def _get_observation_space(self):
+    def _get_observation_space(self) -> spaces.Box:
         """Get environment observation space.
 
         Returns:
@@ -51,7 +53,7 @@ class MovingBoxTargetUR5(UR5BaseEnv):
         return spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
 
     # TODO: All the stuff we only needed for the positioning task have to be removed in the final avoidance envs
-    def reset(self, initial_joint_positions = None, type='random'):
+    def reset(self, initial_joint_positions = None, type='random') -> np.array:
         """Environment reset.
 
         Args:
@@ -120,7 +122,7 @@ class MovingBoxTargetUR5(UR5BaseEnv):
 
         return self.state
 
-    def _reward(self, rs_state, action):
+    def _reward(self, rs_state, action) -> Tuple[float, bool, dict]:
         # TODO: remove print when not needed anymore
         env_state = self._robot_server_state_to_env_state(rs_state)
 
@@ -177,7 +179,7 @@ class MovingBoxTargetUR5(UR5BaseEnv):
 
         return reward, done, info
 
-    def print_state_action(self, rs_state, action):
+    def print_state_action(self, rs_state, action) -> None:
         env_state = self._robot_server_state_to_env_state(rs_state)
 
         print('Action:', action)
@@ -190,8 +192,9 @@ class MovingBoxTargetUR5(UR5BaseEnv):
         print('Sum of Deltas: {:.2e}'.format(sum(abs(env_state[9:15]))))
         print()
 
-    def _action_to_delta_joint_pos(self, action):
-        # Convert environment action to Robot Server action
+    def _action_to_delta_joint_pos(self, action) -> np.array:
+        """Convert environment action to Robot Server action"""
+
         desired_joint_positions = self._get_desired_joint_positions()
         if action.size == 3:
             desired_joint_positions[1:4] = desired_joint_positions[1:4] + action
@@ -204,7 +207,7 @@ class MovingBoxTargetUR5(UR5BaseEnv):
         
 
     # TODO: once normalization is gone this method can be merged with URBaseEnv
-    def step(self, action):
+    def step(self, action) -> Tuple[np.array, float, bool, dict]:
         self.elapsed_steps += 1
 
         # Check if the action is within the action space
@@ -237,19 +240,12 @@ class MovingBoxTargetUR5(UR5BaseEnv):
 
         return self.state, reward, done, info
     
-    def _get_desired_joint_positions(self):
-        """Get desired robot joint positions.
+    def _get_desired_joint_positions(self) -> np.array:
+        """Get desired robot joint positions with standard indexing."""
+        return np.array([DESIRED_JOINT_POSITIONS])
 
-        Returns:
-            np.array: Joint positions with standard indexing.
 
-        """
-        # Fixed desired joint positions
-        joint_positions = np.array([-0.78,-1.31,-1.31,-2.18,1.57,0.0])
-
-        return joint_positions
-
-    def _robot_server_state_to_env_state(self, rs_state):
+    def _robot_server_state_to_env_state(self, rs_state) -> np.array:
         """Transform state from Robot Server to environment format.
 
         Args:

@@ -11,10 +11,7 @@ from robo_gym.envs.ur5.ur5_ee_positioning import EndEffectorPositioningUR5Sim
 from robo_gym.envs.ur5.ur5_ee_positioning import EndEffectorPositioningUR5Rob
 from robo_gym.envs.ur5.ur5_avoidance_basic import MovingBoxTargetUR5Sim
 from robo_gym.envs.ur5.ur5_avoidance_basic import MovingBoxTargetUR5Rob
-from robo_gym.envs.ur5.ur5_avoidance_basic import MovingBoxTargetUR5DoF3Sim
-from robo_gym.envs.ur5.ur5_avoidance_basic import MovingBoxTargetUR5DoF3Rob
-from robo_gym.envs.ur5.ur5_avoidance_basic import MovingBoxTargetUR5DoF5Sim
-from robo_gym.envs.ur5.ur5_avoidance_basic import MovingBoxTargetUR5DoF5Rob
+
 # from robo_gym.envs.ur5.ur5_avoidance import MovingBox3DSplineTargetUR5Sim
 # from robo_gym.envs.ur5.ur5_avoidance import MovingBox3DSplineTargetUR5Rob
 # from robo_gym.envs.ur5.ur5_avoidance import MovingBox3DSplineTargetUR5DoF3Sim
