@@ -1,3 +1,12 @@
+"""
+Environment for more complex obstacle avoidance controlling a robotic arm from UR.
+
+In this environment the obstacle trajectory is generated with a randomized 3d spline.
+The goal of the robot is to avoid dynamic obstacles while following pre-planned trajectory, 
+which was programmed with the UR’s teach pendant. 
+This trajectory is sampled at a frequency of 20 Hz.
+"""
+# TODO: add sentence that this is the environment used in the submission to iros 2021 
 
 import os, random, copy, json
 import numpy as np
@@ -11,6 +20,7 @@ from robo_gym.utils.exceptions import InvalidStateError, RobotServerError
 import robo_gym_server_modules.robot_server.client as rs_client
 from robo_gym.envs.simulation_wrapper import Simulation
 from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
+from typing import Tuple
 
 DEBUG = True
 DOF = 5 # degrees of freedom the robotic arm can use [5, 6]
@@ -19,7 +29,7 @@ MINIMUM_DISTANCE = 0.45 # the distance [cm] the robot should keep to the obstacl
 class IrosEnv03UR5Training(UR5BaseEnv):
     max_episode_steps = 1000
 
-    def __init__(self, rs_address=None, **kwargs):
+    def __init__(self, rs_address=None, **kwargs) -> None:
         super().__init__(rs_address, **kwargs)
 
         file_name = 'trajectory_iros_2021.json'
@@ -27,6 +37,7 @@ class IrosEnv03UR5Training(UR5BaseEnv):
         with open(file_path) as json_file:
             self.trajectory = json.load(json_file)['trajectory']
 
+    # TODO: add typing to method head
     def _set_initial_robot_server_state(self, rs_state):
         n_sampling_points = int(np.random.default_rng().uniform(low=8000, high=12000))
         
@@ -39,7 +50,7 @@ class IrosEnv03UR5Training(UR5BaseEnv):
         state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
         return state_msg
 
-    def reset(self):
+    def reset(self) -> np.array:
         """Environment reset.
 
         Args:
@@ -115,7 +126,7 @@ class IrosEnv03UR5Training(UR5BaseEnv):
             raise InvalidStateError('DOF setting has unsupported value [3, 5, 6]')
         return desired_joint_positions
 
-    def step(self, action):
+    def step(self, action) -> Tuple[np.array, float, bool, dict]:
         self.elapsed_steps += 1
         self.elapsed_steps_in_current_state += 1
 
@@ -174,7 +185,7 @@ class IrosEnv03UR5Training(UR5BaseEnv):
         return self.state, reward, done, info
 
     # TODO: once we use a dictonary to handle the rs state this method should be redone
-    def print_state_action_info(self, rs_state, action):
+    def print_state_action_info(self, rs_state, action) -> None:
         env_state = self._robot_server_state_to_env_state(rs_state)
 
         print('Action:', action)
@@ -192,7 +203,7 @@ class IrosEnv03UR5Training(UR5BaseEnv):
         print()
 
 
-    def _reward(self, rs_state, action):
+    def _reward(self, rs_state, action) -> Tuple[float, bool, dict]:
         env_state = self._robot_server_state_to_env_state(rs_state)
 
         reward = 0
@@ -261,7 +272,7 @@ class IrosEnv03UR5Training(UR5BaseEnv):
 
         return reward, done, info
 
-    def _robot_server_state_to_env_state(self, rs_state):
+    def _robot_server_state_to_env_state(self, rs_state) -> np.array:
         """Transform state from Robot Server to environment format.
 
         Args:
@@ -326,7 +337,7 @@ class IrosEnv03UR5Training(UR5BaseEnv):
         return state
 
     # observation space should be fine
-    def _get_observation_space(self):
+    def _get_observation_space(self) -> spaces.Box:
         """Get environment observation space.
 
         Returns:
@@ -354,7 +365,7 @@ class IrosEnv03UR5Training(UR5BaseEnv):
 
         return spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
 
-    def _get_robot_server_state_len(self):
+    def _get_robot_server_state_len(self) -> spaces.Box:
 
         """Get length of the Robot Server state.
 
@@ -375,7 +386,7 @@ class IrosEnv03UR5Training(UR5BaseEnv):
 
         return len(rs_state)
 
-    def _get_desired_joint_positions(self):
+    def _get_desired_joint_positions(self) -> np.array:
         """Get desired robot joint positions.
 
         Returns:
@@ -426,9 +437,16 @@ class IrosEnv03UR5TrainingRob(IrosEnv03UR5Training):
 # TODO: add roslaunch for the realsense skeleton tracker
 # roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=1moving2points n_objects:=1.0 object_0_frame:=target
 
+
+
+"""
+Testing Environment for more complex obstacle avoidance controlling a robotic arm from UR.
+In contrast to the training environment the obstacle trajectories are fixed instead of random generation.
+"""
 class IrosEnv03UR5TestFixedSplines(IrosEnv03UR5Training):
     ep_n = 0 
 
+    # TODO: add typing to method head
     def _set_initial_robot_server_state(self, rs_state):        
         string_params = {"object_0_function": "fixed_trajectory"}
         float_params = {"object_0_trajectory_id": self.ep_n%50}
