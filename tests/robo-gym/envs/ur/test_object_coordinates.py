@@ -9,7 +9,7 @@ from robo_gym.utils import ur_utils
 test_object_coordinates_params = [
    #? robot up-right, target_coord_in_ee_frame 0.0, -0.3, 0.2, coordinates of target calculated using official dimensions from CAD drawing.
    ('EndEffectorPositioningUR5Sim-v0', [0.0, -1.57, 0.0, -1.57, 0.0, 0.0], [0.0, (-0.192 -0.2), (1.001 + 0.3), 0.0, 0.0, 0.0], {'r': 0.360, 'theta': 0.983, 'phi': -1.571}, 'ur5'),  
-   ('EndEffectorPositioningUR10Sim-v0', [0.0, -1.57, 0.0, -1.57, 1.2, 1.2], [0.0, (-0.256 -0.2), (1.428 + 0.3), 0.0, 0.0, 0.0], {'r': 0.360, 'theta': 0.983, 'phi': -1.571},'ur10')
+   ('EndEffectorPositioningUR10Sim-v0', [0.0, -1.57, 0.0, -1.57, 0.0, 0.0], [0.0, (-0.256 -0.2), (1.428 + 0.3), 0.0, 0.0, 0.0], {'r': 0.360, 'theta': 0.983, 'phi': -1.571},'ur10')
 
 ]
 
