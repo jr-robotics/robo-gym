@@ -100,7 +100,9 @@ def cartesian_to_polar_3d(cartesian_coordinates):
     y = cartesian_coordinates[1]
     z = cartesian_coordinates[2]
     r =  np.sqrt(x**2+y**2+z**2)
+    #? phi is defined in [-pi, +pi]
     phi = np.arctan2(y,x)
+    #? theta is defined in [0, +pi]
     theta = np.arccos(z/r)
 
     return [r,phi,theta]
