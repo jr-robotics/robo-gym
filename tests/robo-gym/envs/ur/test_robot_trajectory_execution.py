@@ -24,7 +24,7 @@ def test_robot_trajectory_iros(env_name, ur_model):
     for i in range(40):
         state, _, _, _ = env.step(action)
 
-    assert np.isclose(ur.normalize_joint_values(joint_positions), state[3:9], atol=0.1).all()
+    assert np.isclose(ur.normalize_joint_values(joint_positions), state[3:9], atol=0.05).all()
 
     env.kill_sim()
     env.close()
