@@ -8,12 +8,14 @@ from robo_gym.utils import ur_utils
 
 
 
-envs = ['IrosEnv03UR5TrainingSim-v0',
-        'IrosEnv03UR5TestFixedSplinesSim-v0']
+test_robot_trajectory_iros_params = [
+    ('IrosEnv03UR5TrainingSim-v0', 'ur5'),
+    ('IrosEnv03UR5TestFixedSplinesSim-v0', 'ur5')
+    ]
 
 
-@pytest.mark.parametrize('env_name', envs)
-def test_robot_trajectory_iros(env_name):
+@pytest.mark.parametrize('env_name, ur_model', test_robot_trajectory_iros_params)
+def test_robot_trajectory_iros(env_name, ur_model):
     ur = ur_utils.UR(model=ur_model)
     env = gym.make(env_name, ip='robot-servers')
     env.reset()
