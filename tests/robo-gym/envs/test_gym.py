@@ -8,19 +8,13 @@ envs = [
     # 'ObstacleAvoidanceMir100Sim-v0', 
     'EndEffectorPositioningUR10Sim-v0', 
     # 'EndEffectorPositioningUR10DoF5Sim-v0',
-    # 'EndEffectorPositioningUR5Sim-v0',
+    'EndEffectorPositioningUR5Sim-v0',
     # 'EndEffectorPositioningUR5DoF5Sim-v0',
-    # 'MovingBoxTargetUR5Sim-v0',
+    'MovingBoxTargetUR5Sim-v0',
     # 'MovingBoxTargetUR5DoF3Sim-v0',
     # 'MovingBoxTargetUR5DoF5Sim-v0',
-    # 'MovingBox3DSplineTargetUR5Sim-v0',
-    # 'MovingBox3DSplineTargetUR5DoF3Sim-v0',
-    # 'Moving2Box3DSplineTargetUR5Sim-v0',
-    # 'ObstacleAvoidance1Box2PointsUR5Sim-v0',
-    # 'IrosEnv01UR5Sim-v0',
-    # 'IrosEnv02UR5Sim-v0'
-
-
+    'IrosEnv03UR5TrainingSim-v0',
+    'IrosEnv03UR5TestFixedSplinesSim-v0'
 ]
 
 
