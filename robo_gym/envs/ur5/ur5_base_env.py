@@ -122,14 +122,6 @@ class UR5BaseEnv(gym.Env):
             joint_positions = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
             if not np.isclose(joint_positions, self.initial_joint_positions, atol=0.1).all():
                 raise InvalidStateError('Reset joint positions are not within defined range')
-
-        # go one empty action and check if there is a collision
-        if not self.real_robot:
-            action = self.state[3:3+len(self.action_space.sample())]
-            _, _, done, _ = self.step(action)
-            self.elapsed_steps = 0
-            if done:
-                raise InvalidStateError('Reset started in a collision state')
             
         return self.state
 
