@@ -10,10 +10,6 @@ from robo_gym.envs.simulation_wrapper import Simulation
 from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
 
 from robo_gym.envs.ur5.ur5_base_env import UR5BaseEnv
-
-
-IGNORE_WRIST_3 = True
-
 class EndEffectorPositioningUR5(UR5BaseEnv):
 
     def _reward(self, rs_state, action):
@@ -63,27 +59,6 @@ class EndEffectorPositioningUR5(UR5BaseEnv):
             self.last_position_on_success = []
 
         return reward, done, info
-
-    def step(self, action):
-        if IGNORE_WRIST_3:
-            action = np.append(action, [0.0])
-
-        return super().step(action)
-
-    def _get_action_space(self):
-        """Get environment action space.
-
-        Returns:
-            gym.spaces: Gym action space object.
-
-        """
-        if IGNORE_WRIST_3:
-            return spaces.Box(low=np.full((5), -1.0), high=np.full((5), 1.0), dtype=np.float32)
-        else:
-            return spaces.Box(low=np.full((6), -1.0), high=np.full((6), 1.0), dtype=np.float32)
-
-
-
 class EndEffectorPositioningUR5Sim(EndEffectorPositioningUR5, Simulation):
     cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
         max_velocity_scale_factor:=0.2 \

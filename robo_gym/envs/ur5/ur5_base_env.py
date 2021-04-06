@@ -32,9 +32,10 @@ class UR5BaseEnv(gym.Env):
     real_robot = False
     max_episode_steps = 300
 
-    def __init__(self, rs_address=None, **kwargs):
+    def __init__(self, rs_address=None, fix_wrist3=True, **kwargs):
         self.ur = ur_utils.UR(model="ur5")
         self.elapsed_steps = 0
+        self.fix_wrist3 = fix_wrist3
         self.observation_space = self._get_observation_space()
         self.action_space = self._get_action_space()
         self.seed()
@@ -134,6 +135,9 @@ class UR5BaseEnv(gym.Env):
         # Check if the action is contained in the action space
         if not self.action_space.contains(action):
             raise InvalidActionError()
+        # If fix_wrist3 append 0.0 to environment action 
+        if self.fix_wrist3:
+            action = np.append(action, [0.0])
         # Convert environment action to Robot Server action
         rs_action = copy.deepcopy(action)
         # Scale action
@@ -295,7 +299,10 @@ class UR5BaseEnv(gym.Env):
 
         """
 
-        return spaces.Box(low=np.full((6), -1.0), high=np.full((6), 1.0), dtype=np.float32)
+        if self.fix_wrist3:
+            return spaces.Box(low=np.full((5), -1.0), high=np.full((5), 1.0), dtype=np.float32)
+        else:
+            return spaces.Box(low=np.full((6), -1.0), high=np.full((6), 1.0), dtype=np.float32)
 
 
 
