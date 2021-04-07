@@ -164,11 +164,6 @@ class IrosEnv03UR5Training(UR5BaseEnv):
         if self.target_point_flag:
             if np.isclose(self._get_desired_joint_positions(), self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12]), atol = 0.1).all():
                 self.target_reached = 1
-                self.state_n +=1
-                # Restart from state 0 if the full trajectory has been completed
-                self.state_n = self.state_n % len(self.trajectory)
-                self.elapsed_steps_in_current_state = 0
-                self.target_reached_counter += 1
         if DEBUG:
             print("Target Reached: ")
             print(self.target_reached)
@@ -180,7 +175,13 @@ class IrosEnv03UR5Training(UR5BaseEnv):
         done = False
         reward, done, info = self._reward(rs_state=rs_state, action=action)
         self.last_action = action
-        self.target_reached = 0
+        if self.target_reached:
+            self.state_n +=1
+            # Restart from state 0 if the full trajectory has been completed
+            self.state_n = self.state_n % len(self.trajectory)
+            self.elapsed_steps_in_current_state = 0
+            self.target_reached_counter += 1
+            self.target_reached = 0
 
         return self.state, reward, done, info
 
@@ -313,7 +314,7 @@ class IrosEnv03UR5Training(UR5BaseEnv):
         # desired joint positions
         desired_joints = self.ur.normalize_joint_values(self._get_desired_joint_positions())
         delta_joints = ur_j_pos_norm - desired_joints
-        target_point_flag = self.target_point_flag
+        target_point_flag = copy.deepcopy(self.target_point_flag)
 
         # Transform cartesian coordinates of target to polar coordinates 
         # with respect to the forearm
