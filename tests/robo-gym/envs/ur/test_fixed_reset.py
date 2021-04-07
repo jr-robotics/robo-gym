@@ -4,6 +4,8 @@ import pytest
 
 import robo_gym
 from robo_gym.utils import ur_utils
+from robo_gym.wrappers.ur5_avoidance_iros_debug import UR5AvoidanceIrosDebugWrapper
+
 
 
 test_ur_reset_init_joints_params = [
@@ -41,6 +43,25 @@ def test_ur_reset_desired_joint_positions(env_name, desired_joint_positions, ur_
 
    for joint in joint_comparison:
       assert joint
+   
+   env.kill_sim()
+   env.close()
+
+test_ur_reset_fixed_joint_positions_params = [
+   ('IrosEnv03UR5TrainingSim-v0', [0.5, -2.7, 1.3, -1.7, -1.9, 1.6], 'ur5'),
+]
+
+@pytest.mark.parametrize('env_name, fixed_positions, ur_model', test_ur_reset_fixed_joint_positions_params)
+def test_ur_reset_fixed_joint_positions(env_name, fixed_joint_positions, ur_model):
+   ur = ur_utils.UR(model=ur_model)
+   env = gym.make(env_name, ip='robot-servers')
+   env = UR5AvoidanceIrosDebugWrapper(env)
+
+   state = env.reset(fixed_joint_positions=fixed_joint_positions)
+
+   assert np.isclose(ur.normalize_joint_values(fixed_joint_positions), state[3:9], atol=0.1).all()
+
+   
    
    env.kill_sim()
    env.close()
