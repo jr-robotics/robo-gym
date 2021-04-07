@@ -14,7 +14,7 @@ from scipy.spatial.transform import Rotation as R
 import gym
 from gym import spaces
 from robo_gym.utils import utils, ur_utils
-from robo_gym.utils.exceptions import InvalidStateError, RobotServerError
+from robo_gym.utils.exceptions import InvalidStateError, RobotServerError, InvalidActionError
 import robo_gym_server_modules.robot_server.client as rs_client
 from robo_gym.envs.simulation_wrapper import Simulation
 from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
@@ -208,8 +208,12 @@ class MovingBoxTargetUR5(UR5BaseEnv):
     def step(self, action) -> Tuple[np.array, float, bool, dict]:
         self.elapsed_steps += 1
 
-        # Check if the action is within the action space
         action = np.array(action)
+        
+        # Check if the action is contained in the action space
+        if not self.action_space.contains(action):
+            raise InvalidActionError()
+        
         if self.last_action is None:
             self.last_action = action
         
