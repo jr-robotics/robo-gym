@@ -82,7 +82,7 @@ class MovingBoxTargetUR5(UR5BaseEnv):
         else:
             self._set_desired_joint_positions(DESIRED_JOINT_POSITIONS)
 
-        rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self._get_desired_joint_positions)
+        rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self._get_desired_joint_positions())
 
 
         # Set initial state of the Robot Server
