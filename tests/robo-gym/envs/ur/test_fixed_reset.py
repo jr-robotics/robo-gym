@@ -51,7 +51,7 @@ test_ur_reset_fixed_joint_positions_params = [
    ('IrosEnv03UR5TrainingSim-v0', [0.5, -2.7, 1.3, -1.7, -1.9, 1.6], 'ur5'),
 ]
 
-@pytest.mark.parametrize('env_name, fixed_positions, ur_model', test_ur_reset_fixed_joint_positions_params)
+@pytest.mark.parametrize('env_name, fixed_joint_positions, ur_model', test_ur_reset_fixed_joint_positions_params)
 def test_ur_reset_fixed_joint_positions(env_name, fixed_joint_positions, ur_model):
    ur = ur_utils.UR(model=ur_model)
    env = gym.make(env_name, ip='robot-servers')
