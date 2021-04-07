@@ -36,14 +36,14 @@ def test_robot_trajectory_iros(env_name, ur_model, traj_relative_path):
         joint_positions = trajectory[0][i]
         joint_positions[5] = 0 #TODO remove this once the trajectory file has been fixed 
         state, _, _, _ = env.step(action)
-        assert np.isclose(ur.normalize_joint_values(joint_positions), state[3:9], atol=0.1).all()
+        assert np.isclose(ur.normalize_joint_values(joint_positions), state[3:9], atol=0.05).all()
     # check that the current trajectory point is a target point
     assert state[21] == 1.0
     # check that state machine has transitioned to segment 1 of trajectory 
     joint_positions = trajectory[1][0]
     joint_positions[5] = 0 #TODO remove this once the trajectory file has been fixed 
     state, _, _, _ = env.step(action)
-    assert np.isclose(ur.normalize_joint_values(joint_positions), state[3:9], atol=0.1).all()
+    assert np.isclose(ur.normalize_joint_values(joint_positions), state[3:9], atol=0.05).all()
 
     env.kill_sim()
     env.close()
