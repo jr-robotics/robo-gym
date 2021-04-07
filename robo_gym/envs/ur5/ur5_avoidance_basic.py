@@ -57,12 +57,11 @@ class MovingBoxTargetUR5(UR5BaseEnv):
         return spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
 
 
-    def reset(self) -> np.array:
+    def reset(self, desired_joint_positions = None) -> np.array:
         """Environment reset.
 
         Args:
             initial_joint_positions (list[6] or np.array[6]): robot joint positions in radians.
-            ee_target_pose (list[6] or np.array[6]): [x,y,z,r,p,y] target end effector pose.
 
         Returns:
             np.array: Environment state.
@@ -77,8 +76,11 @@ class MovingBoxTargetUR5(UR5BaseEnv):
         self.state = np.zeros(self._get_env_state_len())
         rs_state = np.zeros(self._get_robot_server_state_len())
         
-        # Set initial robot joint positions
-        self.initial_joint_positions = self._get_desired_joint_positions()
+        # Initialize desired joint positions
+        if desired_joint_positions:
+            self._set_desired_joint_positions(desired_joint_positions)
+        else:
+            self._set_desired_joint_positions(DESIRED_JOINT_POSITIONS)
 
         rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self.initial_joint_positions)
 
@@ -112,9 +114,9 @@ class MovingBoxTargetUR5(UR5BaseEnv):
         if not self.observation_space.contains(self.state):
             raise InvalidStateError()
         
-        # Check if current position is in the range of the initial joint positions
+        # Check if current position is in the range of the desired joint positions
         joint_positions = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
-        if not np.isclose(joint_positions, self.initial_joint_positions, atol=0.1).all():
+        if not np.isclose(joint_positions, self.desired_joint_positions, atol=0.1).all():
             raise InvalidStateError('Reset joint positions are not within defined range')        
 
         return self.state
@@ -242,9 +244,14 @@ class MovingBoxTargetUR5(UR5BaseEnv):
 
         return self.state, reward, done, info
     
+    def _set_desired_joint_positions(self, desired_joint_positions) -> None:
+        """Set desired robot joint positions with standard indexing."""
+        assert len(desired_joint_positions) == 6
+        self.desired_joint_positions = copy.deepcopy(desired_joint_positions)
+    
     def _get_desired_joint_positions(self) -> np.array:
         """Get desired robot joint positions with standard indexing."""
-        return np.array(DESIRED_JOINT_POSITIONS)
+        return np.array(self.desired_joint_positions)
 
 
     def _robot_server_state_to_env_state(self, rs_state) -> np.array:
