@@ -38,24 +38,30 @@ class IrosEnv03UR5Training(UR5BaseEnv):
             self.trajectory = json.load(json_file)['trajectory']
 
     # TODO: add typing to method head
-    def _set_initial_robot_server_state(self, rs_state):
-        n_sampling_points = int(np.random.default_rng().uniform(low=8000, high=12000))
-        
-        string_params = {"object_0_function": "3d_spline_ur5_workspace"}
-        
-        float_params = {"object_0_x_min": -1.0, "object_0_x_max": 1.0, "object_0_y_min": -1.0, "object_0_y_max": 1.0, \
-                        "object_0_z_min": 0.1, "object_0_z_max": 1.0, "object_0_n_points": 10, \
-                        "n_sampling_points": n_sampling_points}
+    def _set_initial_robot_server_state(self, rs_state, fixed_object_position = None):
+        if fixed_object_position:
+            # Object in a fixed position
+            string_params = {"object_0_function": "fixed_position"}
+            float_params = {"object_0_x": fixed_object_position[0], 
+                            "object_0_y": fixed_object_position[1], 
+                            "object_0_z": fixed_object_position[2]}
+        else:
+            n_sampling_points = int(np.random.default_rng().uniform(low=8000, high=12000))
+            
+            string_params = {"object_0_function": "3d_spline_ur5_workspace"}
+            
+            float_params = {"object_0_x_min": -1.0, "object_0_x_max": 1.0, "object_0_y_min": -1.0, "object_0_y_max": 1.0, \
+                            "object_0_z_min": 0.1, "object_0_z_max": 1.0, "object_0_n_points": 10, \
+                            "n_sampling_points": n_sampling_points}
 
         state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
         return state_msg
 
-    def reset(self) -> np.array:
+    def reset(self, fixed_object_position = None) -> np.array:
         """Environment reset.
 
         Args:
-            initial_joint_positions (list[6] or np.array[6]): robot joint positions in radians.
-            ee_target_pose (list[6] or np.array[6]): [x,y,z,r,p,y] target end effector pose.
+            fixed_object_position (list[3]): x,y,z fixed position of object
 
         Returns:
             np.array: Environment state.
@@ -80,7 +86,7 @@ class IrosEnv03UR5Training(UR5BaseEnv):
         rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self.initial_joint_positions)
 
         # Set initial state of the Robot Server
-        state_msg = self._set_initial_robot_server_state(rs_state)
+        state_msg = self._set_initial_robot_server_state(rs_state, fixed_object_position)
         
         if not self.client.set_state_msg(state_msg):
             raise RobotServerError("set_state")
