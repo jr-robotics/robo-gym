@@ -100,8 +100,8 @@ class MovingBoxTargetUR5(UR5BaseEnv):
             z_offset = np.random.default_rng().uniform(low=0.2, high=0.6)
             
             string_params = {"object_0_function": "triangle_wave"}
-            float_params = {"object_0_x": 0.13, 
-                            "object_0_y": -0.30, 
+            float_params = {"object_0_x": -0.13, 
+                            "object_0_y": 0.30, 
                             "object_0_z_amplitude": z_amplitude,
                             "object_0_z_frequency": z_frequency, 
                             "object_0_z_offset": z_offset}
@@ -315,7 +315,7 @@ class MovingBoxTargetUR5Sim(MovingBoxTargetUR5, Simulation):
     cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
         world_name:=box100.world \
         yaw:=3.14\
-        reference_frame:=world \
+        reference_frame:=base_link \
         max_velocity_scale_factor:=0.2 \
         action_cycle_rate:=20 \
         rviz_gui:=false \
