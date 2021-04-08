@@ -33,7 +33,7 @@ def test_object_coordinates_ee_pos(env_name, initial_joint_positions, object_coo
    env.close()
 
 test_object_coordinates_avoidance_basic_params = [
-   ('MovingBoxTargetUR5Sim-v0', [0.0, -1.57, 0.0, -1.57, 0.0, 0.0], [0.0, (-0.191 -0.2), (1.001 + 0.3), 0.0, 0.0, 0.0], {'r': 0.360, 'theta': 0.983, 'phi': -1.571}, 'ur5')  
+   ('MovingBoxTargetUR5Sim-v0', [0.0, -1.57, 0.0, -1.57, 0.0, 0.0], [0.0, (0.191 + 0.2), (1.001 + 0.3), 0.0, 0.0, 0.0], {'r': 0.360, 'theta': 0.983, 'phi': -1.571}, 'ur5')  
 ]
 
 @pytest.mark.parametrize('env_name, desired_joint_positions, fixed_object_position, polar_coords,  ur_model', test_object_coordinates_avoidance_basic_params)
