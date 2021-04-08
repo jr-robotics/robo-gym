@@ -458,9 +458,16 @@ class IrosEnv03UR5TestFixedSplines(IrosEnv03UR5Training):
     ep_n = 0 
 
     # TODO: add typing to method head
-    def _set_initial_robot_server_state(self, rs_state):        
-        string_params = {"object_0_function": "fixed_trajectory"}
-        float_params = {"object_0_trajectory_id": self.ep_n%50}
+    def _set_initial_robot_server_state(self, rs_state, fixed_object_position = None):
+        if fixed_object_position:
+            # Object in a fixed position
+            string_params = {"object_0_function": "fixed_position"}
+            float_params = {"object_0_x": fixed_object_position[0], 
+                            "object_0_y": fixed_object_position[1], 
+                            "object_0_z": fixed_object_position[2]}
+        else:        
+            string_params = {"object_0_function": "fixed_trajectory"}
+            float_params = {"object_0_trajectory_id": self.ep_n%50}
 
         state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
         return state_msg
