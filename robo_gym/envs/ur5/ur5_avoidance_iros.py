@@ -431,7 +431,7 @@ class IrosEnv03UR5Training(UR5BaseEnv):
 
 class IrosEnv03UR5TrainingSim(IrosEnv03UR5Training, Simulation):
     cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
-        world_name:=tabletop_box50.world \
+        world_name:=tabletop_sphere50.world \
         yaw:=-0.78\
         reference_frame:=base_link \
         max_velocity_scale_factor:=0.2 \
@@ -441,7 +441,7 @@ class IrosEnv03UR5TrainingSim(IrosEnv03UR5Training, Simulation):
         objects_controller:=true \
         target_mode:=1moving2points \
         n_objects:=1.0 \
-        object_0_model_name:=box50 \
+        object_0_model_name:=sphere50 \
         object_0_frame:=target"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
@@ -487,7 +487,7 @@ class IrosEnv03UR5TestFixedSplines(IrosEnv03UR5Training):
 
 class IrosEnv03UR5TestFixedSplinesSim(IrosEnv03UR5TestFixedSplines, Simulation):
     cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
-        world_name:=tabletop_box50.world \
+        world_name:=tabletop_sphere50.world \
         yaw:=-0.78\
         reference_frame:=base_link \
         max_velocity_scale_factor:=0.2 \
@@ -498,7 +498,7 @@ class IrosEnv03UR5TestFixedSplinesSim(IrosEnv03UR5TestFixedSplines, Simulation):
         target_mode:=1moving2points \
         n_objects:=1.0 \
         object_trajectory_file_name:=splines_ur5 \
-        object_0_model_name:=box50 \
+        object_0_model_name:=sphere50 \
         object_0_frame:=target"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)

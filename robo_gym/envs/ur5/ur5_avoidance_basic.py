@@ -313,7 +313,7 @@ class MovingBoxTargetUR5(UR5BaseEnv):
 
 class MovingBoxTargetUR5Sim(MovingBoxTargetUR5, Simulation):
     cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
-        world_name:=box100.world \
+        world_name:=tabletop_sphere50.world \
         yaw:=3.14\
         reference_frame:=base_link \
         max_velocity_scale_factor:=0.2 \
@@ -323,7 +323,7 @@ class MovingBoxTargetUR5Sim(MovingBoxTargetUR5, Simulation):
         objects_controller:=true \
         target_mode:=moving \
         n_objects:=1.0 \
-        object_0_model_name:=box100 \
+        object_0_model_name:=sphere50 \
         object_0_frame:=target"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
