@@ -29,3 +29,20 @@ def test_collision_detection(env_name, collision_joint_config, ur_model):
     assert info['final_status'] == 'collision'
     env.kill_sim()
     env.close()
+
+
+test_object_collision_avoidance_iros_params = [
+   ('IrosEnv03UR5TrainingSim-v0', [-0.2, -0.1, 0.5], 'ur5')  
+]
+
+@pytest.mark.parametrize('env_name, fixed_object_position, ur_model', test_object_collision_avoidance_iros_params)
+def test_object_collision_avoidance_iros(env_name, fixed_object_position, ur_model):
+   ur = ur_utils.UR(model=ur_model)
+   env = gym.make(env_name, ip='robot-servers')
+   state = env.reset(fixed_object_position=fixed_object_position)
+   done = False
+   while not done:
+       _, _, done, info = env.step(np.zeros(5))
+   assert info['final_status'] == 'collision'
+   env.kill_sim()
+   env.close()
