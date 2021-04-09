@@ -30,20 +30,26 @@ def test_robot_trajectory_iros(env_name, ur_model, traj_relative_path):
     with open(traj_path) as json_file:
         trajectory = json.load(json_file)['trajectory']
 
-    # check if robot follows the trajectory in all steps of trajectory segment 0 
+     
     action = np.zeros(5)
     for i in range(len(trajectory[0])):
-        joint_positions = trajectory[0][i]
-        joint_positions[5] = 0 #TODO remove this once the trajectory file has been fixed 
+        traj_joint_positions = trajectory[0][i]
+        traj_joint_positions[5] = 0 #TODO remove this once the trajectory file has been fixed 
         state, _, _, _ = env.step(action)
-        assert np.isclose(ur.normalize_joint_values(joint_positions), state[3:9], atol=0.1).all()
+        ur_j_pos_norm = state[3:9]
+        delta_joints = state[9:15]
+        desired_joints = state [15:21]
+        # check if robot follows the trajectory in all steps of trajectory segment 0
+        assert np.isclose(ur.normalize_joint_values(traj_joint_positions), ur_j_pos_norm, atol=0.1).all()
+        # check if calculation of delta joints is correct
+        assert np.isclose((ur_j_pos_norm - desired_joints), delta_joints, atol=0.01).all()
     # check that the current trajectory point is a target point
     assert state[21] == 1.0
     # check that state machine has transitioned to segment 1 of trajectory 
-    joint_positions = trajectory[1][0]
-    joint_positions[5] = 0 #TODO remove this once the trajectory file has been fixed 
+    traj_joint_positions = trajectory[1][0]
+    traj_joint_positions[5] = 0 #TODO remove this once the trajectory file has been fixed 
     state, _, _, _ = env.step(action)
-    assert np.isclose(ur.normalize_joint_values(joint_positions), state[3:9], atol=0.1).all()
+    assert np.isclose(ur.normalize_joint_values(traj_joint_positions), state[3:9], atol=0.1).all()
 
     env.kill_sim()
     env.close()
