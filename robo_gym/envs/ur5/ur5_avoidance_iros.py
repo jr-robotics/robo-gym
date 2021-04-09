@@ -342,6 +342,12 @@ class IrosEnv03UR5Training(UR5BaseEnv):
         target_coord_forearm_frame = utils.change_reference_frame(target_coord,ref_frame_to_forearm_translation,ref_frame_to_forearm_quaternion)
         target_polar_forearm = utils.cartesian_to_polar_3d(target_coord_forearm_frame)
 
+        if DEBUG:
+            print('Object coords in ref frame', target_coord)
+            print('Object coords in ee frame', target_coord_ee_frame)
+            print('Object polar coords in ee frame', target_polar)
+            print('Object coords in forearm frame', target_coord_forearm_frame)
+            print('Object polar coords in forearm frame', target_polar_forearm)
         # Compose environment state
         state = np.concatenate((target_polar, ur_j_pos_norm, delta_joints, desired_joints, [target_point_flag], target_polar_forearm))
 
@@ -430,7 +436,7 @@ class IrosEnv03UR5TrainingSim(IrosEnv03UR5Training, Simulation):
         reference_frame:=base_link \
         max_velocity_scale_factor:=0.2 \
         action_cycle_rate:=20 \
-        rviz_gui:=false \
+        rviz_gui:=true \
         gazebo_gui:=true \
         objects_controller:=true \
         target_mode:=1moving2points \
