@@ -4,7 +4,7 @@ RUN apt-get -y update && apt-get install -y unzip libglu1-mesa-dev libgl1-mesa-d
 COPY . /usr/local/robo-gym/
 WORKDIR /usr/local/robo-gym/
 RUN pip install .
-RUN pip install pytest
+RUN pip install pytest pytest-rerunfailures
 
 ENTRYPOINT ["/usr/local/robo-gym/bin/docker_entrypoint"]
 CMD ["bash"]
