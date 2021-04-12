@@ -201,7 +201,7 @@ class MovingBoxTargetUR5(UR5BaseEnv):
         print('Sum of Deltas: {:.2e}'.format(sum(abs(env_state[9:15]))))
         print()
 
-    def _action_to_delta_joint_pos(self, action) -> np.array:
+    def env_action_to_rs_action(self, action) -> np.array:
         """Convert environment action to Robot Server action"""
 
         desired_joint_positions = self._get_desired_joint_positions()
@@ -213,44 +213,19 @@ class MovingBoxTargetUR5(UR5BaseEnv):
             desired_joint_positions = desired_joint_positions + action
         else:
             raise InvalidStateError('DOF setting has unsupported value [3, 5, 6]')
-        return desired_joint_positions
-        
+
+        rs_action = self.ur._ur_joint_list_to_ros_joint_list(desired_joint_positions)
+
+        return rs_action
+
+
 
     # TODO: once normalization is gone this method can be merged with URBaseEnv
     def step(self, action) -> Tuple[np.array, float, bool, dict]:
-        self.elapsed_steps += 1
-
-        action = np.array(action)
-        
-        # Check if the action is contained in the action space
-        if not self.action_space.contains(action):
-            raise InvalidActionError()
-        
         if self.last_action is None:
             self.last_action = action
-        
-        # Convert environment action to Robot Server action
-        rs_action = self._action_to_delta_joint_pos(action)
 
-        # ? Scaling in URBaseEnv
-
-        # Convert action indexing from ur to ros
-        rs_action = self.ur._ur_joint_list_to_ros_joint_list(rs_action)
-        # Send action to Robot Server and get state
-        rs_state = self.client.send_action_get_state(rs_action.tolist()).state
-
-        # Convert the state from Robot Server format to environment format
-        self.state = self._robot_server_state_to_env_state(rs_state)
-        
-        # Check if the environment state is contained in the observation space
-        if not self.observation_space.contains(self.state):
-            raise InvalidStateError()
-
-        # Assign reward
-        reward = 0
-        done = False
-        reward, done, info = self._reward(rs_state=rs_state, action=action)
-        self.last_action = action
+        self.state, reward, done, info = super().step()
 
         return self.state, reward, done, info
     

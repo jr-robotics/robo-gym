@@ -129,23 +129,32 @@ class UR5BaseEnv(gym.Env):
     def _reward(self, rs_state, action):
         return 0, False, {}
 
+    def env_action_to_rs_action(self, action) -> np.array:
+        rs_action = copy.deepcopy(action)
+        # If fix_wrist3 append 0.0 to environment action 
+        if self.fix_wrist3:
+            rs_action = np.append(rs_action, [0.0])
+        
+        # Scale action
+        rs_action = np.multiply(action, self.abs_joint_pos_range)
+        # Convert action indexing from ur to ros
+        rs_action = self.ur._ur_joint_list_to_ros_joint_list(rs_action)
+
+        return rs_action        
+
     def step(self, action):
         self.elapsed_steps += 1
 
         # Check if the action is contained in the action space
         if not self.action_space.contains(action):
             raise InvalidActionError()
-        # If fix_wrist3 append 0.0 to environment action 
-        if self.fix_wrist3:
-            action = np.append(action, [0.0])
-        # Convert environment action to Robot Server action
-        rs_action = copy.deepcopy(action)
-        # Scale action
-        rs_action = np.multiply(rs_action, self.abs_joint_pos_range)
-        # Convert action indexing from ur to ros
-        rs_action = self.ur._ur_joint_list_to_ros_joint_list(rs_action)
+
+        # Convert environment action to robot server action
+        rs_action = self.env_action_to_rs_action(action)
+
         # Send action to Robot Server and get state
         rs_state = self.client.send_action_get_state(rs_action.tolist()).state
+        
         # Convert the state from Robot Server format to environment format
         self.state = self._robot_server_state_to_env_state(rs_state)
 
