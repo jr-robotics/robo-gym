@@ -95,9 +95,7 @@ class UR5BaseEnv(gym.Env):
             assert len(joint_positions) == 6
             self.joint_positions = joint_positions
         else:
-            self.joint_positions = self._set_joint_positions(JOINT_POSITIONS)
-
-
+            self._set_joint_positions(JOINT_POSITIONS)
 
         rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self.joint_positions)
 
@@ -108,6 +106,7 @@ class UR5BaseEnv(gym.Env):
             ee_target_pose = self._get_target_pose()
 
         rs_state[0:6] = ee_target_pose
+
 
         # Set initial state of the Robot Server
         state_msg = robot_server_pb2.State(state = rs_state.tolist())
@@ -243,8 +242,7 @@ class UR5BaseEnv(gym.Env):
             joint_positions_low = np.array(joint_positions) - np.array(RANDOM_JOINT_OFFSET) 
             joint_positions_high = np.array(joint_positions) + np.array(RANDOM_JOINT_OFFSET) 
 
-        joint_positions = np.random.default_rng().uniform(low=joint_positions_low, high=joint_positions_high)
-        return joint_positions
+        self.joint_positions = np.random.default_rng().uniform(low=joint_positions_low, high=joint_positions_high)
     
     def _get_joint_positions(self) -> np.array:
         """Get robot joint positions with standard indexing."""

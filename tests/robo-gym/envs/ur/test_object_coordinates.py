@@ -37,10 +37,10 @@ test_object_coordinates_avoidance_basic_params = [
 ]
 
 @pytest.mark.parametrize('env_name, desired_joint_positions, fixed_object_position, polar_coords,  ur_model', test_object_coordinates_avoidance_basic_params)
-def test_object_coordinates_avoidance_basic(env_name, desired_joint_positions, fixed_object_position, polar_coords, ur_model):
+def test_object_coordinates_avoidance_basic(env_name, joint_positions, fixed_object_position, polar_coords, ur_model):
    ur = ur_utils.UR(model=ur_model)
    env = gym.make(env_name, ip='robot-servers')
-   state = env.reset(desired_joint_positions=desired_joint_positions, fixed_object_position=fixed_object_position)
+   state = env.reset(joint_positions=joint_positions, fixed_object_position=fixed_object_position)
 
    
    assert np.isclose([polar_coords['r'], polar_coords['phi'], polar_coords['theta']], state[0:3], atol=0.1).all()

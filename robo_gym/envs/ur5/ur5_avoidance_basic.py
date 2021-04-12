@@ -23,7 +23,7 @@ from typing import Tuple
 DEBUG = True
 DOF = 5 # degrees of freedom the robotic arm can use [3, 5, 6]
 MINIMUM_DISTANCE = 0.3 # the distance [cm] the robot should keep to the obstacle
-DESIRED_JOINT_POSITIONS = [-0.78,-1.31,-1.31,-2.18,1.57,0.0]
+JOINT_POSITIONS = [-0.78,-1.31,-1.31,-2.18,1.57,0.0]
 
 class MovingBoxTargetUR5(UR5BaseEnv):
     
@@ -57,7 +57,7 @@ class MovingBoxTargetUR5(UR5BaseEnv):
         return spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
 
 
-    def reset(self, desired_joint_positions = None, fixed_object_position = None) -> np.array:
+    def reset(self, joint_positions = None, fixed_object_position = None) -> np.array:
         """Environment reset.
 
         Args:
@@ -78,10 +78,11 @@ class MovingBoxTargetUR5(UR5BaseEnv):
         rs_state = np.zeros(self._get_robot_server_state_len())
         
         # Initialize desired joint positions
-        if desired_joint_positions:
-            self._set_desired_joint_positions(desired_joint_positions)
+        if joint_positions:
+            assert len(joint_positions) == 6
+            self.joint_positions = joint_positions
         else:
-            self._set_desired_joint_positions(DESIRED_JOINT_POSITIONS)
+            self._set_joint_positions(JOINT_POSITIONS)
 
         rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self._get_desired_joint_positions())
 
@@ -225,16 +226,16 @@ class MovingBoxTargetUR5(UR5BaseEnv):
         if self.last_action is None:
             self.last_action = action
 
-        self.state, reward, done, info = super().step()
+        self.state, reward, done, info = super().step(action)
 
         return self.state, reward, done, info
     
-    def _set_desired_joint_positions(self, desired_joint_positions) -> None:
+    def _set_joint_positions(self, joint_positions) -> None:
         """Set desired robot joint positions with standard indexing."""
-        assert len(desired_joint_positions) == 6
-        self.desired_joint_positions = copy.deepcopy(desired_joint_positions)
+        assert len(joint_positions) == 6
+        self.joint_positions = copy.deepcopy(joint_positions)
     
-    def _get_desired_joint_positions(self) -> np.array:
+    def _get_joint_positions(self) -> np.array:
         """Get desired robot joint positions with standard indexing."""
         return np.array(self.desired_joint_positions)
 
