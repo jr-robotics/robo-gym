@@ -62,7 +62,7 @@ class EndEffectorPositioningUR5(UR5BaseEnv):
 class EndEffectorPositioningUR5Sim(EndEffectorPositioningUR5, Simulation):
     cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
         world_name:=tabletop_sphere50.world \
-        yaw:= -0.78\
+        yaw:=-0.78 \
         reference_frame:=base_link \
         max_velocity_scale_factor:=0.2 \
         action_cycle_rate:=20 \
