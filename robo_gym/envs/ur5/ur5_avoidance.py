@@ -1,8 +1,11 @@
-#!/usr/bin/env python3
 from copy import deepcopy
 import math, copy
+from robo_gym.envs.ur5.ur5_base_env import UR5BaseEnv
 import numpy as np
 from scipy.spatial.transform import Rotation as R
+import json
+import os
+import random
 import gym
 from gym import spaces
 from gym.utils import seeding
@@ -12,16 +15,13 @@ import robo_gym_server_modules.robot_server.client as rs_client
 from robo_gym.envs.simulation_wrapper import Simulation
 from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
 
-from robo_gym.envs.ur5.ur5 import UR5Env
-
-# TODO: In general it would be nice if we find a better way to highlight ros joint order vs normal and normalized joints vs rs joints
-
 DEBUG = True
+
 
 # ? Base Environment for the Obstacle Avoidance Use Case
 # * In the base environment the target obstacle is only moving up and down in a vertical line in front of the robot.
 # * The goal in this environment is for the robot to stay as much as possible in it's initial joint configuration while keeping a minimum distance to the obstacle
-class MovingBoxTargetUR5(UR5Env):
+class MovingBoxTargetUR5(UR5BaseEnv):
     
     max_episode_steps = 1000
             
@@ -32,7 +32,6 @@ class MovingBoxTargetUR5(UR5Env):
             gym.spaces: Gym observation space object.
 
         """
-
         # Joint position range tolerance
         pos_tolerance = np.full(6,0.1)
         # Joint positions range used to determine if there is an error in the sensor readings
@@ -64,8 +63,9 @@ class MovingBoxTargetUR5(UR5Env):
         """
         self.elapsed_steps = 0
 
+        self.last_action = None
+        self.prev_base_reward = None
         
-
         # Initialize environment state
         self.state = np.zeros(self._get_env_state_len())
         rs_state = np.zeros(self._get_robot_server_state_len())
@@ -131,28 +131,13 @@ class MovingBoxTargetUR5(UR5Env):
 
         # minimum and maximum distance the robot should keep to the obstacle
         minimum_distance = 0.3 # m
-        maximum_distance = 0.6 # m
+
 
         # calculate distance to the target
         target_coord = np.array(rs_state[0:3])
         ee_coord = np.array(rs_state[18:21])
         distance_to_target = np.linalg.norm(target_coord - ee_coord)   
         
-        # ! not used yet
-        # ? we could train the robot to always "look" at the target just because it would look cool
-        polar_1 = abs(env_state[1] * 180/math.pi)
-        polar_2 = abs(env_state[2] * 180/math.pi)
-        # reward polar coords close to zero
-        # polar 1 weighted by max_steps
-        p1_r = (1 - (polar_1 / 90)) * (1/1000)
-        # if p1_r <= 0.001:
-        #     reward += p1_r
-        
-        # polar 1 weighted by max_steps
-        p2_r = (1 - (polar_2 / 90)) * (1/1000)
-        # if p2_r <= 0.001:
-        #     reward += p2_r
-
         # TODO: depends on the stating pos being in the state, maybe find better solution
         # difference in joint position current vs. starting position
         # delta_joint_pos = env_state[3:9] - env_state[-6:]
@@ -179,24 +164,16 @@ class MovingBoxTargetUR5(UR5Env):
                 reward += a_r
             
 
-
         # punish if the obstacle gets too close
         dist = 0
         if distance_to_target < minimum_distance:
             dist = -2 * (1/self.max_episode_steps) 
             reward += dist
 
-        # punish if the robot moves too far away from the obstacle
-        dist_max = 0
-        if distance_to_target > maximum_distance:
-            dist_max = -1 * (1/self.max_episode_steps)
-            #reward += dist_max
-
         # TODO: we could remove this if we do not need to punish failure or reward success
         # Check if robot is in collision
         collision = True if rs_state[25] == 1 else False
         if collision:
-            # reward = -5
             done = True
             info['final_status'] = 'collision'
             info['target_coord'] = target_coord
@@ -210,13 +187,10 @@ class MovingBoxTargetUR5(UR5Env):
         
 
         if DEBUG: self.print_state_action_info(rs_state, action)
-        # ? DEBUG PRINT
-        if DEBUG: print('reward composition:', 'dr =', round(dr, 5), 'no_act =', round(act_r, 5), 'min_dist =', round(dist, 5), 'delta_act', round(act_delta, 5))
-
 
         return reward, done, info
 
-    def print_state_action_info(self, rs_state, action):
+    def print_state_action(self, rs_state, action):
         env_state = self._robot_server_state_to_env_state(rs_state)
 
         print('Action:', action)
@@ -234,7 +208,6 @@ class MovingBoxTargetUR5(UR5Env):
         self.elapsed_steps += 1
 
         # Check if the action is within the action space
-        assert self.action_space.contains(action), "%r (%s) invalid" % (action, type(action))
         action = np.array(action)
         if self.last_action is None:
             self.last_action = action
@@ -338,14 +311,34 @@ class MovingBoxTargetUR5DoF5(MovingBoxTargetUR5):
     def _get_action_space(self):
         return spaces.Box(low=np.full((5), -1.0), high=np.full((5), 1.0), dtype=np.float32)
 
-    
-# ? Complex Target Movement Environment for the Obstacle Avoidance Use Case
-# * In this environment the target obstacle is moving in a complex randomized pattern in front of the robot.
-# * The goal in this environment is for the robot to stay as much as possible in it's initial joint configuration while keeping a minimum distance to the obstacle
-class MovingBox3DSplineTargetUR5(MovingBoxTargetUR5):
 
-    # TODO: The only difference to MovingBoxTargetUR5 are the settings of the target right? If so maybe we can find a cleaner solution later so we dont have to have the same reset twice
-    def reset(self, initial_joint_positions = None, type='random'):
+
+class IrosEnv03UR5Training(UR5BaseEnv):
+    def __init__(self, rs_address=None, **kwargs):
+        self.ur = ur_utils.UR(model="ur5")
+        self.elapsed_steps = 0
+        self.observation_space = self._get_observation_space()
+        self.action_space = self._get_action_space()
+        self.seed()
+        self.distance_threshold = 0.1
+        self.abs_joint_pos_range = self.ur.get_max_joint_positions()
+        self.last_position_on_success = []
+        self.prev_rs_state = None
+        self.last_action = None
+
+        file_name = 'ur5_pickplace_trajectories.json'
+        file_path = os.path.join(os.path.dirname(__file__), 'robot_trajectories', file_name)
+        with open(file_path) as json_file:
+            self.trajectories = json.load(json_file)
+        
+        # Connect to Robot Server
+        if rs_address:
+            self.client = rs_client.Client(rs_address)
+        else:
+            print("WARNING: No IP and Port passed. Simulation will not be started")
+            print("WARNING: Use this only to get environment shape")
+
+    def reset(self, initial_joint_positions = None, type='random', reward_weights=[0.0]*7):
         """Environment reset.
 
         Args:
@@ -356,7 +349,35 @@ class MovingBox3DSplineTargetUR5(MovingBoxTargetUR5):
             np.array: Environment state.
 
         """
+
+        # Default Configuration 
+        # [obstacle_coordinates[3], current_joint[5], delta_joint[5], desired_joint[5], flag[1], obstacle_two_coordinates[3], [0.0]*3]
+
+        # 1.	[polar_coords]
+        # 2.    [obstacle_cartesian[3], current_joint[5], delta_joint[5], desired_joint[5], flag[1], ee_cartesian[3], elbow_cartesian[3]]
+        # 3.	[obstacle_coordinates[3], [0,0,0,0,0,0], delta_joint[5], [0,0,0,0,0,0], flag[1], obstacle_two_coordinates[3], [0.0]*3]
+        # 4.	[obstacle_coordinates[3], current_joint[5], [0,0,0,0,0,0], desired_joint[5], flag[1], obstacle_two_coordinates[3], [0.0]*3]
+        # 5. 	[obstacle_coordinates[3], current_joint[5], [0,0,0,0,0,0], desired_joint[5], [0], obstacle_two_coordinates[3], [0.0]*3]
+
+        self.mask_setting = 1
+
         self.elapsed_steps = 0
+
+        self.obstacle_coords = []
+
+        # Initialize state machine variables
+        self.state_n = 0 
+        self.elapsed_steps_in_current_state = 0 
+        self.target_reached = 0
+        self.target_reached_counter = 0
+
+        self.reward_composition = []
+        
+        # Pick robot trajectory
+        self.trajectories_ids = ['trajectory_3', 'trajectory_7', 'trajectory_8', 'trajectory_9', 'trajectory_10', 'trajectory_11']
+        self.trajectory_id = random.choice(self.trajectories_ids)
+        if DEBUG:
+            print('Robot Trajectory ID: ' + self.trajectory_id)
 
         # Initialize environment state
         self.state = np.zeros(self._get_env_state_len())
@@ -377,15 +398,14 @@ class MovingBox3DSplineTargetUR5(MovingBoxTargetUR5):
 
         # TODO: We should create some kind of helper function depending on how dynamic these settings should be
         # Set initial state of the Robot Server
-        z_amplitude = np.random.default_rng().uniform(low=0.09, high=0.35)
-        z_frequency = 0.125
-        z_offset = np.random.default_rng().uniform(low=0.2, high=0.6)
-        n_sampling_points = int(np.random.default_rng().uniform(low= 4000, high=50000))
+        n_sampling_points = int(np.random.default_rng().uniform(low= 8000, high=12000))
         
-        string_params = {"object_0_function": "3d_spline"}
-        float_params = {"object_0_x_min": -0.7, "object_0_x_max": 0.7, "object_0_y_min": 0.2, "object_0_y_max": 1.0, \
+        string_params = {"object_0_function": "3d_spline_ur5_workspace"}
+        
+        float_params = {"object_0_x_min": -1.0, "object_0_x_max": 1.0, "object_0_y_min": -1.0, "object_0_y_max": 1.0, \
                         "object_0_z_min": 0.1, "object_0_z_max": 1.0, "object_0_n_points": 10, \
                         "n_sampling_points": n_sampling_points}
+
         state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
         if not self.client.set_state_msg(state_msg):
             raise RobotServerError("set_state")
@@ -397,7 +417,7 @@ class MovingBox3DSplineTargetUR5(MovingBoxTargetUR5):
         # Check if the length of the Robot Server state received is correct
         if not len(rs_state)== self._get_robot_server_state_len():
             raise InvalidStateError("Robot Server state received has wrong length")
-
+        
         # Convert the initial state from Robot Server format to environment format
         self.state = self._robot_server_state_to_env_state(rs_state)
 
@@ -411,129 +431,230 @@ class MovingBox3DSplineTargetUR5(MovingBoxTargetUR5):
         # check if current position is in the range of the initial joint positions
         if (len(self.last_position_on_success) == 0) or (type=='random'):
             joint_positions = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
+            if DEBUG:
+                print("Initial Joint Positions")
+                print(self.initial_joint_positions)
+                print("Joint Positions")
+                print(joint_positions)
             if not np.isclose(joint_positions, self.initial_joint_positions, atol=0.1).all():
                 raise InvalidStateError('Reset joint positions are not within defined range')
             
         return self.state
 
-class MovingBox3DSplineTargetUR5DoF3(MovingBox3DSplineTargetUR5):
-    def _get_action_space(self):
-        return spaces.Box(low=np.full((3), -1.0), high=np.full((3), 1.0), dtype=np.float32)
+    def step(self, action):
+        self.elapsed_steps += 1
+        self.elapsed_steps_in_current_state += 1
 
-class MovingBox3DSplineTargetUR5DoF5(MovingBox3DSplineTargetUR5):
-    def _get_action_space(self):
-        return spaces.Box(low=np.full((5), -1.0), high=np.full((5), 1.0), dtype=np.float32)
-
-# ? 2 Boxes Complex Target Movement Environment for the Obstacle Avoidance Use Case
-# * In this environment the target obstacle is moving in a complex randomized pattern in front of the robot.
-# * The goal in this environment is for the robot to stay as much as possible in it's initial joint configuration while keeping a minimum distance to the obstacle
-class Moving2Box3DSplineTargetUR5(MovingBoxTargetUR5):
-
-    def _get_observation_space(self):
-        """Get environment observation space.
-
-        Returns:
-            gym.spaces: Gym observation space object.
-
-        """
-
-        # Joint position range tolerance
-        pos_tolerance = np.full(6,0.1)
-        # Joint positions range used to determine if there is an error in the sensor readings
-        max_joint_positions = np.add(np.full(6, 1.0), pos_tolerance)
-        min_joint_positions = np.subtract(np.full(6, -1.0), pos_tolerance)
-        # Target coordinates range
-        target_range = np.full(3, np.inf)
-        # Joint positions range tolerance
-        vel_tolerance = np.full(6,0.5)
-        # Joint velocities range used to determine if there is an error in the sensor readings
-        max_joint_velocities = np.add(self.ur.get_max_joint_velocities(), vel_tolerance)
-        min_joint_velocities = np.subtract(self.ur.get_min_joint_velocities(), vel_tolerance)
-
-        max_delta_start_positions = np.add(np.full(6, 1.0), pos_tolerance)
-        min_delta_start_positions = np.subtract(np.full(6, -1.0), pos_tolerance)
-        # Object 2 coordinates range
-        object2_range = np.full(3, np.inf)
-
-        # Definition of environment observation_space
-        max_obs = np.concatenate((target_range, max_joint_positions, max_delta_start_positions, object2_range))
-        min_obs = np.concatenate((-target_range, min_joint_positions, min_delta_start_positions, -object2_range))
-
-        return spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
-    
-    def reset(self, initial_joint_positions = None, type='random'):
-        """Environment reset.
-
-        Args:
-            initial_joint_positions (list[6] or np.array[6]): robot joint positions in radians.
-            ee_target_pose (list[6] or np.array[6]): [x,y,z,r,p,y] target end effector pose.
-
-        Returns:
-            np.array: Environment state.
-
-        """
-        self.elapsed_steps = 0
-
-        # Initialize environment state
-        self.state = np.zeros(self._get_env_state_len())
-        rs_state = np.zeros(self._get_robot_server_state_len())
+        # Check if the action is within the action space
+        assert self.action_space.contains(action), "%r (%s) invalid" % (action, type(action))
+        action = np.array(action)
+        if self.last_action is None:
+            self.last_action = action
         
-        # NOTE: maybe we can find a cleaner version when we have the final envs (we could prob remove it for the avoidance task altogether)
-        # Set initial robot joint positions
-        if initial_joint_positions:
-            assert len(initial_joint_positions) == 6
-            self.initial_joint_positions = initial_joint_positions
-        elif (len(self.last_position_on_success) != 0) and (type=='continue'):
-            self.initial_joint_positions = self.last_position_on_success
-        else:
-            self.initial_joint_positions = self._get_desired_joint_positions()
+        # Convert environment action to Robot Server action
+        desired_joint_positions = copy.deepcopy(self._get_desired_joint_positions())
+        if action.size == 3:
+            desired_joint_positions[1:4] = desired_joint_positions[1:4] + action
+        elif action.size == 5:
+            desired_joint_positions[0:5] = desired_joint_positions[0:5] + action
+        elif action.size == 6:
+            desired_joint_positions = desired_joint_positions + action
 
-        rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self.initial_joint_positions)
+        rs_action = desired_joint_positions
 
-
-        # TODO: We should create some kind of helper function depending on how dynamic these settings should be
-        # Set initial state of the Robot Server
-        z_amplitude = np.random.default_rng().uniform(low=0.09, high=0.35)
-        z_frequency = 0.125
-        z_offset = np.random.default_rng().uniform(low=0.2, high=0.6)
-        
-        string_params = {"object_0_function": "3d_spline", \
-                         "object_1_function": "3d_spline"}
-        float_params = {"object_0_x_min": -0.7, "object_0_x_max": 0.7, "object_0_y_min": 0.2, "object_0_y_max": 1.0, \
-                        "object_0_z_min": 0.1, "object_0_z_max": 1.0, "object_0_n_points": 10, \
-                        "object_1_x_min": -0.7, "object_1_x_max": 0.7, "object_1_y_min": 0.2, "object_1_y_max": 1.0, \
-                        "object_1_z_min": 0.1, "object_1_z_max": 1.0, "object_1_n_points": 10,  \
-                        "n_sampling_points": 4000}
-        state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
-        if not self.client.set_state_msg(state_msg):
-            raise RobotServerError("set_state")
-
-        # Get Robot Server state
-        rs_state = copy.deepcopy(np.nan_to_num(np.array(self.client.get_state_msg().state)))
+        # Convert action indexing from ur to ros
+        rs_action = self.ur._ur_joint_list_to_ros_joint_list(rs_action)
+        # Send action to Robot Server and get state
+        rs_state = self.client.send_action_get_state(rs_action.tolist()).state
         self.prev_rs_state = copy.deepcopy(rs_state)
 
-        # Check if the length of the Robot Server state received is correct
-        if not len(rs_state)== self._get_robot_server_state_len():
-            raise InvalidStateError("Robot Server state received has wrong length")
-
-        # Convert the initial state from Robot Server format to environment format
+        # Convert the state from Robot Server format to environment format
         self.state = self._robot_server_state_to_env_state(rs_state)
-
-        # save start position
-        self.start_position = self.state[3:9]
-
+        
         # Check if the environment state is contained in the observation space
         if not self.observation_space.contains(self.state):
             raise InvalidStateError()
         
-        # check if current position is in the range of the initial joint positions
-        if (len(self.last_position_on_success) == 0) or (type=='random'):
-            joint_positions = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
-            if not np.isclose(joint_positions, self.initial_joint_positions, atol=0.1).all():
-                raise InvalidStateError('Reset joint positions are not within defined range')
-            
-        return self.state
+        if DEBUG:
+            print("Desired Joint Positions")
+            print(self._get_desired_joint_positions())
+            print("Joint Positions")
+            print(self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12]))
+
+        # Check if the robot is at the target position
+        if self.target_point_flag:
+            if np.isclose(self._get_desired_joint_positions(), self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12]), atol = 0.1).all():
+                self.target_reached = 1
+                self.state_n +=1
+                # Restart from state 0 if the full trajectory has been completed
+                self.state_n = self.state_n % len(self.trajectories[self.trajectory_id])
+                self.elapsed_steps_in_current_state = 0
+                self.target_reached_counter += 1
+        if DEBUG:
+            print("Target Reached: ")
+            print(self.target_reached)
+            print("State number: ")
+            print(self.state_n)
     
+        # Assign reward
+        reward = 0
+        done = False
+        reward, done, info = self._reward(rs_state=rs_state, action=action)
+        self.last_action = action
+        self.target_reached = 0
+
+        return self.state, reward, done, info
+
+    def print_state_action_info(self, rs_state, action):
+        env_state = self._robot_server_state_to_env_state(rs_state)
+
+        print('Action:', action)
+        print('Last A:', self.last_action)
+        print('Distance EE: {:.2f} Polar1: {:.2f} Polar2: {:.2f}'.format(env_state[0], env_state[1], env_state[2]))
+        print('Distance Elbow: {:.2f} Polar1: {:.2f} Polar2: {:.2f}'.format(env_state[-6], env_state[-5], env_state[-4]))
+        print('Elbow Cartesian: x={:.2f}, y={:.2f}, z={:.2f}'.format(env_state[-3], env_state[-2], env_state[-1]))
+        
+        print('Joint Positions: [1]:{:.2f} [2]:{:.2f} [3]:{:.2f} [4]:{:.2f} [5]:{:.2f} [6]:{:.2f}'.format(*env_state[3:9]))
+        print('Joint PosDeltas: [1]:{:.2f} [2]:{:.2f} [3]:{:.2f} [4]:{:.2f} [5]:{:.2f} [6]:{:.2f}'.format(*env_state[9:15]))
+        print('Current Desired: [1]:{:.2f} [2]:{:.2f} [3]:{:.2f} [4]:{:.2f} [5]:{:.2f} [6]:{:.2f}'.format(*env_state[15:21]))
+        print('Is current disred a target?', env_state[21])
+        print('Targets reached', self.target_reached_counter)
+
+        print()
+    # should not be used anyway
+    def print_reward_composition(self):
+        # self.reward_composition.append([dr, act_r, small_actions, act_delta, dist_1, self.target_reached, collision_reward])
+        dr = [r[0] for r in self.reward_composition]
+        act_r = [r[1] for r in self.reward_composition]
+        # small_actions = [r[2] for r in self.reward_composition]
+        act_delta = [r[2] for r in self.reward_composition]
+        dist_1 = [r[3] for r in self.reward_composition]
+        target_reached = [r[5] for r in self.reward_composition]
+        collision_reward = [r[4] for r in self.reward_composition]
+        # joint_delta_r = [r[5] for r in self.reward_composition]
+
+        print('sanity check', dr, act_r, act_delta)
+
+        print('Reward Composition of Episode:')
+        print('Reward for keeping low delta joints: SUM={} MIN={}, MAX={}'.format(np.sum(dr), np.min(dr), np.max(dr)))
+        print('Reward for as less as possible: SUM={} MIN={}, MAX={}'.format(np.sum(act_r), np.min(act_r), np.max(act_r)))
+        # print('Reward minor actions: SUM={} MIN={}, MAX={}'.format(np.sum(small_actions), np.min(small_actions), np.max(small_actions)))
+        print('Punishment for rapid movement: SUM={} MIN={}, MAX={}'.format(np.sum(act_delta), np.min(act_delta), np.max(act_delta)))
+        print('Punishment for target distance: SUM={} MIN={}, MAX={}'.format(np.sum(dist_1), np.min(dist_1), np.max(dist_1)))
+        print('Reward for target reached: SUM={} MIN={}, MAX={}'.format(np.sum(target_reached), np.min(target_reached), np.max(target_reached)))
+        print('Punishment for collision: SUM={} MIN={}, MAX={}'.format(np.sum(collision_reward), np.min(collision_reward), np.max(collision_reward)))
+        # print('Punishment for joint delta: SUM={} MIN={}, MAX={}'.format(np.sum(joint_delta_r), np.min(joint_delta_r), np.max(joint_delta_r)))
+
+    def _reward(self, rs_state, action):
+        # TODO: remove print when not needed anymore
+        # print('action', action)
+        env_state = self._robot_server_state_to_env_state(rs_state)
+
+        reward = 0
+        done = False
+        info = {}
+
+        # minimum the robot should keep to the obstacle
+        minimum_distance = 0.45 # m
+        
+        target_coord = rs_state[0:3]
+        ee_coord = rs_state[18:21]
+        elbow_coord = rs_state[26:29]
+
+        self.obstacle_coords.append(target_coord)
+        
+        distance_to_target = np.linalg.norm(np.array(target_coord)-np.array(ee_coord))
+        distance_to_target_2 = np.linalg.norm(np.array(target_coord)-np.array(elbow_coord))
+
+        # Normalize joint position values
+        ur_j_pos = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
+        ur_j_pos_norm = self.ur.normalize_joint_values(joints=ur_j_pos)
+
+        # desired joint positions
+        desired_joints = self.ur.normalize_joint_values(self._get_desired_joint_positions())
+        delta_joint_pos = ur_j_pos_norm - desired_joints
+        target_point_flag = self.target_point_flag
+
+
+        distance_weight = -2.0
+        delta_weight = 1.0
+        action_usage_weight = 1.5
+        act_delta_weight = -0.2
+        collison_weight = -0.1
+        target_reached_weight = 0.05
+        joint_delta_weight = 0.0
+
+        # reward for being in the defined interval of minimum_distance and maximum_distance
+        dr = 0
+        # if abs(delta_joint_pos).sum() < 0.5:
+        #     dr = 1.5 * (1 - (sum(abs(delta_joint_pos))/0.5)) * (1/1000)
+        #     reward += dr
+        for i in range(len(delta_joint_pos)-1):
+            if abs(delta_joint_pos[i]) < 0.1:
+                dr = delta_weight * (1 - (abs(delta_joint_pos[i]))/0.1) * (1/1000) 
+                dr = dr/5
+                reward += dr
+        
+        
+        # reward moving as less as possible
+        act_r = 0 
+        if abs(action).sum() <= action.size:
+            act_r = action_usage_weight * (1 - (np.square(action).sum()/action.size)) * (1/1000)
+            reward += act_r
+
+
+        # punish big deltas in action
+        act_delta = 0
+        for i in range(len(action)):
+            if abs(action[i] - self.last_action[i]) > 0.4:
+                a_r = act_delta_weight * (1/1000)
+                act_delta += a_r
+                reward += a_r
+        
+        dist_1 = 0
+        if (distance_to_target < minimum_distance) or (distance_to_target_2 < minimum_distance):
+            dist_1 = distance_weight * (1/1000) # -2
+            reward += dist_1
+
+        tr_reward = 0
+        if self.target_reached:
+            tr_reward += target_reached_weight
+            reward += target_reached_weight
+
+        
+        # TODO: we could remove this if we do not need to punish failure or reward success
+        # Check if robot is in collision
+        collision_reward = 0
+        collision = True if rs_state[25] == 1 else False
+        if collision:
+            collision_reward = collison_weight
+            reward = collison_weight
+            done = True
+            info['final_status'] = 'collision'
+            
+
+        if self.elapsed_steps >= self.max_episode_steps:
+            done = True
+            info['final_status'] = 'success'
+        
+        self.reward_composition.append([dr, act_r, act_delta, dist_1, collision_reward, tr_reward])
+        # self.reward_composition.append([dr, act_r, small_actions, act_delta, dist_1, tr_reward, collision_reward])
+        if done:
+            self.print_reward_composition()
+            info['reward_composition'] = self.reward_composition
+            info['targets_reached'] = self.target_reached_counter
+            info['obstacle_coords'] = self.obstacle_coords
+            info['trajectory_id'] = self.trajectory_id
+
+        self.print_state_action_info(rs_state, action)
+        # ? DEBUG PRINT
+        print('Distance 1: {:.2f} Distance 2: {:.2f}'.format(distance_to_target, distance_to_target_2))
+        # if DEBUG: print('reward composition:', 'dr =', round(dr, 5), 'no_act =', round(act_r, 5), 'min_dist_1 =', round(dist_1, 5), 'min_dist_2 =', 'delta_act', round(act_delta, 5))
+        
+        # self.last_joint_positions = env_state[3:9]
+
+        return reward, done, info
+
     def _robot_server_state_to_env_state(self, rs_state):
         """Transform state from Robot Server to environment format.
 
@@ -572,150 +693,74 @@ class Moving2Box3DSplineTargetUR5(MovingBoxTargetUR5):
         # Normalize joint position values
         ur_j_pos_norm = self.ur.normalize_joint_values(joints=ur_j_pos)
 
-        # start joint positions
-        start_joints = self.ur.normalize_joint_values(self._get_desired_joint_positions())
-        delta_joints = ur_j_pos_norm - start_joints
+        # desired joint positions
+        desired_joints = self.ur.normalize_joint_values(self._get_desired_joint_positions())
+        delta_joints = ur_j_pos_norm - desired_joints
+        target_point_flag = self.target_point_flag
 
-        # Transform cartesian coordinates of object2 to polar coordinates 
-        # with respect to the end effector frame
-        object2_coord = rs_state[26:29]
+        # Transform cartesian coordinates of target to polar coordinates 
+        # with respect to the forearm
 
-        object2_coord_ee_frame = utils.change_reference_frame(object2_coord,ref_frame_to_ee_translation,ref_frame_to_ee_quaternion)
-        object2_polar = utils.cartesian_to_polar_3d(object2_coord_ee_frame)
+        forearm_to_ref_frame_translation = rs_state[26:29]
+        forearm_to_ref_frame_quaternion = rs_state[29:33]
+        forearm_to_ref_frame_rotation = R.from_quat(forearm_to_ref_frame_quaternion)
+        ref_frame_to_forearm_rotation = forearm_to_ref_frame_rotation.inv()
+        # to invert the homogeneous transformation
+        # R' = R^-1
+        ref_frame_to_forearm_quaternion = ref_frame_to_forearm_rotation.as_quat()
+        # t' = - R^-1 * t
+        ref_frame_to_forearm_translation = -ref_frame_to_forearm_rotation.apply(forearm_to_ref_frame_translation)
+
+        target_coord_forearm_frame = utils.change_reference_frame(target_coord,ref_frame_to_forearm_translation,ref_frame_to_forearm_quaternion)
+        target_polar_forearm = utils.cartesian_to_polar_3d(target_coord_forearm_frame)
 
         # Compose environment state
-        state = np.concatenate((target_polar, ur_j_pos_norm, delta_joints, object2_polar))
+        state = np.concatenate((target_polar, ur_j_pos_norm, delta_joints, desired_joints, [target_point_flag], target_polar_forearm, [0.0]*3))
+
+        if self.mask_setting == 1: # polar
+            pass
+        elif self.mask_setting == 2: # cartesian and delete second polar
+            state = np.concatenate((target_coord, ur_j_pos_norm, delta_joints, desired_joints, [target_point_flag], ee_to_ref_frame_translation, forearm_to_ref_frame_translation))
+        elif self.mask_setting == 3: # no current no desired
+            state = np.concatenate((target_polar, [0.0]*6, delta_joints, [0.0]*6, [target_point_flag], target_polar_forearm, [0.0]*3))
+        elif self.mask_setting == 4: # no delta
+            state = np.concatenate((target_polar, ur_j_pos_norm, [0.0]*6, desired_joints, [target_point_flag], target_polar_forearm, [0.0]*3))
+        elif self.mask_setting == 5: # no flag for waypoint
+            state = np.concatenate((target_polar, ur_j_pos_norm, delta_joints, desired_joints, [0], target_polar_forearm, [0.0]*3))
 
         return state
-    
-    def print_state_action_info(self, rs_state, action):
-        env_state = self._robot_server_state_to_env_state(rs_state)
 
-        print('Action:', action)
-        print('Last A:', self.last_action)
-        print('Distance (target 1): {:.2f}'.format(env_state[0]))
-        print('Polar 1 (degree): {:.2f}'.format(env_state[1] * 180/math.pi))
-        print('Polar 2 (degree): {:.2f}'.format(env_state[2] * 180/math.pi))
-        print('Distance (target 2): {:.2f}'.format(env_state[15]))
-        print('Polar 1 (degree): {:.2f}'.format(env_state[16] * 180/math.pi))
-        print('Polar 2 (degree): {:.2f}'.format(env_state[17] * 180/math.pi))
-        print('Joint Positions: [1]:{:.2e} [2]:{:.2e} [3]:{:.2e} [4]:{:.2e} [5]:{:.2e} [6]:{:.2e}'.format(*env_state[3:9]))
-        print('Joint PosDeltas: [1]:{:.2e} [2]:{:.2e} [3]:{:.2e} [4]:{:.2e} [5]:{:.2e} [6]:{:.2e}'.format(*env_state[9:15]))
-        print('Sum of Deltas: {:.2e}'.format(sum(abs(env_state[9:15]))))
-        print()
+    # observation space should be fine
+    def _get_observation_space(self):
+        """Get environment observation space.
 
-    def _reward(self, rs_state, action):
-        # TODO: remove print when not needed anymore
-        # print('action', action)
-        env_state = self._robot_server_state_to_env_state(rs_state)
+        Returns:
+            gym.spaces: Gym observation space object.
 
-        reward = 0
-        done = False
-        info = {}
+        """
 
-        # minimum and maximum distance the robot should keep to the obstacle
-        minimum_distance = 0.3 # m
-        maximum_distance = 0.6 # m
-
-        # calculate distance to the target
-        target_coord = np.array(rs_state[0:3])
-        ee_coord = np.array(rs_state[18:21])
-        distance_to_target = np.linalg.norm(target_coord - ee_coord)   
-
-        distance_to_target_2 = env_state[15]
+        # Joint position range tolerance
+        pos_tolerance = np.full(6,0.1)
+        # Joint positions range used to determine if there is an error in the sensor readings
+        max_joint_positions = np.add(np.full(6, 1.0), pos_tolerance)
+        min_joint_positions = np.subtract(np.full(6, -1.0), pos_tolerance)
+        # Target coordinates range
+        target_range = np.full(3, np.inf)
         
-        # ! not used yet
-        # ? we could train the robot to always "look" at the target just because it would look cool
-        polar_1 = abs(env_state[1] * 180/math.pi)
-        polar_2 = abs(env_state[2] * 180/math.pi)
-        # reward polar coords close to zero
-        # polar 1 weighted by max_steps
-        p1_r = (1 - (polar_1 / 90)) * (1/1000)
-        # if p1_r <= 0.001:
-        #     reward += p1_r
-        
-        # polar 1 weighted by max_steps
-        p2_r = (1 - (polar_2 / 90)) * (1/1000)
-        # if p2_r <= 0.001:
-        #     reward += p2_r
+        max_delta_start_positions = np.add(np.full(6, 1.0), pos_tolerance)
+        min_delta_start_positions = np.subtract(np.full(6, -1.0), pos_tolerance)
 
-        # TODO: depends on the stating pos being in the state, maybe find better solution
-        # difference in joint position current vs. starting position
-        # delta_joint_pos = env_state[3:9] - env_state[-6:]
-        delta_joint_pos = env_state[9:15]
+        # Target coordinates (with respect to forearm frame) range
+        target_forearm_range = np.full(3, np.inf)
 
-        # reward for being in the defined interval of minimum_distance and maximum_distance
-        dr = 0
-        if abs(env_state[-6:]).sum() < 0.5:
-            dr = 1 * (1 - (abs(delta_joint_pos).sum()/0.5)) * (1/1000)
-            reward += dr
-        
-        # reward moving as less as possible
-        act_r = 0 
-        if abs(action).sum() <= action.size:
-            act_r = 1 * (1 - (np.square(action).sum()/action.size)) * (1/1000)
-            reward += act_r
+        # Definition of environment observation_space
+        max_obs = np.concatenate((target_range, max_joint_positions, max_delta_start_positions, max_joint_positions, [1], target_forearm_range, target_forearm_range))
+        min_obs = np.concatenate((-target_range, min_joint_positions, min_delta_start_positions, min_joint_positions, [0], -target_forearm_range, -target_forearm_range))
 
-        # punish big deltas in action
-        act_delta = 0
-        for i in range(len(action)):
-            if abs(action[i] - self.last_action[i]) > 0.5:
-                a_r = - 0.2 * (1/1000)
-                act_delta += a_r
-                reward += a_r
-        
-        # ? First try is to just split the distance reward
-        # punish if the obstacle gets too close
-        # dist_1 = 0
-        # if distance_to_target < minimum_distance:
-        #     dist_1 = -1 * (1/self.max_episode_steps) # -2
-        #     reward += dist_1
-        
-        # dist_2 = 0
-        # if distance_to_target_2 < minimum_distance:
-        #     dist_2 = -1 * (1/self.max_episode_steps) # -2
-        #     reward += dist_2
-
-        dist_1 = 0
-        if (distance_to_target < minimum_distance) or (distance_to_target_2 < minimum_distance):
-            dist_1 = -2 * (1/self.max_episode_steps) # -2
-            reward += dist_1
-        
-        dist_2 = 0
-       
-
-
-        # punish if the robot moves too far away from the obstacle
-        dist_max = 0
-        if distance_to_target > maximum_distance:
-            dist_max = -1 * (1/self.max_episode_steps)
-            #reward += dist_max
-
-        # TODO: we could remove this if we do not need to punish failure or reward success
-        # Check if robot is in collision
-        collision = True if rs_state[25] == 1 else False
-        if collision:
-            # reward = -5
-            done = True
-            info['final_status'] = 'collision'
-            info['target_coord'] = target_coord
-            self.last_position_on_success = []
-
-        if self.elapsed_steps >= self.max_episode_steps:
-            done = True
-            info['final_status'] = 'success'
-            info['target_coord'] = target_coord
-            self.last_position_on_success = []
-        
-
-        if DEBUG: self.print_state_action_info(rs_state, action)
-        # ? DEBUG PRINT
-        if DEBUG: print('reward composition:', 'dr =', round(dr, 5), 'no_act =', round(act_r, 5), 'min_dist_1 =', round(dist_1, 5), 'min_dist_2 =', round(dist_2, 5), 'delta_act', round(act_delta, 5))
-
-
-        return reward, done, info
+        return spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
 
     def _get_robot_server_state_len(self):
+
         """Get length of the Robot Server state.
 
         Describes the composition of the Robot Server state and returns
@@ -731,95 +776,43 @@ class Moving2Box3DSplineTargetUR5(MovingBoxTargetUR5):
         ur_j_vel = [0.0]*6
         ee_to_ref_frame_transform = [0.0]*7
         ur_collision = [0.0]
-        object_2 = [0.0]*6 
-        rs_state = target + ur_j_pos + ur_j_vel + ee_to_ref_frame_transform + ur_collision + object_2
+        forearm_to_ref_frame_transform = [0.0]*7
+        rs_state = target + ur_j_pos + ur_j_vel + ee_to_ref_frame_transform + ur_collision + forearm_to_ref_frame_transform
 
         return len(rs_state)
 
-class Moving2Box3DSplineTargetUR5DoF3(Moving2Box3DSplineTargetUR5):
-    def _get_action_space(self):
-        return spaces.Box(low=np.full((3), -1.0), high=np.full((3), 1.0), dtype=np.float32)
+    def _get_desired_joint_positions(self):
+        """Get desired robot joint positions.
 
-class Moving2Box3DSplineTargetUR5DoF5(Moving2Box3DSplineTargetUR5):
+        Returns:
+            np.array: Joint positions with standard indexing.
+
+        """
+        
+        
+        if self.elapsed_steps_in_current_state < len(self.trajectories[self.trajectory_id][self.state_n]):
+            joint_positions = copy.deepcopy(self.trajectories[self.trajectory_id][self.state_n][self.elapsed_steps_in_current_state])
+            # Last Joint is set to 0
+            joint_positions[5] = 0
+            self.target_point_flag = 0
+        else:
+            # Get last point of the trajectory segment
+            joint_positions = copy.deepcopy(self.trajectories[self.trajectory_id][self.state_n][-1])
+            # Last Joint is set to 0
+            joint_positions[5] = 0
+            self.target_point_flag = 1
+        
+
+        return joint_positions
+
+
+class IrosEnv03UR5TrainingDoF5(IrosEnv03UR5Training):
     def _get_action_space(self):
         return spaces.Box(low=np.full((5), -1.0), high=np.full((5), 1.0), dtype=np.float32)
 
-# ? Moving Box Target Environemnts (UP-DOWN)
-# * Avoidance environment where the obstacle only moves up and down in front of the robot
-# * There are three different environments for 3, 5 and 5 degrees of freedom
-
-class MovingBoxTargetUR5Sim(MovingBoxTargetUR5, Simulation):
+class IrosEnv03UR5TrainingSim(IrosEnv03UR5Training, Simulation):
     cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
-        world_name:=box100.world \
-        yaw:=3.14\
-        reference_frame:=world \
-        max_velocity_scale_factor:=0.2 \
-        action_cycle_rate:=20 \
-        rviz_gui:=false \
-        gazebo_gui:=true \
-        objects_controller:=true \
-        target_mode:=moving \
-        n_objects:=1.0 \
-        object_0_model_name:=box100 \
-        object_0_frame:=target"
-    def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
-        Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
-        MovingBoxTargetUR5.__init__(self, rs_address=self.robot_server_ip, **kwargs)
-
-class MovingBoxTargetUR5Rob(MovingBoxTargetUR5):
-    real_robot = True 
-
-class MovingBoxTargetUR5DoF3Sim(MovingBoxTargetUR5DoF3, Simulation):
-    cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
-        world_name:=box100.world \
-        yaw:=3.14\
-        reference_frame:=world \
-        max_velocity_scale_factor:=0.2 \
-        action_cycle_rate:=20 \
-        rviz_gui:=false \
-        gazebo_gui:=true \
-        objects_controller:=true \
-        target_mode:=moving \
-        n_objects:=1.0 \
-        object_0_model_name:=box100 \
-        object_0_frame:=target"
-    def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
-        Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
-        MovingBoxTargetUR5DoF3.__init__(self, rs_address=self.robot_server_ip, **kwargs)
-
-class MovingBoxTargetUR5DoF3Rob(MovingBoxTargetUR5DoF3):
-    real_robot = True
-
-class MovingBoxTargetUR5DoF5Sim(MovingBoxTargetUR5DoF5, Simulation):
-    cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
-        world_name:=box100.world \
-        yaw:=3.14\
-        reference_frame:=world \
-        max_velocity_scale_factor:=0.2 \
-        action_cycle_rate:=20 \
-        rviz_gui:=false \
-        gazebo_gui:=true \
-        objects_controller:=true \
-        target_mode:=moving \
-        n_objects:=1.0 \
-        object_0_model_name:=box100 \
-        object_0_frame:=target"
-    def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
-        Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
-        MovingBoxTargetUR5DoF5.__init__(self, rs_address=self.robot_server_ip, **kwargs)
-
-class MovingBoxTargetUR5DoF5Rob(MovingBoxTargetUR5DoF5):
-    real_robot = True
-
-
-
-# ? Moving Box Target Environments (Complex)
-# * Avoidance environment where the obstacle only moves in a complex random pattern in front of the robot.
-# * There are three different environments for 3, 5 and 5 degrees of freedom
-
-class MovingBox3DSplineTargetUR5Sim(MovingBox3DSplineTargetUR5, Simulation):
-    cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
-        world_name:=box100.world \
+        world_name:=tabletop_box50.world \
         yaw:=-0.78\
         reference_frame:=world \
         max_velocity_scale_factor:=0.2 \
@@ -827,23 +820,17 @@ class MovingBox3DSplineTargetUR5Sim(MovingBox3DSplineTargetUR5, Simulation):
         rviz_gui:=false \
         gazebo_gui:=true \
         objects_controller:=true \
-        target_mode:=moving \
+        target_mode:=1moving2points \
         n_objects:=1.0 \
-        object_0_model_name:=box100 \
+        object_0_model_name:=box50 \
         object_0_frame:=target"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
-        MovingBox3DSplineTargetUR5.__init__(self, rs_address=self.robot_server_ip, **kwargs)
+        IrosEnv03UR5Training.__init__(self, rs_address=self.robot_server_ip, **kwargs)
 
-class MovingBox3DSplineTargetUR5Rob(MovingBox3DSplineTargetUR5):
-    real_robot = True
-
-# TODO: can this comment be removed?
-# roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=moving
-
-class MovingBox3DSplineTargetUR5DoF3Sim(MovingBox3DSplineTargetUR5DoF3, Simulation):
+class IrosEnv03UR5TrainingDoF5Sim(IrosEnv03UR5TrainingDoF5, Simulation):
     cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
-        world_name:=box100.world \
+        world_name:=tabletop_box50.world \
         yaw:=-0.78\
         reference_frame:=world \
         max_velocity_scale_factor:=0.2 \
@@ -851,23 +838,131 @@ class MovingBox3DSplineTargetUR5DoF3Sim(MovingBox3DSplineTargetUR5DoF3, Simulati
         rviz_gui:=false \
         gazebo_gui:=true \
         objects_controller:=true \
-        target_mode:=moving \
+        target_mode:=1moving2points \
         n_objects:=1.0 \
-        object_0_model_name:=box100 \
+        object_0_model_name:=box50 \
         object_0_frame:=target"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
-        MovingBox3DSplineTargetUR5DoF3.__init__(self, rs_address=self.robot_server_ip, **kwargs)
+        IrosEnv03UR5TrainingDoF5.__init__(self, rs_address=self.robot_server_ip, **kwargs)
 
-class MovingBox3DSplineTargetUR5DoF3Rob(MovingBox3DSplineTargetUR5DoF3):
+class IrosEnv03UR5TrainingDoF5Rob(IrosEnv03UR5TrainingDoF5):
     real_robot = True
 
-# TODO: can this comment be removed?
-# roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=moving
+# roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=1moving2points n_objects:=1.0 object_0_frame:=target
 
-class MovingBox3DSplineTargetUR5DoF5Sim(MovingBox3DSplineTargetUR5DoF5, Simulation):
+# ? Test Environment with robot trajectories different from the ones on which it was trained.
+class IrosEnv03UR5Test(IrosEnv03UR5Training):
+    def reset(self, initial_joint_positions = None, type='random', reward_weights=[0.0]*7):
+        """Environment reset.
+
+        Args:
+            initial_joint_positions (list[6] or np.array[6]): robot joint positions in radians.
+            ee_target_pose (list[6] or np.array[6]): [x,y,z,r,p,y] target end effector pose.
+
+        Returns:
+            np.array: Environment state.
+
+        """
+
+        # Default Configuration 
+        # [obstacle_coordinates[3], current_joint[5], delta_joint[5], desired_joint[5], flag[1], obstacle_two_coordinates[3], [0.0]*3]
+
+        # 1.	[polar_coords]
+        # 2.    [obstacle_cartesian[3], current_joint[5], delta_joint[5], desired_joint[5], flag[1], ee_cartesian[3], elbow_cartesian[3]]
+        # 3.	[obstacle_coordinates[3], [0,0,0,0,0,0], delta_joint[5], [0,0,0,0,0,0], flag[1], obstacle_two_coordinates[3], [0.0]*3]
+        # 4.	[obstacle_coordinates[3], current_joint[5], [0,0,0,0,0,0], desired_joint[5], flag[1], obstacle_two_coordinates[3], [0.0]*3]
+        # 5. 	[obstacle_coordinates[3], current_joint[5], [0,0,0,0,0,0], desired_joint[5], [0], obstacle_two_coordinates[3], [0.0]*3]
+
+        self.mask_setting = 1
+
+        self.elapsed_steps = 0
+
+        self.obstacle_coords = []
+
+        # Initialize state machine variables
+        self.state_n = 0 
+        self.elapsed_steps_in_current_state = 0 
+        self.target_reached = 0
+        self.target_reached_counter = 0
+
+        self.reward_composition = []
+        
+        # Pick robot trajectory
+        self.trajectories_ids = ['trajectory_12', 'trajectory_13']
+        self.trajectory_id = random.choice(self.trajectories_ids)
+        if DEBUG:
+            print('Robot Trajectory ID: ' + self.trajectory_id)
+
+        # Initialize environment state
+        self.state = np.zeros(self._get_env_state_len())
+        rs_state = np.zeros(self._get_robot_server_state_len())
+        
+        # NOTE: maybe we can find a cleaner version when we have the final envs (we could prob remove it for the avoidance task altogether)
+        # Set initial robot joint positions
+        if initial_joint_positions:
+            assert len(initial_joint_positions) == 6
+            self.initial_joint_positions = initial_joint_positions
+        elif (len(self.last_position_on_success) != 0) and (type=='continue'):
+            self.initial_joint_positions = self.last_position_on_success
+        else:
+            self.initial_joint_positions = self._get_desired_joint_positions()
+
+        rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self.initial_joint_positions)
+
+
+        # TODO: We should create some kind of helper function depending on how dynamic these settings should be
+        # Set initial state of the Robot Server
+        n_sampling_points = int(np.random.default_rng().uniform(low= 8000, high=12000))
+        
+        string_params = {"object_0_function": "3d_spline_ur5_workspace"}
+        
+        float_params = {"object_0_x_min": -1.0, "object_0_x_max": 1.0, "object_0_y_min": -1.0, "object_0_y_max": 1.0, \
+                        "object_0_z_min": 0.1, "object_0_z_max": 1.0, "object_0_n_points": 10, \
+                        "n_sampling_points": n_sampling_points}
+
+        state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
+        if not self.client.set_state_msg(state_msg):
+            raise RobotServerError("set_state")
+
+        # Get Robot Server state
+        rs_state = copy.deepcopy(np.nan_to_num(np.array(self.client.get_state_msg().state)))
+        self.prev_rs_state = copy.deepcopy(rs_state)
+
+        # Check if the length of the Robot Server state received is correct
+        if not len(rs_state)== self._get_robot_server_state_len():
+            raise InvalidStateError("Robot Server state received has wrong length")
+        
+        # Convert the initial state from Robot Server format to environment format
+        self.state = self._robot_server_state_to_env_state(rs_state)
+
+        # save start position
+        self.start_position = self.state[3:9]
+
+        # Check if the environment state is contained in the observation space
+        if not self.observation_space.contains(self.state):
+            raise InvalidStateError()
+        
+        # check if current position is in the range of the initial joint positions
+        if (len(self.last_position_on_success) == 0) or (type=='random'):
+            joint_positions = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
+            if DEBUG:
+                print("Initial Joint Positions")
+                print(self.initial_joint_positions)
+                print("Joint Positions")
+                print(joint_positions)
+            if not np.isclose(joint_positions, self.initial_joint_positions, atol=0.1).all():
+                raise InvalidStateError('Reset joint positions are not within defined range')
+            
+        return self.state
+
+class IrosEnv03UR5TestDoF5(IrosEnv03UR5Test):
+    def _get_action_space(self):
+        return spaces.Box(low=np.full((5), -1.0), high=np.full((5), 1.0), dtype=np.float32)
+
+class IrosEnv03UR5TestDoF5Sim(IrosEnv03UR5TestDoF5, Simulation):
     cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
-        world_name:=box100.world \
+        world_name:=tabletop_box50.world \
         yaw:=-0.78\
         reference_frame:=world \
         max_velocity_scale_factor:=0.2 \
@@ -875,25 +970,136 @@ class MovingBox3DSplineTargetUR5DoF5Sim(MovingBox3DSplineTargetUR5DoF5, Simulati
         rviz_gui:=false \
         gazebo_gui:=true \
         objects_controller:=true \
-        target_mode:=moving \
+        target_mode:=1moving2points \
         n_objects:=1.0 \
-        object_0_model_name:=box100 \
+        object_0_model_name:=box50 \
         object_0_frame:=target"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
-        MovingBox3DSplineTargetUR5DoF5.__init__(self, rs_address=self.robot_server_ip, **kwargs)
+        IrosEnv03UR5TestDoF5.__init__(self, rs_address=self.robot_server_ip, **kwargs)
 
-class MovingBox3DSplineTargetUR5DoF5Rob(MovingBox3DSplineTargetUR5DoF5):
+class IrosEnv03UR5TestDoF5Rob(IrosEnv03UR5TestDoF5):
     real_robot = True
 
+# roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=1moving2points n_objects:=1.0 object_0_frame:=target
 
-# ? 2 Moving Box Target Environments (Complex)
-# * Avoidance environment where the obstacle only moves in a complex random pattern in front of the robot.
-# * There are three different environments for 3, 5 and 5 degrees of freedom
+# ? Test Environment with robot trajectories different from the ones on which it was trained
+# ? and fixed obstacle trajectories imported from file 
 
-class Moving2Box3DSplineTargetUR5Sim(Moving2Box3DSplineTargetUR5, Simulation):
+class IrosEnv03UR5TestFixedSplines(IrosEnv03UR5Training):
+    ep_n = 0 
+
+    def reset(self, initial_joint_positions = None, type='random', reward_weights=[0.0]*7):
+        """Environment reset.
+
+        Args:
+            initial_joint_positions (list[6] or np.array[6]): robot joint positions in radians.
+            ee_target_pose (list[6] or np.array[6]): [x,y,z,r,p,y] target end effector pose.
+
+        Returns:
+            np.array: Environment state.
+
+        """
+
+        # Default Configuration 
+        # [obstacle_coordinates[3], current_joint[5], delta_joint[5], desired_joint[5], flag[1], obstacle_two_coordinates[3], [0.0]*3]
+
+        # 1.	[polar_coords]
+        # 2.    [obstacle_cartesian[3], current_joint[5], delta_joint[5], desired_joint[5], flag[1], ee_cartesian[3], elbow_cartesian[3]]
+        # 3.	[obstacle_coordinates[3], [0,0,0,0,0,0], delta_joint[5], [0,0,0,0,0,0], flag[1], obstacle_two_coordinates[3], [0.0]*3]
+        # 4.	[obstacle_coordinates[3], current_joint[5], [0,0,0,0,0,0], desired_joint[5], flag[1], obstacle_two_coordinates[3], [0.0]*3]
+        # 5. 	[obstacle_coordinates[3], current_joint[5], [0,0,0,0,0,0], desired_joint[5], [0], obstacle_two_coordinates[3], [0.0]*3]
+
+        self.mask_setting = 1
+
+        self.elapsed_steps = 0
+
+        self.obstacle_coords = []
+
+        # Initialize state machine variables
+        self.state_n = 0 
+        self.elapsed_steps_in_current_state = 0 
+        self.target_reached = 0
+        self.target_reached_counter = 0
+
+        self.reward_composition = []
+        
+        # Pick robot trajectory
+        self.trajectories_ids = ['trajectory_3', 'trajectory_7', 'trajectory_8', 'trajectory_9', 'trajectory_10', 'trajectory_11']
+        self.trajectory_id = self.trajectories_ids[int(self.ep_n/50)]
+        if DEBUG:
+            print('Robot Trajectory ID: ' + self.trajectory_id)
+
+        # Initialize environment state
+        self.state = np.zeros(self._get_env_state_len())
+        rs_state = np.zeros(self._get_robot_server_state_len())
+        
+        # NOTE: maybe we can find a cleaner version when we have the final envs (we could prob remove it for the avoidance task altogether)
+        # Set initial robot joint positions
+        if initial_joint_positions:
+            assert len(initial_joint_positions) == 6
+            self.initial_joint_positions = initial_joint_positions
+        elif (len(self.last_position_on_success) != 0) and (type=='continue'):
+            self.initial_joint_positions = self.last_position_on_success
+        else:
+            self.initial_joint_positions = self._get_desired_joint_positions()
+
+        rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self.initial_joint_positions)
+
+
+        # TODO: We should create some kind of helper function depending on how dynamic these settings should be
+        # Set initial state of the Robot Server
+        n_sampling_points = int(np.random.default_rng().uniform(low= 8000, high=12000))
+        
+        string_params = {"object_0_function": "fixed_trajectory"}
+        float_params = {"object_0_trajectory_id": self.ep_n%50}
+        
+        print("Obstacle trajectory id: " + repr(self.ep_n%50))
+
+        state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
+        if not self.client.set_state_msg(state_msg):
+            raise RobotServerError("set_state")
+
+        # Get Robot Server state
+        rs_state = copy.deepcopy(np.nan_to_num(np.array(self.client.get_state_msg().state)))
+        self.prev_rs_state = copy.deepcopy(rs_state)
+
+        # Check if the length of the Robot Server state received is correct
+        if not len(rs_state)== self._get_robot_server_state_len():
+            raise InvalidStateError("Robot Server state received has wrong length")
+        
+        # Convert the initial state from Robot Server format to environment format
+        self.state = self._robot_server_state_to_env_state(rs_state)
+
+        # save start position
+        self.start_position = self.state[3:9]
+
+        # Check if the environment state is contained in the observation space
+        if not self.observation_space.contains(self.state):
+            raise InvalidStateError()
+        
+        # check if current position is in the range of the initial joint positions
+        if (len(self.last_position_on_success) == 0) or (type=='random'):
+            joint_positions = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
+            if DEBUG:
+                print("Initial Joint Positions")
+                print(self.initial_joint_positions)
+                print("Joint Positions")
+                print(joint_positions)
+            if not np.isclose(joint_positions, self.initial_joint_positions, atol=0.1).all():
+                raise InvalidStateError('Reset joint positions are not within defined range')
+        
+        self.ep_n +=1
+
+        return self.state
+
+class IrosEnv03UR5TestFixedSplinesDoF5(IrosEnv03UR5TestFixedSplines):
+    def _get_action_space(self):
+        return spaces.Box(low=np.full((5), -1.0), high=np.full((5), 1.0), dtype=np.float32)
+
+class IrosEnv03UR5TestFixedSplinesDoF5Sim(IrosEnv03UR5TestFixedSplinesDoF5, Simulation):
     cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
-        world_name:=2_box100.world \
+        world_name:=tabletop_box50.world \
         yaw:=-0.78\
         reference_frame:=world \
         max_velocity_scale_factor:=0.2 \
@@ -901,67 +1107,16 @@ class Moving2Box3DSplineTargetUR5Sim(Moving2Box3DSplineTargetUR5, Simulation):
         rviz_gui:=false \
         gazebo_gui:=true \
         objects_controller:=true \
-        target_mode:=2moving \
-        n_objects:=2.0 \
-        object_0_model_name:=box100 \
-        object_0_frame:=target \
-        object_1_model_name:=box100_2 \
-        object_1_frame:=object_02"
+        target_mode:=1moving2points \
+        n_objects:=1.0 \
+        object_trajectory_file_name:=splines_ur5 \
+        object_0_model_name:=box50 \
+        object_0_frame:=target"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
-        Moving2Box3DSplineTargetUR5.__init__(self, rs_address=self.robot_server_ip, **kwargs)
+        IrosEnv03UR5TestFixedSplinesDoF5.__init__(self, rs_address=self.robot_server_ip, **kwargs)
 
-class Moving2Box3DSplineTargetUR5Rob(Moving2Box3DSplineTargetUR5):
+class IrosEnv03UR5TestFixedSplinesDoF5Rob(IrosEnv03UR5TestFixedSplinesDoF5):
     real_robot = True
 
-# roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=2moving
-
-class Moving2Box3DSplineTargetUR5DoF3Sim(Moving2Box3DSplineTargetUR5DoF3, Simulation):
-    cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
-        world_name:=2_box100.world \
-        yaw:=-0.78\
-        reference_frame:=world \
-        max_velocity_scale_factor:=0.2 \
-        action_cycle_rate:=20 \
-        rviz_gui:=false \
-        gazebo_gui:=true \
-        objects_controller:=true \
-        target_mode:=2moving \
-        n_objects:=2.0 \
-        object_0_model_name:=box100 \
-        object_0_frame:=target \
-        object_1_model_name:=box100_2 \
-        object_1_frame:=object_02"
-    def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
-        Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
-        Moving2Box3DSplineTargetUR5DoF3.__init__(self, rs_address=self.robot_server_ip, **kwargs)
-
-class Moving2Box3DSplineTargetUR5DoF3Rob(Moving2Box3DSplineTargetUR5DoF3):
-    real_robot = True
-
-# roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=2moving
-
-class Moving2Box3DSplineTargetUR5DoF5Sim(Moving2Box3DSplineTargetUR5DoF5, Simulation):
-    cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
-        world_name:=2_box100.world \
-        yaw:=-0.78\
-        reference_frame:=world \
-        max_velocity_scale_factor:=0.2 \
-        action_cycle_rate:=20 \
-        rviz_gui:=false \
-        gazebo_gui:=true \
-        objects_controller:=true \
-        target_mode:=2moving \
-        n_objects:=2.0 \
-        object_0_model_name:=box100 \
-        object_0_frame:=target \
-        object_1_model_name:=box100_2 \
-        object_1_frame:=object_02"
-    def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
-        Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
-        Moving2Box3DSplineTargetUR5DoF5.__init__(self, rs_address=self.robot_server_ip, **kwargs)
-
-class Moving2Box3DSplineTargetUR5DoF5Rob(Moving2Box3DSplineTargetUR5DoF5):
-    real_robot = True
-
-# roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=2moving
+# roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=1moving2points n_objects:=1.0 object_0_frame:=target

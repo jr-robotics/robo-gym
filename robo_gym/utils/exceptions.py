@@ -16,3 +16,9 @@ class RobotServerError(Exception):
             self.message = "service call failed"
     def __str__(self):
         return self.message
+
+class InvalidActionError(Exception):
+    def __init__(self, message = "The action is not contained in the action space."):
+        self.message = message
+    def __str__(self):
+        return self.message

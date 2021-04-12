@@ -3,6 +3,7 @@
 import numpy as np
 import yaml
 import os  
+import copy
 
 class UR():
     """Universal Robots utilities class.
@@ -81,6 +82,8 @@ class UR():
         Returns:
             norm_joints (np.array): Joint position values normalized between [-1 , 1]
         """
+        
+        joints = copy.deepcopy(joints)
         for i in range(len(joints)):
             if joints[i] <= 0:
                 joints[i] = joints[i]/abs(self.min_joint_positions[i])
