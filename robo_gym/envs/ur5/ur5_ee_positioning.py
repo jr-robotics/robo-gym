@@ -61,8 +61,18 @@ class EndEffectorPositioningUR5(UR5BaseEnv):
         return reward, done, info
 class EndEffectorPositioningUR5Sim(EndEffectorPositioningUR5, Simulation):
     cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
+        world_name:=tabletop_sphere50.world \
+        yaw:=-0.78 \
+        reference_frame:=base_link \
         max_velocity_scale_factor:=0.2 \
-        action_cycle_rate:=20"
+        action_cycle_rate:=20 \
+        rviz_gui:=false \
+        gazebo_gui:=true \
+        objects_controller:=true \
+        target_mode:=1object \
+        n_objects:=1.0 \
+        object_0_model_name:=sphere50 \
+        object_0_frame:=target"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
         EndEffectorPositioningUR5.__init__(self, rs_address=self.robot_server_ip, **kwargs)
