@@ -3,6 +3,7 @@
 from copy import deepcopy
 import sys, math, copy, random
 import numpy as np
+from numpy.lib.ufunclike import fix
 from scipy.spatial.transform import Rotation as R
 import gym
 from gym import spaces
@@ -32,10 +33,17 @@ class UR5BaseEnv(gym.Env):
     real_robot = False
     max_episode_steps = 300
 
-    def __init__(self, rs_address=None, fix_wrist3=True, **kwargs):
+    def __init__(self, rs_address=None, fix_base=False, fix_shoulder=False, fix_elbow=False, fix_wrist_1=False, fix_wrist_2=False, fix_wrist_3=True, **kwargs):
         self.ur = ur_utils.UR(model="ur5")
         self.elapsed_steps = 0
-        self.fix_wrist3 = fix_wrist3
+
+        self.fix_base = fix_base
+        self.fix_shoulder = fix_shoulder
+        self.fix_elbow = fix_elbow
+        self.fix_wrist_1 = fix_wrist_1
+        self.fix_wrist_2 = fix_wrist_2
+        self.fix_wrist_3 = fix_wrist_3
+
         self.observation_space = self._get_observation_space()
         self.action_space = self._get_action_space()
         self.seed()
@@ -129,18 +137,31 @@ class UR5BaseEnv(gym.Env):
     def _reward(self, rs_state, action):
         return 0, False, {}
 
+    def add_fixed_joints(self, action):
+        action = action.tolist()
+        fixed_joints = np.array([self.fix_base, self.fix_shoulder, self.fix_elbow, self.fix_wrist_1, self.fix_wrist_2, self.fix_wrist_3])
+        fixed_joint_indices = np.where(fixed_joints)[0]
+
+        initial_joints_norm = self.ur.normalize_joint_values(joints=self.initial_joint_positions)
+
+        temp = []
+        for joint in range(len(fixed_joints)):
+            if joint in fixed_joint_indices:
+                temp.append(initial_joints_norm[joint])
+            else:
+                temp.append(action.pop(0))
+        return temp
+
     def env_action_to_rs_action(self, action) -> np.array:
+        action = self.add_fixed_joints(action)
         rs_action = copy.deepcopy(action)
-        # If fix_wrist3 append 0.0 to environment action 
-        if self.fix_wrist3:
-            rs_action = np.append(rs_action, [0.0])
-        
+
         # Scale action
         rs_action = np.multiply(rs_action, self.abs_joint_pos_range)
         # Convert action indexing from ur to ros
         rs_action = self.ur._ur_joint_list_to_ros_joint_list(rs_action)
 
-        return rs_action        
+        return action, rs_action        
 
     def step(self, action):
         self.elapsed_steps += 1
@@ -150,7 +171,7 @@ class UR5BaseEnv(gym.Env):
             raise InvalidActionError()
 
         # Convert environment action to robot server action
-        rs_action = self.env_action_to_rs_action(action)
+        action, rs_action = self.env_action_to_rs_action(action)
 
         # Send action to Robot Server and get state
         rs_state = self.client.send_action_get_state(rs_action.tolist()).state
@@ -307,11 +328,10 @@ class UR5BaseEnv(gym.Env):
             gym.spaces: Gym action space object.
 
         """
+        fixed_joints = [self.fix_base, self.fix_shoulder, self.fix_elbow, self.fix_wrist_1, self.fix_wrist_2, self.fix_wrist_3]
+        num_control_joints = len(fixed_joints) - sum(fixed_joints)
 
-        if self.fix_wrist3:
-            return spaces.Box(low=np.full((5), -1.0), high=np.full((5), 1.0), dtype=np.float32)
-        else:
-            return spaces.Box(low=np.full((6), -1.0), high=np.full((6), 1.0), dtype=np.float32)
+        return spaces.Box(low=np.full((num_control_joints), -1.0), high=np.full((num_control_joints), 1.0), dtype=np.float32)
 
 
 
