@@ -136,7 +136,7 @@ class UR5BaseEnv(gym.Env):
             rs_action = np.append(rs_action, [0.0])
         
         # Scale action
-        rs_action = np.multiply(action, self.abs_joint_pos_range)
+        rs_action = np.multiply(rs_action, self.abs_joint_pos_range)
         # Convert action indexing from ur to ros
         rs_action = self.ur._ur_joint_list_to_ros_joint_list(rs_action)
 
