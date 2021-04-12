@@ -14,6 +14,11 @@ import robo_gym_server_modules.robot_server.client as rs_client
 from robo_gym.envs.simulation_wrapper import Simulation
 from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
 
+
+
+
+JOINT_POSITIONS = [0.0, -2.5, 1.5, 0, -1.4, 0]
+RANDOM_JOINT_OFFSET = [0.65, 0.25, 0.5, 3.14, 0.4, 3.14]
 class UR5BaseEnv(gym.Env):
     """Universal Robots UR5 base environment.
 
@@ -64,16 +69,13 @@ class UR5BaseEnv(gym.Env):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
-    def reset(self, initial_joint_positions = None, ee_target_pose = None, type='continue'):
+    def reset(self, joint_positions = None, ee_target_pose = None):
         """Environment reset.
 
         Args:
-            initial_joint_positions (list[6] or np.array[6]): robot joint positions in radians.
+            joint_positions (list[6] or np.array[6]): robot joint positions in radians.
             ee_target_pose (list[6] or np.array[6]): [x,y,z,r,p,y] target end effector pose.
-            type (random or continue):
-                random: reset at a random position within the range defined in _set_initial_joint_positions_range
-                continue: if the episode terminated with success the robot starts the next episode from this location, otherwise it starts at a random position
-
+        
         Returns:
             np.array: Environment state.
 
@@ -86,17 +88,18 @@ class UR5BaseEnv(gym.Env):
         # Initialize environment state
         self.state = np.zeros(self._get_env_state_len())
         rs_state = np.zeros(self._get_robot_server_state_len())
+
         
         # Set initial robot joint positions
-        if initial_joint_positions:
-            assert len(initial_joint_positions) == 6
-            self.initial_joint_positions = initial_joint_positions
-        elif (len(self.last_position_on_success) != 0) and (type=='continue'):
-            self.initial_joint_positions = self.last_position_on_success
+        if joint_positions:
+            assert len(joint_positions) == 6
+            self.joint_positions = joint_positions
         else:
-            self.initial_joint_positions = self._get_desired_joint_positions()
+            self.joint_positions = self._set_joint_positions(JOINT_POSITIONS)
 
-        rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self.initial_joint_positions)
+
+
+        rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self.joint_positions)
 
         # Set target End Effector pose
         if ee_target_pose:
@@ -129,7 +132,7 @@ class UR5BaseEnv(gym.Env):
         # check if current position is in the range of the initial joint positions
         if (len(self.last_position_on_success) == 0) or (type=='random'):
             joint_positions = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
-            if not np.isclose(joint_positions, self.initial_joint_positions, atol=0.1).all():
+            if not np.isclose(joint_positions, self.joint_positions, atol=0.1).all():
                 raise InvalidStateError('Reset joint positions are not within defined range')
             
         return self.state
@@ -142,12 +145,12 @@ class UR5BaseEnv(gym.Env):
         fixed_joints = np.array([self.fix_base, self.fix_shoulder, self.fix_elbow, self.fix_wrist_1, self.fix_wrist_2, self.fix_wrist_3])
         fixed_joint_indices = np.where(fixed_joints)[0]
 
-        initial_joints_norm = self.ur.normalize_joint_values(joints=self.initial_joint_positions)
+        joints_position_norm = self.ur.normalize_joint_values(joints=self._get_joint_positions())
 
         temp = []
         for joint in range(len(fixed_joints)):
             if joint in fixed_joint_indices:
-                temp.append(initial_joints_norm[joint])
+                temp.append(joints_position_norm[joint])
             else:
                 temp.append(action.pop(0))
         return temp
@@ -232,17 +235,20 @@ class UR5BaseEnv(gym.Env):
 
         return len(env_state)
 
-    def _get_desired_joint_positions(self):
-        """Generate random desired robot joint positions.
+    def _set_joint_positions(self, joint_positions) -> None:
+        """Set robot joint positions with standard indexing."""
+        assert len(joint_positions) == 6
 
-        Returns:
-            np.array: Joint positions with standard indexing.
+        if RANDOM_JOINT_OFFSET:
+            joint_positions_low = np.array(joint_positions) - np.array(RANDOM_JOINT_OFFSET) 
+            joint_positions_high = np.array(joint_positions) + np.array(RANDOM_JOINT_OFFSET) 
 
-        """
-        # Random desired joint positions
-        joint_positions = np.random.default_rng().uniform(low=np.array([-0.65, -2.75, 1.0, -3.14, -1.7, -3.14]), high=np.array([0.65, -2.0, 2.5, 3.14, -1.0, 3.14]))
-
+        joint_positions = np.random.default_rng().uniform(low=joint_positions_low, high=joint_positions_high)
         return joint_positions
+    
+    def _get_joint_positions(self) -> np.array:
+        """Get robot joint positions with standard indexing."""
+        return np.array(self.joint_positions)
 
     def _get_target_pose(self):
         """Generate target End Effector pose.

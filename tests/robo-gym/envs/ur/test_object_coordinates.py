@@ -20,11 +20,11 @@ test_object_coordinates_ee_pos_params = [
 
 ]
 
-@pytest.mark.parametrize('env_name, initial_joint_positions, object_coordinates, polar_coords,  ur_model', test_object_coordinates_ee_pos_params)
-def test_object_coordinates_ee_pos(env_name, initial_joint_positions, object_coordinates, polar_coords, ur_model):
+@pytest.mark.parametrize('env_name, joint_positions, object_coordinates, polar_coords,  ur_model', test_object_coordinates_ee_pos_params)
+def test_object_coordinates_ee_pos(env_name, joint_positions, object_coordinates, polar_coords, ur_model):
    ur = ur_utils.UR(model=ur_model)
    env = gym.make(env_name, ip='robot-servers')
-   state = env.reset(initial_joint_positions=initial_joint_positions, ee_target_pose=object_coordinates)
+   state = env.reset(joint_positions=joint_positions, ee_target_pose=object_coordinates)
 
    
    assert np.isclose([polar_coords['r'], polar_coords['phi'], polar_coords['theta']], state[0:3], atol=0.1).all()
