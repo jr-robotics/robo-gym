@@ -96,10 +96,15 @@ class UR5BaseEnv(gym.Env):
         else:
             ee_target_pose = self._get_target_pose()
 
-        rs_state[0:6] = ee_target_pose
-
         # Set initial state of the Robot Server
-        state_msg = robot_server_pb2.State(state = rs_state.tolist())
+
+        # Object in a fixed position
+        string_params = {"object_0_function": "fixed_position"}
+        float_params = {"object_0_x": ee_target_pose[0], 
+                        "object_0_y": ee_target_pose[1], 
+                        "object_0_z": ee_target_pose[2]}
+        
+        state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
         if not self.client.set_state_msg(state_msg):
             raise RobotServerError("set_state")
 
