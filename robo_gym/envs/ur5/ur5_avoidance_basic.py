@@ -321,7 +321,7 @@ class MovingBoxTargetUR5Sim(MovingBoxTargetUR5, Simulation):
         rviz_gui:=false \
         gazebo_gui:=true \
         objects_controller:=true \
-        target_mode:=moving \
+        target_mode:=1object \
         n_objects:=1.0 \
         object_0_model_name:=sphere50 \
         object_0_frame:=target"
