@@ -2,7 +2,7 @@ import gym
 import robo_gym
 from robo_gym.wrappers.exception_handling import ExceptionHandling
 
-target_machine_ip = 'localhost' # or other machine 'xxx.xxx.xxx.xxx'
+target_machine_ip = '127.0.0.1' # or other machine 'xxx.xxx.xxx.xxx'
 
 # initialize environment
 env = gym.make('NoObstacleNavigationMir100Sim-v0', ip=target_machine_ip, gui=True)

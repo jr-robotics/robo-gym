@@ -167,12 +167,12 @@ In a second terminal window activate the Python 3.6 virtual environment and run:
 ```python
 import gym, robo_gym
 
-env = gym.make('NoObstacleNavigationMir100Sim-v0', ip='localhost', gui=True)
+env = gym.make('NoObstacleNavigationMir100Sim-v0', ip='127.0.0.1', gui=True)
 
 env.reset()
 ```
 
-If you are running the ServerManager on a different PC replace *localhost* with the IP address of the machine. 
+If you are running the ServerManager on a different PC replace *127.0.0.1* with the IP address of the machine. 
 
 After running the command you should see the robot simulation starting and the initial state of the environment printed in the terminal window. 
 
@@ -235,7 +235,7 @@ It is then sufficient to run ``start-server-manager`` in the same shell.
 
 The IP address of the machine on which the Server Manager is running has to
 be passed as an argument to ``env.make``, if the Server Manager is running on the
-same machine use ``ip='localhost'``.
+same machine use ``ip='127.0.0.1'``.
 
 By default the simulated environments are started in headless mode, without any graphical interface.
 
@@ -409,7 +409,7 @@ import gym
 import robo_gym
 from robo_gym.wrappers.exception_handling import ExceptionHandling
 
-target_machine_ip = 'localhost' # or other machine 'xxx.xxx.xxx.xxx'
+target_machine_ip = '127.0.0.1' # or other machine 'xxx.xxx.xxx.xxx'
 
 # initialize environment
 env = gym.make('NoObstacleNavigationMir100Sim-v0', ip=target_machine_ip, gui=True)
