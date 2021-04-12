@@ -3,7 +3,6 @@
 from copy import deepcopy
 import sys, math, copy, random
 import numpy as np
-from numpy.lib.ufunclike import fix
 from scipy.spatial.transform import Rotation as R
 import gym
 from gym import spaces
@@ -234,6 +233,7 @@ class UR5BaseEnv(gym.Env):
 
         return len(env_state)
 
+    # ? move to ee env
     def _set_joint_positions(self, joint_positions) -> None:
         """Set robot joint positions with standard indexing."""
         assert len(joint_positions) == 6
@@ -248,6 +248,7 @@ class UR5BaseEnv(gym.Env):
         """Get robot joint positions with standard indexing."""
         return np.array(self.joint_positions)
 
+    # ? move to ee env
     def _get_target_pose(self):
         """Generate target End Effector pose.
 
@@ -255,7 +256,6 @@ class UR5BaseEnv(gym.Env):
             np.array: [x,y,z,alpha,theta,gamma] pose.
 
         """
-
         return self.ur.get_random_workspace_pose()
 
     def _robot_server_state_to_env_state(self, rs_state):
