@@ -139,6 +139,7 @@ class UR5BaseEnv(gym.Env):
         return 0, False, {}
 
     def add_fixed_joints(self, action):
+        action = action.tolist()
         fixed_joints = np.array([self.fix_base, self.fix_shoulder, self.fix_elbow, self.fix_wrist_1, self.fix_wrist_2, self.fix_wrist_3])
         fixed_joint_indices = np.where(fixed_joints)[0]
 
@@ -164,6 +165,8 @@ class UR5BaseEnv(gym.Env):
         return action, rs_action        
 
     def step(self, action):
+        if action == list: action = np.array(action)
+            
         self.elapsed_steps += 1
 
         # Check if the action is contained in the action space
