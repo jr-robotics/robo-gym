@@ -61,7 +61,7 @@ class MovingBoxTargetUR5(UR5BaseEnv):
         """Environment reset.
 
         Args:
-            desired_joint_positions (list[6] or np.array[6]): robot joint positions in radians.
+            joint_positions (list[6] or np.array[6]): robot joint positions in radians.
             fixed_object_position (list[3]): x,y,z fixed position of object
 
         Returns:
@@ -84,7 +84,7 @@ class MovingBoxTargetUR5(UR5BaseEnv):
         else:
             self._set_joint_positions(JOINT_POSITIONS)
 
-        rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self._get_desired_joint_positions())
+        rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self._get_joint_positions())
 
 
         # Set initial state of the Robot Server
@@ -127,7 +127,7 @@ class MovingBoxTargetUR5(UR5BaseEnv):
         
         # Check if current position is in the range of the desired joint positions
         joint_positions = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
-        if not np.isclose(joint_positions, self.desired_joint_positions, atol=0.1).all():
+        if not np.isclose(joint_positions, self.joint_positions, atol=0.1).all():
             raise InvalidStateError('Reset joint positions are not within defined range')        
 
         return self.state
@@ -205,17 +205,17 @@ class MovingBoxTargetUR5(UR5BaseEnv):
     def env_action_to_rs_action(self, action) -> np.array:
         """Convert environment action to Robot Server action"""
 
-        desired_joint_positions = self._get_desired_joint_positions()
+        joint_positions = self._get_joint_positions()
         if action.size == 3:
-            desired_joint_positions[1:4] = desired_joint_positions[1:4] + action
+            joint_positions[1:4] = joint_positions[1:4] + action
         elif action.size == 5:
-            desired_joint_positions[0:5] = desired_joint_positions[0:5] + action
+            joint_positions[0:5] = joint_positions[0:5] + action
         elif action.size == 6:
-            desired_joint_positions = desired_joint_positions + action
+            joint_positions = joint_positions + action
         else:
             raise InvalidStateError('DOF setting has unsupported value [3, 5, 6]')
 
-        rs_action = self.ur._ur_joint_list_to_ros_joint_list(desired_joint_positions)
+        rs_action = self.ur._ur_joint_list_to_ros_joint_list(joint_positions)
 
         return rs_action
 
@@ -237,7 +237,7 @@ class MovingBoxTargetUR5(UR5BaseEnv):
     
     def _get_joint_positions(self) -> np.array:
         """Get desired robot joint positions with standard indexing."""
-        return np.array(self.desired_joint_positions)
+        return np.array(self.joint_positions)
 
 
     def _robot_server_state_to_env_state(self, rs_state) -> np.array:
@@ -279,7 +279,7 @@ class MovingBoxTargetUR5(UR5BaseEnv):
         ur_j_pos_norm = self.ur.normalize_joint_values(joints=ur_j_pos)
 
         # start joint positions
-        start_joints = self.ur.normalize_joint_values(self._get_desired_joint_positions())
+        start_joints = self.ur.normalize_joint_values(self._get_joint_positions())
         delta_joints = ur_j_pos_norm - start_joints
 
         # Compose environment state
