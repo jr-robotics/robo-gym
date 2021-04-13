@@ -9,7 +9,7 @@ from robo_gym.utils import ur_utils
 
 test_ur_reset_init_joints_params = [
    ('EndEffectorPositioningUR5Sim-v0', [0.2, -2.5, 1.1, -2.0, -1.2, 1.2], 'ur5'),
-   ('EndEffectorPositioningUR10Sim-v0', [0.2, -2.5, 1.1, -2.0, 1.2, 1.2], 'ur10')
+   # ('EndEffectorPositioningUR10Sim-v0', [0.2, -2.5, 1.1, -2.0, 1.2, 1.2], 'ur10')
 ]
 
 @pytest.mark.parametrize('env_name, joint_positions, ur_model', test_ur_reset_init_joints_params)
@@ -33,7 +33,7 @@ test_ur_reset_joint_positions_params = [
 ]
 
 @pytest.mark.parametrize('env_name, joint_positions, ur_model', test_ur_reset_joint_positions_params)
-def test_ur_reset_desired_joint_positions(env_name, joint_positions, ur_model):
+def test_ur_reset_joint_positions(env_name, joint_positions, ur_model):
    ur = ur_utils.UR(model=ur_model)
    env = gym.make(env_name, ip='robot-servers')
 
