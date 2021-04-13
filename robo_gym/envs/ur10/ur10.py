@@ -51,11 +51,11 @@ class UR10Env(gym.Env):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
-    def reset(self, initial_joint_positions = None, ee_target_pose = None):
+    def reset(self, joint_positions = None, ee_target_pose = None):
         """Environment reset.
 
         Args:
-            initial_joint_positions (list[6] or np.array[6]): robot joint positions in radians.
+            joint_positions (list[6] or np.array[6]): robot joint positions in radians.
             ee_target_pose (list[6] or np.array[6]): [x,y,z,r,p,y] target end effector pose.
 
         Returns:
@@ -72,13 +72,13 @@ class UR10Env(gym.Env):
         rs_state = np.zeros(self._get_robot_server_state_len())
 
         # Set initial robot joint positions
-        if initial_joint_positions:
-            assert len(initial_joint_positions) == 6
-            ur_initial_joint_positions = initial_joint_positions
+        if joint_positions:
+            assert len(joint_positions) == 6
+            ur_joint_positions = joint_positions
         else:
-            ur_initial_joint_positions = self._get_initial_joint_positions()
+            ur_joint_positions = self._get_joint_positions()
 
-        rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(ur_initial_joint_positions)
+        rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(ur_joint_positions)
 
         # Set target End Effector pose
         if ee_target_pose:
@@ -195,7 +195,7 @@ class UR10Env(gym.Env):
 
         return len(env_state)
 
-    def _get_initial_joint_positions(self):
+    def _get_joint_positions(self):
         """Generate random initial robot joint positions.
 
         Returns:
@@ -345,7 +345,7 @@ class EndEffectorPositioningUR10(UR10Env):
 
 class EndEffectorPositioningUR10DoF5(UR10Env):
 
-    def _get_initial_joint_positions(self):
+    def _get_joint_positions(self):
         """Generate random initial robot joint positions.
 
         Returns:
