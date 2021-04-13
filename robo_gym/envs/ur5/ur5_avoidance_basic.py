@@ -217,7 +217,7 @@ class MovingBoxTargetUR5(UR5BaseEnv):
 
         rs_action = self.ur._ur_joint_list_to_ros_joint_list(joint_positions)
 
-        return rs_action
+        return action, rs_action
 
 
 
