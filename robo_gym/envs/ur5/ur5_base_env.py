@@ -141,7 +141,7 @@ class UR5BaseEnv(gym.Env):
     def _reward(self, rs_state, action):
         return 0, False, {}
 
-    def add_fixed_joints(self, action):
+    def add_fixed_joints(self, action) -> np.array:
         action = action.tolist()
         fixed_joints = np.array([self.fix_base, self.fix_shoulder, self.fix_elbow, self.fix_wrist_1, self.fix_wrist_2, self.fix_wrist_3])
         fixed_joint_indices = np.where(fixed_joints)[0]
@@ -154,7 +154,7 @@ class UR5BaseEnv(gym.Env):
                 temp.append(joints_position_norm[joint])
             else:
                 temp.append(action.pop(0))
-        return temp
+        return np.array(temp)
 
     def env_action_to_rs_action(self, action) -> np.array:
         """Convert environment action to Robot Server action"""
