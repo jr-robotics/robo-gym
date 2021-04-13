@@ -412,14 +412,10 @@ class IrosEnv03UR5Training(UR5BaseEnv):
         """
         if self.elapsed_steps_in_current_state < len(self.trajectory[self.state_n]):
             joint_positions = copy.deepcopy(self.trajectory[self.state_n][self.elapsed_steps_in_current_state])
-            # Last Joint is set to 0
-            joint_positions[5] = 0
             self.target_point_flag = 0
         else:
             # Get last point of the trajectory segment
             joint_positions = copy.deepcopy(self.trajectory[self.state_n][-1])
-            # Last Joint is set to 0
-            joint_positions[5] = 0
             self.target_point_flag = 1
         
 

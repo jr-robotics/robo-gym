@@ -5,7 +5,7 @@ from stable_baselines import TD3
 from stable_baselines.td3.policies import MlpPolicy
 
 # specify the ip of the machine running the robot-server
-target_machine_ip = 'localhost' # or other xxx.xxx.xxx.xxx
+target_machine_ip = '127.0.0.1' # or other xxx.xxx.xxx.xxx
 
 # initialize environment
 env = gym.make('NoObstacleNavigationMir100Sim-v0', ip=target_machine_ip, gui=True)

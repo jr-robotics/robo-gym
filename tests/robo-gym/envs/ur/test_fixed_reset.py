@@ -8,7 +8,7 @@ from robo_gym.utils import ur_utils
 
 
 test_ur_reset_init_joints_params = [
-   ('EndEffectorPositioningUR5Sim-v0', [0.2, -2.5, 1.1, -2.0, -1.2, 1.2], 'ur5'),
+   ('EndEffectorPositioningUR5Sim-v0', [0.2, -2.5, 1.1, -2.0, -1.2, 1.2], 'ur5')
    # ('EndEffectorPositioningUR10Sim-v0', [0.2, -2.5, 1.1, -2.0, 1.2, 1.2], 'ur10')
 ]
 
