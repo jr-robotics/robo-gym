@@ -169,7 +169,7 @@ class UR5BaseEnv(gym.Env):
         return action, rs_action        
 
     def step(self, action):
-        if action == list: action = np.array(action)
+        if type(action) == list: action = np.array(action)
             
         self.elapsed_steps += 1
 
