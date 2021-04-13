@@ -82,7 +82,6 @@ class UR5BaseEnv(gym.Env):
         self.elapsed_steps = 0
 
         self.last_action = None
-        self.prev_base_reward = None
 
         # Initialize environment state
         self.state = np.zeros(self._get_env_state_len())
@@ -158,6 +157,7 @@ class UR5BaseEnv(gym.Env):
         return temp
 
     def env_action_to_rs_action(self, action) -> np.array:
+        """Convert environment action to Robot Server action"""
         action = self.add_fixed_joints(action)
         rs_action = copy.deepcopy(action)
 

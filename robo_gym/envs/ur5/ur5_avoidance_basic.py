@@ -29,8 +29,17 @@ class MovingBoxTargetUR5(UR5BaseEnv):
     
     max_episode_steps = 1000
 
-    def _get_action_space(self) -> spaces.Box:
-        return spaces.Box(low=np.full((DOF), -1.0), high=np.full((DOF), 1.0), dtype=np.float32)
+    def _get_action_space(self):
+        """Get environment action space.
+
+        Returns:
+            gym.spaces: Gym action space object.
+
+        """
+        fixed_joints = [self.fix_base, self.fix_shoulder, self.fix_elbow, self.fix_wrist_1, self.fix_wrist_2, self.fix_wrist_3]
+        num_control_joints = len(fixed_joints) - sum(fixed_joints)
+
+        return spaces.Box(low=np.full((num_control_joints), -1.0), high=np.full((num_control_joints), 1.0), dtype=np.float32)
             
     def _get_observation_space(self) -> spaces.Box:
         """Get environment observation space.
@@ -71,7 +80,6 @@ class MovingBoxTargetUR5(UR5BaseEnv):
         self.elapsed_steps = 0
 
         self.last_action = None
-        self.prev_base_reward = None
         
         # Initialize environment state
         self.state = np.zeros(self._get_env_state_len())
@@ -202,23 +210,29 @@ class MovingBoxTargetUR5(UR5BaseEnv):
         print('Sum of Deltas: {:.2e}'.format(sum(abs(env_state[9:15]))))
         print()
 
+    def add_fixed_joints(self, action):
+        action = action.tolist()
+        fixed_joints = np.array([self.fix_base, self.fix_shoulder, self.fix_elbow, self.fix_wrist_1, self.fix_wrist_2, self.fix_wrist_3])
+        fixed_joint_indices = np.where(fixed_joints)[0]
+
+        temp = []
+        for joint in range(len(fixed_joints)):
+            if joint in fixed_joint_indices:
+                temp.append(0)
+            else:
+                temp.append(action.pop(0))
+        return temp
+
     def env_action_to_rs_action(self, action) -> np.array:
         """Convert environment action to Robot Server action"""
+        action = self.add_fixed_joints(action)
+        rs_action = copy.deepcopy(action)
 
-        joint_positions = self._get_joint_positions()
-        if action.size == 3:
-            joint_positions[1:4] = joint_positions[1:4] + action
-        elif action.size == 5:
-            joint_positions[0:5] = joint_positions[0:5] + action
-        elif action.size == 6:
-            joint_positions = joint_positions + action
-        else:
-            raise InvalidStateError('DOF setting has unsupported value [3, 5, 6]')
+        joint_positions = self._get_joint_positions() + action
 
         rs_action = self.ur._ur_joint_list_to_ros_joint_list(joint_positions)
 
-        return action, rs_action
-
+        return action, rs_action   
 
 
     # TODO: once normalization is gone this method can be merged with URBaseEnv
