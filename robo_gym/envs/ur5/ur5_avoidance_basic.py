@@ -64,47 +64,7 @@ class MovingBoxTargetUR5(UR5BaseAvoidanceEnv):
             np.array: Environment state.
 
         """
-        self.elapsed_steps = 0
-
-        self.last_action = None
-        
-        # Initialize environment state
-        self.state = np.zeros(self._get_env_state_len())
-        rs_state = np.zeros(self._get_robot_server_state_len())
-        
-        # Initialize desired joint positions
-        if joint_positions:
-            assert len(joint_positions) == 6
-            self.joint_positions = joint_positions
-        else:
-            self._set_joint_positions(JOINT_POSITIONS)
-
-        rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self._get_joint_positions())
-
-        # Set initial state of the Robot Server
-        state_msg = self._set_initial_robot_server_state(rs_state, fixed_object_position)
-        
-        if not self.client.set_state_msg(state_msg):
-            raise RobotServerError("set_state")
-
-        # Get Robot Server state
-        rs_state = copy.deepcopy(np.nan_to_num(np.array(self.client.get_state_msg().state)))
-
-        # Check if the length of the Robot Server state received is correct
-        if not len(rs_state)== self._get_robot_server_state_len():
-            raise InvalidStateError("Robot Server state received has wrong length")
-
-        # Convert the initial state from Robot Server format to environment format
-        self.state = self._robot_server_state_to_env_state(rs_state)
-
-        # Check if the environment state is contained in the observation space
-        if not self.observation_space.contains(self.state):
-            raise InvalidStateError()
-        
-        # Check if current position is in the range of the desired joint positions
-        joint_positions = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
-        if not np.isclose(joint_positions, self.joint_positions, atol=0.1).all():
-            raise InvalidStateError('Reset joint positions are not within defined range')        
+        self.state = super.reset(joint_positions = None, fixed_object_position = None)   
 
         return self.state
 
@@ -237,6 +197,30 @@ class MovingBoxTargetUR5(UR5BaseAvoidanceEnv):
         state = np.concatenate((target_polar, ur_j_pos_norm, delta_joints))
 
         return state
+
+    def _get_observation_space(self) -> spaces.Box:
+        """Get environment observation space.
+
+        Returns:
+            gym.spaces: Gym observation space object.
+
+        """
+        # Joint position range tolerance
+        pos_tolerance = np.full(6,0.1)
+        # Joint positions range used to determine if there is an error in the sensor readings
+        max_joint_positions = np.add(np.full(6, 1.0), pos_tolerance)
+        min_joint_positions = np.subtract(np.full(6, -1.0), pos_tolerance)
+        # Target coordinates range
+        target_range = np.full(3, np.inf)
+        
+        max_delta_start_positions = np.add(np.full(6, 1.0), pos_tolerance)
+        min_delta_start_positions = np.subtract(np.full(6, -1.0), pos_tolerance)
+
+        # Definition of environment observation_space
+        max_obs = np.concatenate((target_range, max_joint_positions, max_delta_start_positions))
+        min_obs = np.concatenate((-target_range, min_joint_positions, min_delta_start_positions))
+
+        return spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
 
 class MovingBoxTargetUR5Sim(MovingBoxTargetUR5, Simulation):
     cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \

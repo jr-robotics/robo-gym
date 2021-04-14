@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-from copy import deepcopy
-import sys, math, copy, random
+
+import copy
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 import gym

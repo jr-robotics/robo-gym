@@ -65,54 +65,17 @@ class IrosEnv03UR5Training(UR5BaseAvoidanceEnv):
         Returns:
             np.array: Environment state.
         """
-        self.elapsed_steps = 0
-
-        self.obstacle_coords = []
-
         # Initialize state machine variables
         self.state_n = 0 
         self.elapsed_steps_in_current_state = 0 
         self.target_reached = 0
         self.target_reached_counter = 0
-        
-        # Initialize environment state
-        self.state = np.zeros(self._get_env_state_len())
-        rs_state = np.zeros(self._get_robot_server_state_len())
-        
-        # Set initial robot joint positions 
-        self.joint_positions = self._get_joint_positions()
 
-        rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self.joint_positions)
+        self.obstacle_coords = []
 
-        # Set initial state of the Robot Server
-        state_msg = self._set_initial_robot_server_state(rs_state, fixed_object_position)
-        
-        if not self.client.set_state_msg(state_msg):
-            raise RobotServerError("set_state")
+        joint_positions = self._get_joint_positions()
 
-        # Get Robot Server state
-        rs_state = copy.deepcopy(np.nan_to_num(np.array(self.client.get_state_msg().state)))
-
-        # Check if the length of the Robot Server state received is correct
-        if not len(rs_state)== self._get_robot_server_state_len():
-            raise InvalidStateError("Robot Server state received has wrong length")
-        
-        # Convert the initial state from Robot Server format to environment format
-        self.state = self._robot_server_state_to_env_state(rs_state)
-
-        # Check if the environment state is contained in the observation space
-        if not self.observation_space.contains(self.state):
-            raise InvalidStateError()
-        
-        # check if current position is in the range of the initial joint positions
-        joint_positions = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
-        if DEBUG:
-            print("Initial Joint Positions")
-            print(self.joint_positions)
-            print("Joint Positions")
-            print(joint_positions)
-        if not np.isclose(joint_positions, self.joint_positions, atol=0.1).all():
-            raise InvalidStateError('Reset joint positions are not within defined range')
+        self.state = super().reset(joint_positions = joint_positions, fixed_object_position = fixed_object_position)
             
         return self.state
 
@@ -266,7 +229,7 @@ class IrosEnv03UR5Training(UR5BaseAvoidanceEnv):
         # Transform joint positions and joint velocities from ROS indexing to
         # standard indexing
         ur_j_pos = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
-        ur_j_vel = self.ur._ros_joint_list_to_ur_joint_list(rs_state[12:18])
+        #ur_j_vel = self.ur._ros_joint_list_to_ur_joint_list(rs_state[12:18])
 
         # Normalize joint position values
         ur_j_pos_norm = self.ur.normalize_joint_values(joints=ur_j_pos)

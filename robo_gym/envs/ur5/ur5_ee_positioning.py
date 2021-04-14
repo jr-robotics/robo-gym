@@ -176,7 +176,6 @@ class EndEffectorPositioningUR5(UR5BaseEnv):
         reward = reward - (0.05 * np.sum(delta))
 
         if euclidean_dist_3d <= self.distance_threshold:
-            
             reward = 100
             done = True
             info['final_status'] = 'success'
@@ -200,6 +199,7 @@ class EndEffectorPositioningUR5(UR5BaseEnv):
             info['target_coord'] = target_coord
 
         return reward, done, info
+        
 class EndEffectorPositioningUR5Sim(EndEffectorPositioningUR5, Simulation):
     cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
         world_name:=tabletop_sphere50.world \
