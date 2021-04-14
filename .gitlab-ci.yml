@@ -45,7 +45,7 @@ test_environments:
     - docker-executor
   stage: test
   script:
-    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
+    - echo -n $CI_JOB_TOKEN | docker login -u gitlab-ci-token --password-stdin $CI_REGISTRY
     - docker pull $ROBOT_SERVERS_IMAGE
     - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
     - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA robo-gym
@@ -66,7 +66,7 @@ test_environments_with_master:
     - docker-executor
   stage: test
   script:
-    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
+    - echo -n $CI_JOB_TOKEN | docker login -u gitlab-ci-token --password-stdin $CI_REGISTRY
     - docker pull robotics-git.joanneum.at:4567/robo-gym/robot-servers/master:latest
     - docker tag robotics-git.joanneum.at:4567/robo-gym/robot-servers/master:latest robot-servers
     - docker-compose -f docker-compose-test-melodic.yml up -d
@@ -85,7 +85,7 @@ test_environments_with_rs_manual_deploy:
     - docker-executor
   stage: test
   script:
-    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
+    - echo -n $CI_JOB_TOKEN | docker login -u gitlab-ci-token --password-stdin $CI_REGISTRY
     - docker pull robotics-git.joanneum.at:4567/robo-gym/robot-servers/manual_deploy:latest
     - docker tag robotics-git.joanneum.at:4567/robo-gym/robot-servers/manual_deploy:latest robot-servers
     - docker-compose -f docker-compose-test-melodic.yml up -d
@@ -103,7 +103,7 @@ capsize_test_environments_with_rs_master:
     - docker-executor
   stage: test
   script:
-    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
+    - echo -n $CI_JOB_TOKEN | docker login -u gitlab-ci-token --password-stdin $CI_REGISTRY
     - docker pull robotics-git.joanneum.at:4567/robo-gym/robot-servers/capsize_master:latest
     - docker tag robotics-git.joanneum.at:4567/robo-gym/robot-servers/capsize_master:latest robot-servers
     - docker-compose -f docker-compose-test-melodic.yml up -d
@@ -122,7 +122,7 @@ capsize_test_environments_with_rs_develop:
     - docker-executor
   stage: test
   script:
-    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
+    - echo -n $CI_JOB_TOKEN | docker login -u gitlab-ci-token --password-stdin $CI_REGISTRY
     - docker pull robotics-git.joanneum.at:4567/robo-gym/robot-servers/capsize_develop:latest
     - docker tag robotics-git.joanneum.at:4567/robo-gym/robot-servers/capsize_develop:latest robot-servers
     - docker-compose -f docker-compose-test-melodic.yml up -d
