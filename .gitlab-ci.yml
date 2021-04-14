@@ -1,9 +1,20 @@
 stages:
+  - build
   - test
   - deploy
 
 variables:
   ROBOT_SERVERS_IMAGE: "robotics-git.joanneum.at:4567/robo-gym/robot-servers/develop:latest"
+
+build_robo-gym_docker_image:
+  image: docker:18.09
+  services:
+    - docker:18.09-dind
+  tags:
+    - docker-executor
+  stage: build
+  script:
+    - docker build -f Dockerfile -t robo-gym .
 
 echo_robot_server_image:
   stage: test
