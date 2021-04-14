@@ -46,9 +46,9 @@ test_environments:
   stage: test
   script:
     - echo -n $CI_JOB_TOKEN | docker login -u gitlab-ci-token --password-stdin $CI_REGISTRY
-    - docker pull $ROBOT_SERVERS_IMAGE
     - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
     - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA robo-gym
+    - docker pull $ROBOT_SERVERS_IMAGE
     - docker tag $ROBOT_SERVERS_IMAGE robot-servers
     - docker-compose -f docker-compose-test-melodic.yml up -d
     - docker exec robo-gym pytest -x
