@@ -11,7 +11,7 @@ before_script:
   # we use $CI_JOB_TOKEN here which is a special token provided by GitLab
   - echo -n $CI_JOB_TOKEN | docker login -u gitlab-ci-token --password-stdin $CI_REGISTRY
 
-build_robo-gym_docker_image:
+.build_robo-gym_image: &build_robo-gym_image_def
   image: docker:18.09
   services:
     - docker:18.09-dind
@@ -26,8 +26,14 @@ build_robo-gym_docker_image:
       --pull
       --cache-from $CI_REGISTRY_IMAGE:latest
       --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+      --build-arg PYTHON_VER=$PYTHON_VER
       .
     - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+
+build_robo-gym_image_py36:
+  <<: *build_robo-gym_image_def
+  variables:
+      PYTHON_VER: "3.6"
 
 echo_robot_server_image:
   stage: test
