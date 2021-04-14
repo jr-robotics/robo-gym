@@ -226,6 +226,26 @@ class IrosEnv03UR5Training(UR5BaseAvoidanceEnv):
 
         return gym.spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
 
+    def _get_env_state_len(self):
+        """Get length of the environment state.
+
+        Describes the composition of the environment state and returns
+        its length.
+
+        Returns:
+            int: Length of the environment state
+
+        """
+        object_polar_coords_ee = [0.0]*3
+        ur_j_pos = [0.0]*6
+        ur_j_delta = [0.0]*6
+        object_polar_coords_elbow = [0.0]*3
+        trajectory_j_pos = [0.0] * 6
+        target_flag = [0.0]*1
+        env_state = object_polar_coords_ee + ur_j_pos + ur_j_delta + object_polar_coords_elbow + trajectory_j_pos + target_flag
+
+        return len(env_state)
+
 
 
     def _get_joint_positions(self) -> np.array:

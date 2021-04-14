@@ -14,8 +14,8 @@ from robo_gym.envs.simulation_wrapper import Simulation
 from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
 from typing import Tuple
 
-# TODO: remove object target
 
+# TODO: remove env state len function is not used anywhere
 
 JOINT_POSITIONS = [0.0, -2.5, 1.5, 0, -1.4, 0]
 class UR5BaseEnv(gym.Env):

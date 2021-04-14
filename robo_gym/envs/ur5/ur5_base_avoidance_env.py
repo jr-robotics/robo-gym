@@ -167,6 +167,24 @@ class UR5BaseAvoidanceEnv(UR5BaseEnv):
 
         return state
 
+    def _get_env_state_len(self):
+        """Get length of the environment state.
+
+        Describes the composition of the environment state and returns
+        its length.
+
+        Returns:
+            int: Length of the environment state
+
+        """
+        object_polar_coords_ee = [0.0]*3
+        ur_j_pos = [0.0]*6
+        ur_j_delta = [0.0]*6
+        object_polar_coords_elbow = [0.0]*3
+        env_state = object_polar_coords_ee + ur_j_pos + ur_j_delta + object_polar_coords_elbow
+
+        return len(env_state)
+
     def _get_observation_space(self) -> gym.spaces.Box:
         """Get environment observation space.
 

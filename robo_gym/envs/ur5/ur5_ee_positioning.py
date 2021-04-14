@@ -34,6 +34,24 @@ class EndEffectorPositioningUR5(UR5BaseEnv):
         min_obs = np.concatenate((-target_range, min_joint_positions, min_joint_velocities))
 
         return gym.spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
+
+    def _get_env_state_len(self):
+        """Get length of the environment state.
+
+        Describes the composition of the environment state and returns
+        its length.
+
+        Returns:
+            int: Length of the environment state
+
+        """
+        target_polar = [0.0]*3
+        ur_j_pos = [0.0]*6
+        ur_j_vel = [0.0]*6
+
+        env_state = target_polar + ur_j_pos + ur_j_vel
+
+        return len(env_state)
     
     def _set_initial_robot_server_state(self, rs_state, ee_target_pose):
         string_params = {"object_0_function": "fixed_position"}
