@@ -64,7 +64,7 @@ class MovingBoxTargetUR5(UR5BaseAvoidanceEnv):
             np.array: Environment state.
 
         """
-        self.state = super.reset(joint_positions = None, fixed_object_position = None)   
+        self.state = super().reset(joint_positions = None, fixed_object_position = None)   
 
         return self.state
 
