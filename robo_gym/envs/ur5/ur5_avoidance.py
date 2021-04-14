@@ -811,7 +811,8 @@ class IrosEnv03UR5TrainingDoF5(IrosEnv03UR5Training):
         return spaces.Box(low=np.full((5), -1.0), high=np.full((5), 1.0), dtype=np.float32)
 
 class IrosEnv03UR5TrainingSim(IrosEnv03UR5Training, Simulation):
-    cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
+    cmd = "roslaunch ur_robot_server ur_robot_server.launch \
+        ur_model:=ur5 \
         world_name:=tabletop_box50.world \
         yaw:=-0.78\
         reference_frame:=world \
@@ -829,7 +830,8 @@ class IrosEnv03UR5TrainingSim(IrosEnv03UR5Training, Simulation):
         IrosEnv03UR5Training.__init__(self, rs_address=self.robot_server_ip, **kwargs)
 
 class IrosEnv03UR5TrainingDoF5Sim(IrosEnv03UR5TrainingDoF5, Simulation):
-    cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
+    cmd = "roslaunch ur_robot_server ur_robot_server.launch \
+        ur_model:=ur5 \
         world_name:=tabletop_box50.world \
         yaw:=-0.78\
         reference_frame:=world \
@@ -849,7 +851,7 @@ class IrosEnv03UR5TrainingDoF5Sim(IrosEnv03UR5TrainingDoF5, Simulation):
 class IrosEnv03UR5TrainingDoF5Rob(IrosEnv03UR5TrainingDoF5):
     real_robot = True
 
-# roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=1moving2points n_objects:=1.0 object_0_frame:=target
+# roslaunch ur_robot_server ur_robot_server.launch ur_model:=ur5 real_robot:=true rviz_gui:=true gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=1moving2points n_objects:=1.0 object_0_frame:=target
 
 # ? Test Environment with robot trajectories different from the ones on which it was trained.
 class IrosEnv03UR5Test(IrosEnv03UR5Training):
@@ -961,7 +963,8 @@ class IrosEnv03UR5TestDoF5(IrosEnv03UR5Test):
         return spaces.Box(low=np.full((5), -1.0), high=np.full((5), 1.0), dtype=np.float32)
 
 class IrosEnv03UR5TestDoF5Sim(IrosEnv03UR5TestDoF5, Simulation):
-    cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
+    cmd = "roslaunch ur_robot_server ur_robot_server.launch \
+        ur_model:=ur5 \
         world_name:=tabletop_box50.world \
         yaw:=-0.78\
         reference_frame:=world \
@@ -981,7 +984,7 @@ class IrosEnv03UR5TestDoF5Sim(IrosEnv03UR5TestDoF5, Simulation):
 class IrosEnv03UR5TestDoF5Rob(IrosEnv03UR5TestDoF5):
     real_robot = True
 
-# roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=1moving2points n_objects:=1.0 object_0_frame:=target
+# roslaunch ur_robot_server ur_robot_server.launch ur_model:=ur5 real_robot:=true rviz_gui:=true gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=1moving2points n_objects:=1.0 object_0_frame:=target
 
 # ? Test Environment with robot trajectories different from the ones on which it was trained
 # ? and fixed obstacle trajectories imported from file 
@@ -1098,7 +1101,8 @@ class IrosEnv03UR5TestFixedSplinesDoF5(IrosEnv03UR5TestFixedSplines):
         return spaces.Box(low=np.full((5), -1.0), high=np.full((5), 1.0), dtype=np.float32)
 
 class IrosEnv03UR5TestFixedSplinesDoF5Sim(IrosEnv03UR5TestFixedSplinesDoF5, Simulation):
-    cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
+    cmd = "roslaunch ur_robot_server ur_robot_server.launch \
+        ur_model:=ur5 \
         world_name:=tabletop_box50.world \
         yaw:=-0.78\
         reference_frame:=world \
@@ -1119,4 +1123,4 @@ class IrosEnv03UR5TestFixedSplinesDoF5Sim(IrosEnv03UR5TestFixedSplinesDoF5, Simu
 class IrosEnv03UR5TestFixedSplinesDoF5Rob(IrosEnv03UR5TestFixedSplinesDoF5):
     real_robot = True
 
-# roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=1moving2points n_objects:=1.0 object_0_frame:=target
+# roslaunch ur_robot_server ur_robot_server.launch ur_model:=ur5 real_robot:=true rviz_gui:=true gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=1moving2points n_objects:=1.0 object_0_frame:=target
