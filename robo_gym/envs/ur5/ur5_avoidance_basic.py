@@ -52,6 +52,30 @@ class MovingBoxTargetUR5(UR5BaseAvoidanceEnv):
 
         return spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
 
+    # TODO: add typing to method head
+    def _set_initial_robot_server_state(self, rs_state, fixed_object_position = None):
+        # Set initial state of the Robot Server
+        if fixed_object_position:
+            # Object in a fixed position
+            string_params = {"object_0_function": "fixed_position"}
+            float_params = {"object_0_x": fixed_object_position[0], 
+                            "object_0_y": fixed_object_position[1], 
+                            "object_0_z": fixed_object_position[2]}
+        else:
+            # Object moving up and down
+            z_amplitude = np.random.default_rng().uniform(low=0.09, high=0.35)
+            z_frequency = 0.125
+            z_offset = np.random.default_rng().uniform(low=0.2, high=0.6)
+            
+            string_params = {"object_0_function": "triangle_wave"}
+            float_params = {"object_0_x": -0.13, 
+                            "object_0_y": 0.30, 
+                            "object_0_z_amplitude": z_amplitude,
+                            "object_0_z_frequency": z_frequency, 
+                            "object_0_z_offset": z_offset}
+
+        state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
+        return state_msg
 
     def reset(self, joint_positions = None, fixed_object_position = None) -> np.array:
         """Environment reset.
@@ -81,28 +105,9 @@ class MovingBoxTargetUR5(UR5BaseAvoidanceEnv):
 
         rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self._get_joint_positions())
 
-
         # Set initial state of the Robot Server
-        if fixed_object_position:
-            # Object in a fixed position
-            string_params = {"object_0_function": "fixed_position"}
-            float_params = {"object_0_x": fixed_object_position[0], 
-                            "object_0_y": fixed_object_position[1], 
-                            "object_0_z": fixed_object_position[2]}
-        else:
-            # Object moving up and down
-            z_amplitude = np.random.default_rng().uniform(low=0.09, high=0.35)
-            z_frequency = 0.125
-            z_offset = np.random.default_rng().uniform(low=0.2, high=0.6)
-            
-            string_params = {"object_0_function": "triangle_wave"}
-            float_params = {"object_0_x": -0.13, 
-                            "object_0_y": 0.30, 
-                            "object_0_z_amplitude": z_amplitude,
-                            "object_0_z_frequency": z_frequency, 
-                            "object_0_z_offset": z_offset}
+        state_msg = self._set_initial_robot_server_state(rs_state, fixed_object_position)
         
-        state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
         if not self.client.set_state_msg(state_msg):
             raise RobotServerError("set_state")
 
