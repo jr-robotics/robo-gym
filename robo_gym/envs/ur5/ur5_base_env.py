@@ -12,6 +12,7 @@ from robo_gym.utils.exceptions import InvalidStateError, RobotServerError, Inval
 import robo_gym_server_modules.robot_server.client as rs_client
 from robo_gym.envs.simulation_wrapper import Simulation
 from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
+from typing import Tuple
 
 
 
@@ -54,7 +55,6 @@ class UR5BaseEnv(gym.Env):
         self.distance_threshold = 0.1
         self.abs_joint_pos_range = self.ur.get_max_joint_positions()
         self.last_position_on_success = []
-        self.prev_rs_state = None
         self.last_action = None
         
         # Connect to Robot Server
@@ -168,7 +168,7 @@ class UR5BaseEnv(gym.Env):
 
         return action, rs_action        
 
-    def step(self, action):
+    def step(self, action) -> Tuple[np.array, float, bool, dict]:
         if type(action) == list: action = np.array(action)
             
         self.elapsed_steps += 1

@@ -93,7 +93,6 @@ class IrosEnv03UR5Training(UR5BaseEnv):
 
         # Get Robot Server state
         rs_state = copy.deepcopy(np.nan_to_num(np.array(self.client.get_state_msg().state)))
-        self.prev_rs_state = copy.deepcopy(rs_state)
 
         # Check if the length of the Robot Server state received is correct
         if not len(rs_state)== self._get_robot_server_state_len():
@@ -152,7 +151,6 @@ class IrosEnv03UR5Training(UR5BaseEnv):
         rs_action = self.ur._ur_joint_list_to_ros_joint_list(rs_action)
         # Send action to Robot Server and get state
         rs_state = self.client.send_action_get_state(rs_action.tolist()).state
-        self.prev_rs_state = copy.deepcopy(rs_state)
 
         # Convert the state from Robot Server format to environment format
         self.state = self._robot_server_state_to_env_state(rs_state)
