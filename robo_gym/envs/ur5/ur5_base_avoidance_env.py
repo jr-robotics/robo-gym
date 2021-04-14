@@ -49,42 +49,42 @@ class UR5BaseAvoidanceEnv(UR5BaseEnv):
 
         """
         self.elapsed_steps = 0
-
+        print(1)
         self.last_action = None
         
         # Initialize environment state
         self.state = np.zeros(self._get_env_state_len())
         rs_state = np.zeros(self._get_robot_server_state_len())
-        
+        print(2)
         # Initialize desired joint positions
         if joint_positions:
             assert len(joint_positions) == 6
             self.joint_positions = joint_positions
         else:
             self._set_joint_positions(JOINT_POSITIONS)
-
+        print(3)
         rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self._get_joint_positions())
 
         # Set initial state of the Robot Server
         state_msg = self._set_initial_robot_server_state(rs_state, fixed_object_position)
-        
+        print(4)
         if not self.client.set_state_msg(state_msg):
             raise RobotServerError("set_state")
 
         # Get Robot Server state
         rs_state = copy.deepcopy(np.nan_to_num(np.array(self.client.get_state_msg().state)))
-
+        print(5)
         # Check if the length of the Robot Server state received is correct
         if not len(rs_state)== self._get_robot_server_state_len():
             raise InvalidStateError("Robot Server state received has wrong length")
 
         # Convert the initial state from Robot Server format to environment format
         self.state = self._robot_server_state_to_env_state(rs_state)
-
+        print(6)
         # Check if the environment state is contained in the observation space
         if not self.observation_space.contains(self.state):
             raise InvalidStateError()
-        
+        print(7)
         # Check if current position is in the range of the desired joint positions
         joint_positions = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
         if not np.isclose(joint_positions, self.joint_positions, atol=0.1).all():
@@ -133,7 +133,7 @@ class UR5BaseAvoidanceEnv(UR5BaseEnv):
         # desired joint positions
         desired_joints = self.ur.normalize_joint_values(self._get_joint_positions())
         delta_joints = ur_j_pos_norm - desired_joints
-        target_point_flag = copy.deepcopy(self.target_point_flag)
+        
 
         # Transform cartesian coordinates of target to polar coordinates 
         # with respect to the forearm
@@ -163,7 +163,7 @@ class UR5BaseAvoidanceEnv(UR5BaseEnv):
         if self.include_polar_to_elbow:
             state = np.concatenate((target_polar, ur_j_pos_norm, delta_joints, target_polar_forearm))
         else:
-            state = np.concatenate((target_polar, ur_j_pos_norm, delta_joints))
+            state = np.concatenate((target_polar, ur_j_pos_norm, delta_joints, np.zeros(3)))
 
         return state
 
@@ -187,14 +187,15 @@ class UR5BaseAvoidanceEnv(UR5BaseEnv):
 
         # Definition of environment observation_space
         if self.include_polar_to_elbow:
-            max_obs = np.concatenate((target_range, max_joint_positions, max_delta_start_positions))
-            min_obs = np.concatenate((-target_range, min_joint_positions, min_delta_start_positions))
-        else:
             max_obs = np.concatenate((target_range, max_joint_positions, max_delta_start_positions, target_range))
             min_obs = np.concatenate((-target_range, min_joint_positions, min_delta_start_positions, -target_range))
+        else:
+            max_obs = np.concatenate((target_range, max_joint_positions, max_delta_start_positions, np.zeros(3)))
+            min_obs = np.concatenate((-target_range, min_joint_positions, min_delta_start_positions, np.zeros(3)))
 
 
         return gym.spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
+
 
     def add_fixed_joints(self, action) -> np.array:
         action = action.tolist()
@@ -223,7 +224,28 @@ class UR5BaseAvoidanceEnv(UR5BaseEnv):
 
         rs_action = self.ur._ur_joint_list_to_ros_joint_list(joint_positions)
 
-        return action, rs_action         
+        return action, rs_action   
+
+    def _get_robot_server_state_len(self) -> int:
+
+        """Get length of the Robot Server state.
+
+        Describes the composition of the Robot Server state and returns
+        its length.
+
+        Returns:
+            int: Length of the Robot Server state.
+
+        """
+        target = [0.0]*6
+        ur_j_pos = [0.0]*6
+        ur_j_vel = [0.0]*6
+        ee_to_ref_frame_transform = [0.0]*7
+        ur_collision = [0.0]
+        forearm_to_ref_frame_transform = [0.0]*7
+        rs_state = target + ur_j_pos + ur_j_vel + ee_to_ref_frame_transform + ur_collision + forearm_to_ref_frame_transform
+
+        return len(rs_state)      
 
 
 

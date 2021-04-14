@@ -221,31 +221,12 @@ class IrosEnv03UR5Training(UR5BaseAvoidanceEnv):
             max_obs = np.concatenate((target_range, max_joint_positions, max_delta_start_positions, target_forearm_range, max_joint_positions, [1]))
             min_obs = np.concatenate((-target_range, min_joint_positions, min_delta_start_positions, -target_forearm_range, min_joint_positions, [0]))
         else:
-            max_obs = np.concatenate((target_range, max_joint_positions, max_delta_start_positions, max_joint_positions, [1]))
-            min_obs = np.concatenate((-target_range, min_joint_positions, min_delta_start_positions, min_joint_positions, [0]))
+            max_obs = np.concatenate((target_range, max_joint_positions, max_delta_start_positions, np.zeros(3), max_joint_positions, [1]))
+            min_obs = np.concatenate((-target_range, min_joint_positions, min_delta_start_positions, np.zeros(3), min_joint_positions, [0]))
 
         return gym.spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
 
-    def _get_robot_server_state_len(self) -> int:
 
-        """Get length of the Robot Server state.
-
-        Describes the composition of the Robot Server state and returns
-        its length.
-
-        Returns:
-            int: Length of the Robot Server state.
-
-        """
-        target = [0.0]*6
-        ur_j_pos = [0.0]*6
-        ur_j_vel = [0.0]*6
-        ee_to_ref_frame_transform = [0.0]*7
-        ur_collision = [0.0]
-        forearm_to_ref_frame_transform = [0.0]*7
-        rs_state = target + ur_j_pos + ur_j_vel + ee_to_ref_frame_transform + ur_collision + forearm_to_ref_frame_transform
-
-        return len(rs_state)
 
     def _get_joint_positions(self) -> np.array:
         """Get desired robot joint positions.

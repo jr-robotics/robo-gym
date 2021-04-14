@@ -64,7 +64,7 @@ class MovingBoxTargetUR5(UR5BaseAvoidanceEnv):
             np.array: Environment state.
 
         """
-        self.state = super().reset(joint_positions = None, fixed_object_position = None)   
+        self.state = super().reset(joint_positions = joint_positions, fixed_object_position = fixed_object_position)   
 
         return self.state
 
@@ -118,28 +118,9 @@ class MovingBoxTargetUR5(UR5BaseAvoidanceEnv):
             info['final_status'] = 'success'
             info['target_coord'] = target_coord
             self.last_position_on_success = []
-        
 
-        # if DEBUG: self.print_state_action(rs_state, action)
 
         return reward, done, info
-
-    # # TODO: do we want to have a printing method like this? if so i would move it to the URBaseEnv
-    # def print_state_action(self, rs_state, action) -> None:
-    #     env_state = self._robot_server_state_to_env_state(rs_state)
-
-    #     print('Prev Action:', self.last_action)
-    #     print('Action:', action)
-    #     print('Distance: {:.3f}'.format(env_state[0]))
-    #     print('Polar 1 (degree): {:.3f}'.format(env_state[1] * 180/math.pi))
-    #     print('Polar 2 (degree): {:.3f}'.format(env_state[2] * 180/math.pi))
-    #     print('Joint Positions: [1]:{:.3f} [2]:{:.3f} [3]:{:.3f} [4]:{:.3f} [5]:{:.3f} [6]:{:.3f}'.format(*env_state[3:9]))
-    #     print('Joint PosDeltas: [1]:{:.3f} [2]:{:.3f} [3]:{:.3f} [4]:{:.3f} [5]:{:.3f} [6]:{:.3f}'.format(*env_state[9:15]))
-    #     print('Sum of Deltas: {:.2e}'.format(sum(abs(env_state[9:15]))))
-    #     print()
-
-
-
 
     # TODO: once normalization is gone this method can be merged with URBaseEnv
     def step(self, action) -> Tuple[np.array, float, bool, dict]:
@@ -148,7 +129,7 @@ class MovingBoxTargetUR5(UR5BaseAvoidanceEnv):
 
         return self.state, reward, done, info
     
-
+# TODO: yaw is different from the iros env -> check 
 class MovingBoxTargetUR5Sim(MovingBoxTargetUR5, Simulation):
     cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
         world_name:=tabletop_sphere50.world \
@@ -159,7 +140,7 @@ class MovingBoxTargetUR5Sim(MovingBoxTargetUR5, Simulation):
         rviz_gui:=false \
         gazebo_gui:=true \
         objects_controller:=true \
-        target_mode:=1object \
+        target_mode:=1moving2points \
         n_objects:=1.0 \
         object_0_model_name:=sphere50 \
         object_0_frame:=target"

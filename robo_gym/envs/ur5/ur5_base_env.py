@@ -135,7 +135,7 @@ class UR5BaseEnv(gym.Env):
         collision = True if rs_state[25] == 1 else False
         if collision:
             done = True
-            info['final_status'] == 'collision'
+            info['final_status'] = 'collision'
 
         if self.elapsed_steps >= self.max_episode_steps:
             done = True
