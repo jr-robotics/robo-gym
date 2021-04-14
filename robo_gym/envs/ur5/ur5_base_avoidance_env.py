@@ -146,12 +146,10 @@ class UR5BaseAvoidanceEnv(UR5BaseEnv):
         fixed_joints = np.array([self.fix_base, self.fix_shoulder, self.fix_elbow, self.fix_wrist_1, self.fix_wrist_2, self.fix_wrist_3])
         fixed_joint_indices = np.where(fixed_joints)[0]
 
-        joints_position_norm = self.ur.normalize_joint_values(joints=self._get_joint_positions())
-
         temp = []
         for joint in range(len(fixed_joints)):
             if joint in fixed_joint_indices:
-                temp.append(joints_position_norm[joint])
+                temp.append(0)
             else:
                 temp.append(action.pop(0))
         return np.array(temp)
@@ -159,14 +157,18 @@ class UR5BaseAvoidanceEnv(UR5BaseEnv):
     def env_action_to_rs_action(self, action) -> np.array:
         """Convert environment action to Robot Server action"""
         action = self.add_fixed_joints(action)
+        
+        # TODO remove from here later
+        if self.last_action is None:
+            self.last_action = action
+
         rs_action = copy.deepcopy(action)
 
-        # Scale action
-        rs_action = np.multiply(rs_action, self.abs_joint_pos_range)
-        # Convert action indexing from ur to ros
-        rs_action = self.ur._ur_joint_list_to_ros_joint_list(rs_action)
+        joint_positions = self._get_joint_positions() + action
 
-        return action, rs_action        
+        rs_action = self.ur._ur_joint_list_to_ros_joint_list(joint_positions)
+
+        return action, rs_action         
 
     def step(self, action) -> Tuple[np.array, float, bool, dict]:
         if type(action) == list: action = np.array(action)

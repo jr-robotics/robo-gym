@@ -197,34 +197,7 @@ class MovingBoxTargetUR5(UR5BaseAvoidanceEnv):
         print('Sum of Deltas: {:.2e}'.format(sum(abs(env_state[9:15]))))
         print()
 
-    def add_fixed_joints(self, action) -> np.array:
-        action = action.tolist()
-        fixed_joints = np.array([self.fix_base, self.fix_shoulder, self.fix_elbow, self.fix_wrist_1, self.fix_wrist_2, self.fix_wrist_3])
-        fixed_joint_indices = np.where(fixed_joints)[0]
 
-        temp = []
-        for joint in range(len(fixed_joints)):
-            if joint in fixed_joint_indices:
-                temp.append(0)
-            else:
-                temp.append(action.pop(0))
-        return np.array(temp)
-
-    def env_action_to_rs_action(self, action) -> np.array:
-        """Convert environment action to Robot Server action"""
-        action = self.add_fixed_joints(action)
-        
-        # TODO remove from here later
-        if self.last_action is None:
-            self.last_action = action
-
-        rs_action = copy.deepcopy(action)
-
-        joint_positions = self._get_joint_positions() + action
-
-        rs_action = self.ur._ur_joint_list_to_ros_joint_list(joint_positions)
-
-        return action, rs_action   
 
 
     # TODO: once normalization is gone this method can be merged with URBaseEnv
