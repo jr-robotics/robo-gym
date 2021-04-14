@@ -4,6 +4,7 @@ import pytest
 import robo_gym
 
 envs = [
+    'EmptyEnvironmentUR5Sim-v0'
     # 'NoObstacleNavigationMir100Sim-v0', 
     # 'ObstacleAvoidanceMir100Sim-v0', 
     # 'EndEffectorPositioningUR10Sim-v0', 

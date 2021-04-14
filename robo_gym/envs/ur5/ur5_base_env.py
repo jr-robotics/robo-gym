@@ -14,11 +14,10 @@ from robo_gym.envs.simulation_wrapper import Simulation
 from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
 from typing import Tuple
 
-
+# TODO: remove object target
 
 
 JOINT_POSITIONS = [0.0, -2.5, 1.5, 0, -1.4, 0]
-RANDOM_JOINT_OFFSET = [0.65, 0.25, 0.5, 3.14, 0.4, 3.14]
 class UR5BaseEnv(gym.Env):
     """Universal Robots UR5 base environment.
 
@@ -54,7 +53,6 @@ class UR5BaseEnv(gym.Env):
         self.seed()
         self.distance_threshold = 0.1
         self.abs_joint_pos_range = self.ur.get_max_joint_positions()
-        self.last_position_on_success = []
         self.last_action = None
         
         # Connect to Robot Server
@@ -68,7 +66,14 @@ class UR5BaseEnv(gym.Env):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
-    def reset(self, joint_positions = None, ee_target_pose = None):
+    def _set_initial_robot_server_state(self, rs_state):
+        string_params = {}
+        float_params = {}
+
+        state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
+        return state_msg
+
+    def reset(self, joint_positions = None):
         """Environment reset.
 
         Args:
@@ -81,13 +86,10 @@ class UR5BaseEnv(gym.Env):
         """
         self.elapsed_steps = 0
 
-        self.last_action = None
-
         # Initialize environment state
         self.state = np.zeros(self._get_env_state_len())
         rs_state = np.zeros(self._get_robot_server_state_len())
 
-        
         # Set initial robot joint positions
         if joint_positions:
             assert len(joint_positions) == 6
@@ -97,21 +99,9 @@ class UR5BaseEnv(gym.Env):
 
         rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self.joint_positions)
 
-        # Set target End Effector pose
-        if ee_target_pose:
-            assert len(ee_target_pose) == 6
-        else:
-            ee_target_pose = self._get_target_pose()
-
         # Set initial state of the Robot Server
-
-        # Object in a fixed position
-        string_params = {"object_0_function": "fixed_position"}
-        float_params = {"object_0_x": ee_target_pose[0], 
-                        "object_0_y": ee_target_pose[1], 
-                        "object_0_z": ee_target_pose[2]}
+        state_msg = self._set_initial_robot_server_state(rs_state)
         
-        state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
         if not self.client.set_state_msg(state_msg):
             raise RobotServerError("set_state")
 
@@ -130,11 +120,10 @@ class UR5BaseEnv(gym.Env):
         if not self.observation_space.contains(self.state):
             raise InvalidStateError()
         
-        # check if current position is in the range of the initial joint positions
-        if (len(self.last_position_on_success) == 0) or (type=='random'):
-            joint_positions = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
-            if not np.isclose(joint_positions, self.joint_positions, atol=0.1).all():
-                raise InvalidStateError('Reset joint positions are not within defined range')
+        # Check if current position is in the range of the initial joint positions
+        joint_positions = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
+        if not np.isclose(joint_positions, self.joint_positions, atol=0.1).all():
+            raise InvalidStateError('Reset joint positions are not within defined range')
             
         return self.state
 
@@ -194,7 +183,6 @@ class UR5BaseEnv(gym.Env):
         reward = 0
         done = False
         reward, done, info = self._reward(rs_state=rs_state, action=action)
-        self.last_action = action
 
         return self.state, reward, done, info
 
@@ -211,7 +199,7 @@ class UR5BaseEnv(gym.Env):
             int: Length of the Robot Server state.
 
         """
-
+        #TODO: remove target from rs state
         target = [0.0]*6
         ur_j_pos = [0.0]*6
         ur_j_vel = [0.0]*6
@@ -231,25 +219,16 @@ class UR5BaseEnv(gym.Env):
             int: Length of the environment state
 
         """
-
-        target_polar = [0.0]*3
         ur_j_pos = [0.0]*6
         ur_j_vel = [0.0]*6
-        env_state = target_polar + ur_j_pos + ur_j_vel
+        env_state = ur_j_pos + ur_j_vel
 
         return len(env_state)
 
-    # ? move to ee env
     def _set_joint_positions(self, joint_positions) -> None:
-        """Set robot joint positions with standard indexing."""
+        """Set desired robot joint positions with standard indexing."""
         assert len(joint_positions) == 6
-
-        if RANDOM_JOINT_OFFSET:
-            joint_positions_low = np.array(joint_positions) - np.array(RANDOM_JOINT_OFFSET) 
-            joint_positions_high = np.array(joint_positions) + np.array(RANDOM_JOINT_OFFSET) 
-
-        self.joint_positions = np.random.default_rng().uniform(low=joint_positions_low, high=joint_positions_high)
-    
+        self.joint_positions = copy.deepcopy(joint_positions)
     def _get_joint_positions(self) -> np.array:
         """Get robot joint positions with standard indexing."""
         return np.array(self.joint_positions)
@@ -277,23 +256,6 @@ class UR5BaseEnv(gym.Env):
         # Convert to numpy array and remove NaN values
         rs_state = np.nan_to_num(np.array(rs_state))
 
-        # Transform cartesian coordinates of target to polar coordinates 
-        # with respect to the end effector frame
-        target_coord = rs_state[0:3]
-        
-        ee_to_ref_frame_translation = np.array(rs_state[18:21])
-        ee_to_ref_frame_quaternion = np.array(rs_state[21:25])
-        ee_to_ref_frame_rotation = R.from_quat(ee_to_ref_frame_quaternion)
-        ref_frame_to_ee_rotation = ee_to_ref_frame_rotation.inv()
-        # to invert the homogeneous transformation
-        # R' = R^-1
-        ref_frame_to_ee_quaternion = ref_frame_to_ee_rotation.as_quat()
-        # t' = - R^-1 * t
-        ref_frame_to_ee_translation = -ref_frame_to_ee_rotation.apply(ee_to_ref_frame_translation)
-
-        target_coord_ee_frame = utils.change_reference_frame(target_coord,ref_frame_to_ee_translation,ref_frame_to_ee_quaternion)
-        target_polar = utils.cartesian_to_polar_3d(target_coord_ee_frame)
-
         # Transform joint positions and joint velocities from ROS indexing to
         # standard indexing
         ur_j_pos = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
@@ -303,7 +265,7 @@ class UR5BaseEnv(gym.Env):
         ur_j_pos_norm = self.ur.normalize_joint_values(joints=ur_j_pos)
 
         # Compose environment state
-        state = np.concatenate((target_polar, ur_j_pos_norm, ur_j_vel))
+        state = np.concatenate((ur_j_pos_norm, ur_j_vel))
 
         return state
 
@@ -314,20 +276,18 @@ class UR5BaseEnv(gym.Env):
             gym.spaces: Gym observation space object.
 
         """
-
         # Joint position range tolerance
         pos_tolerance = np.full(6,0.1)
+
         # Joint positions range used to determine if there is an error in the sensor readings
         max_joint_positions = np.add(np.full(6, 1.0), pos_tolerance)
         min_joint_positions = np.subtract(np.full(6, -1.0), pos_tolerance)
-        # Target coordinates range
-        target_range = np.full(3, np.inf)
         # Joint velocities range 
         max_joint_velocities = np.array([np.inf] * 6)
-        min_joint_velocities = - np.array([np.inf] * 6)
+        min_joint_velocities = -np.array([np.inf] * 6)
         # Definition of environment observation_space
-        max_obs = np.concatenate((target_range, max_joint_positions, max_joint_velocities))
-        min_obs = np.concatenate((-target_range, min_joint_positions, min_joint_velocities))
+        max_obs = np.concatenate((max_joint_positions, max_joint_velocities))
+        min_obs = np.concatenate((min_joint_positions, min_joint_velocities))
 
         return spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
     
@@ -344,5 +304,26 @@ class UR5BaseEnv(gym.Env):
         return spaces.Box(low=np.full((num_control_joints), -1.0), high=np.full((num_control_joints), 1.0), dtype=np.float32)
 
 
+# TODO: remove object target
+class EmptyEnvironmentUR5Sim(UR5BaseEnv, Simulation):
+    cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
+        world_name:=tabletop_sphere50.world \
+        yaw:=-0.78 \
+        reference_frame:=base_link \
+        max_velocity_scale_factor:=0.2 \
+        action_cycle_rate:=20 \
+        rviz_gui:=false \
+        gazebo_gui:=true \
+        objects_controller:=true \
+        target_mode:=1object \
+        n_objects:=1.0 \
+        object_0_model_name:=sphere50 \
+        object_0_frame:=target"
+    def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
+        Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
+        UR5BaseEnv.__init__(self, rs_address=self.robot_server_ip, **kwargs)
 
+class EmptyEnvironmentUR5Rob(UR5BaseEnv):
+    real_robot = True
 
+# roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=moving
