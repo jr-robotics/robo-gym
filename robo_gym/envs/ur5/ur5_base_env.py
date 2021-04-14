@@ -2,7 +2,6 @@
 
 from copy import deepcopy
 import sys, math, copy, random
-from robo_gym.envs.ur5.ur5_base_env import UR5BaseEnv
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 import gym
