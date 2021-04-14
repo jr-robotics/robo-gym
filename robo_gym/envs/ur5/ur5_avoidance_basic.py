@@ -312,7 +312,8 @@ class MovingBoxTargetUR5(UR5BaseEnv):
         return state
 
 class MovingBoxTargetUR5Sim(MovingBoxTargetUR5, Simulation):
-    cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
+    cmd = "roslaunch ur_robot_server ur_robot_server.launch \
+        ur_model:=ur5 \
         world_name:=tabletop_sphere50.world \
         yaw:=3.14\
         reference_frame:=base_link \
@@ -332,4 +333,4 @@ class MovingBoxTargetUR5Sim(MovingBoxTargetUR5, Simulation):
 class MovingBoxTargetUR5Rob(MovingBoxTargetUR5):
     real_robot = True 
 
-# roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=moving
+# roslaunch ur_robot_server ur_robot_server.launch ur_model:=ur5 real_robot:=true rviz_gui:=true gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=moving

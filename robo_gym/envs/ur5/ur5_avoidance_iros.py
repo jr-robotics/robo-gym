@@ -426,7 +426,8 @@ class IrosEnv03UR5Training(UR5BaseEnv):
 
 
 class IrosEnv03UR5TrainingSim(IrosEnv03UR5Training, Simulation):
-    cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
+    cmd = "roslaunch ur_robot_server ur_robot_server.launch \
+        ur_model:=ur5 \
         world_name:=tabletop_sphere50.world \
         yaw:=-0.78\
         reference_frame:=base_link \
@@ -448,7 +449,7 @@ class IrosEnv03UR5TrainingRob(IrosEnv03UR5Training):
 
 # TODO: check if this roslaunch is correct
 # TODO: add roslaunch for the realsense skeleton tracker
-# roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=1moving2points n_objects:=1.0 object_0_frame:=target
+# roslaunch ur_robot_server ur_robot_server.launch ur_model:=ur5 real_robot:=true rviz_gui:=true gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=1moving2points n_objects:=1.0 object_0_frame:=target
 
 
 
@@ -482,7 +483,8 @@ class IrosEnv03UR5TestFixedSplines(IrosEnv03UR5Training):
         return self.state
 
 class IrosEnv03UR5TestFixedSplinesSim(IrosEnv03UR5TestFixedSplines, Simulation):
-    cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
+    cmd = "roslaunch ur_robot_server ur_robot_server.launch \
+        ur_model:=ur5 \
         world_name:=tabletop_sphere50.world \
         yaw:=-0.78\
         reference_frame:=base_link \
@@ -503,4 +505,4 @@ class IrosEnv03UR5TestFixedSplinesSim(IrosEnv03UR5TestFixedSplines, Simulation):
 class IrosEnv03UR5TestFixedSplinesRob(IrosEnv03UR5TestFixedSplines):
     real_robot = True
 
-# roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=1moving2points n_objects:=1.0 object_0_frame:=target
+# roslaunch ur_robot_server ur_robot_server.launch ur_model:=ur5 real_robot:=true rviz_gui:=true gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=1moving2points n_objects:=1.0 object_0_frame:=target
