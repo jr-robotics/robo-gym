@@ -147,52 +147,10 @@ class IrosEnv03UR5Training(UR5BaseEnv):
         return action, rs_action  
 
     def step(self, action) -> Tuple[np.array, float, bool, dict]:
-        self.elapsed_steps += 1
         self.elapsed_steps_in_current_state += 1
-
-        action = np.array(action)
         
-        # Check if the action is contained in the action space
-        if not self.action_space.contains(action):
-            raise InvalidActionError()
-        
-        # Convert environment action to robot server action
-        action, rs_action = self.env_action_to_rs_action(action)
+        self.state, reward, done, info = super().step(action)
 
-        # Send action to Robot Server and get state
-        rs_state = self.client.send_action_get_state(rs_action.tolist()).state
-
-        # Convert the state from Robot Server format to environment format
-        self.state = self._robot_server_state_to_env_state(rs_state)
-        
-        # Check if the environment state is contained in the observation space
-        if not self.observation_space.contains(self.state):
-            raise InvalidStateError()
-        
-        # Save obstacle position
-        self.obstacle_coords.append(rs_state[0:3])
-
-        if DEBUG:
-            print("Desired Joint Positions")
-            print(self._get_joint_positions())
-            print("Joint Positions")
-            print(self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12]))
-
-        # Check if the robot is at the target position
-        if self.target_point_flag:
-            if np.isclose(self._get_joint_positions(), self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12]), atol = 0.1).all():
-                self.target_reached = 1
-        if DEBUG:
-            print("Target Reached: ")
-            print(self.target_reached)
-            print("State number: ")
-            print(self.state_n)
-    
-        # Assign reward
-        reward = 0
-        done = False
-        reward, done, info = self._reward(rs_state=rs_state, action=action)
-        self.last_action = action
         if self.target_reached:
             self.state_n +=1
             # Restart from state 0 if the full trajectory has been completed
@@ -219,11 +177,24 @@ class IrosEnv03UR5Training(UR5BaseEnv):
         print('Is current disred a target?', env_state[21])
         print('Targets reached', self.target_reached_counter)
 
+        print('Target Reached: {}'.format(self.target_reached))
+        print('State number: {}'.format(self.state_n))
+
         print()
 
 
     def _reward(self, rs_state, action) -> Tuple[float, bool, dict]:
         env_state = self._robot_server_state_to_env_state(rs_state)
+
+        # TODO: move back to step function?
+        # Check if the robot is at the target position
+        if self.target_point_flag:
+            if np.isclose(self._get_joint_positions(), self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12]), atol = 0.1).all():
+                self.target_reached = 1
+
+        # TODO: remove as soon as rs state is a dictonary
+        # Save obstacle position
+        self.obstacle_coords.append(rs_state[0:3])
 
         reward = 0
         done = False
