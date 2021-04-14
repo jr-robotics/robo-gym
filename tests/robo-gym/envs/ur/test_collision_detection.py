@@ -10,7 +10,7 @@ from robo_gym.utils import ur_utils
 
 test_ur_collision = [
     ('EmptyEnvironmentUR5Sim-v0', [0.0, -1.26, -3.14, 0.0, 0.0], 'ur5'), # self-collision
-    ('EmptyEnvironmentUR5Sim-v0', [0.0, 1.0, 1.8, 0.0, 0.0], 'ur5') # collision with ground 
+    ('EmptyEnvironmentUR5Sim-v0', [0.0, 1.0, 1.8, 0.0, 0.0], 'ur5'), # collision with ground 
     ('EndEffectorPositioningUR5Sim-v0', [0.0, -1.26, -3.14, 0.0, 0.0], 'ur5'), # self-collision
     ('EndEffectorPositioningUR5Sim-v0', [0.0, 1.0, 1.8, 0.0, 0.0], 'ur5') # collision with ground 
 #    ('EndEffectorPositioningUR10Sim-v0', [0.0, -1.5, 3.14, 0.0, 0.0, 0.0], 'ur10'), # self-collision
