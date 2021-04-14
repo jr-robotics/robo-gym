@@ -60,7 +60,7 @@ def test_object_coordinates_avoidance_iros(env_name, fixed_object_position, pola
 
    
    assert np.isclose([polar_coords_ee['r'], polar_coords_ee['phi'], polar_coords_ee['theta']], state[0:3], atol=0.1).all()
-   assert np.isclose([polar_coords_forearm['r'], polar_coords_forearm['phi'], polar_coords_forearm['theta']], state[22:25], atol=0.1).all()
+   assert np.isclose([polar_coords_forearm['r'], polar_coords_forearm['phi'], polar_coords_forearm['theta']], state[15:18], atol=0.1).all()
    
    env.kill_sim()
    env.close()
