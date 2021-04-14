@@ -40,12 +40,6 @@ build_robo-gym_image_py37:
   variables:
       PYTHON_VER: "3.7"
 
-echo_robot_server_image:
-  stage: test
-  script:
-    - echo "$ROBOT_SERVERS_IMAGE"  
-  
-
 .test_environments: &test_environments_def
   image: docker:18.09
   before_script:
@@ -56,6 +50,7 @@ echo_robot_server_image:
     - docker-executor
   stage: test
   script:
+    - echo "Python Version:$PYTHON_VER Robot Servers image:$ROBOT_SERVERS_IMAGE"  
     - echo -n $CI_JOB_TOKEN | docker login -u gitlab-ci-token --password-stdin $CI_REGISTRY
     - docker pull $CI_REGISTRY_IMAGE:$PYTHON_VER-$CI_COMMIT_SHA
     - docker tag $CI_REGISTRY_IMAGE:$PYTHON_VER-$CI_COMMIT_SHA robo-gym
