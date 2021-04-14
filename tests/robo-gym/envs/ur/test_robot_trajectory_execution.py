@@ -43,7 +43,7 @@ def test_robot_trajectory_iros(env_name, ur_model, traj_relative_path):
         # check if calculation of delta joints is correct
         assert np.isclose((ur_j_pos_norm - desired_joints), delta_joints, atol=0.01).all()
     # check that the current trajectory point is a target point
-    assert state[21] == 1.0
+    assert state[24] == 1.0
     # check that state machine has transitioned to segment 1 of trajectory 
     traj_joint_positions = trajectory[1][0]
     state, _, _, _ = env.step(action)
