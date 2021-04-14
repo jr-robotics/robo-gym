@@ -49,42 +49,42 @@ class UR5BaseAvoidanceEnv(UR5BaseEnv):
 
         """
         self.elapsed_steps = 0
-        print(1)
+
         self.last_action = None
         
         # Initialize environment state
         self.state = np.zeros(self._get_env_state_len())
         rs_state = np.zeros(self._get_robot_server_state_len())
-        print(2)
+
         # Initialize desired joint positions
         if joint_positions:
             assert len(joint_positions) == 6
             self.joint_positions = joint_positions
         else:
             self._set_joint_positions(JOINT_POSITIONS)
-        print(3)
+
         rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self._get_joint_positions())
 
         # Set initial state of the Robot Server
         state_msg = self._set_initial_robot_server_state(rs_state, fixed_object_position)
-        print(4)
+
         if not self.client.set_state_msg(state_msg):
             raise RobotServerError("set_state")
 
         # Get Robot Server state
         rs_state = copy.deepcopy(np.nan_to_num(np.array(self.client.get_state_msg().state)))
-        print(5)
+
         # Check if the length of the Robot Server state received is correct
         if not len(rs_state)== self._get_robot_server_state_len():
             raise InvalidStateError("Robot Server state received has wrong length")
 
         # Convert the initial state from Robot Server format to environment format
         self.state = self._robot_server_state_to_env_state(rs_state)
-        print(6)
+
         # Check if the environment state is contained in the observation space
         if not self.observation_space.contains(self.state):
             raise InvalidStateError()
-        print(7)
+
         # Check if current position is in the range of the desired joint positions
         joint_positions = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
         if not np.isclose(joint_positions, self.joint_positions, atol=0.1).all():

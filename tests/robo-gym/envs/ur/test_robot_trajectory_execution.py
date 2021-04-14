@@ -37,7 +37,7 @@ def test_robot_trajectory_iros(env_name, ur_model, traj_relative_path):
         state, _, _, _ = env.step(action)
         ur_j_pos_norm = state[3:9]
         delta_joints = state[9:15]
-        desired_joints = state [15:21]
+        desired_joints = state [18:24]
         # check if robot follows the trajectory in all steps of trajectory segment 0
         assert np.isclose(ur.normalize_joint_values(traj_joint_positions), ur_j_pos_norm, atol=0.1).all()
         # check if calculation of delta joints is correct
