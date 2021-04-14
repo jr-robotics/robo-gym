@@ -28,30 +28,6 @@ class MovingBoxTargetUR5(UR5BaseAvoidanceEnv):
     
     max_episode_steps = 1000
             
-    def _get_observation_space(self) -> spaces.Box:
-        """Get environment observation space.
-
-        Returns:
-            gym.spaces: Gym observation space object.
-
-        """
-        # Joint position range tolerance
-        pos_tolerance = np.full(6,0.1)
-        # Joint positions range used to determine if there is an error in the sensor readings
-        max_joint_positions = np.add(np.full(6, 1.0), pos_tolerance)
-        min_joint_positions = np.subtract(np.full(6, -1.0), pos_tolerance)
-        # Target coordinates range
-        target_range = np.full(3, np.inf)
-        
-        max_delta_start_positions = np.add(np.full(6, 1.0), pos_tolerance)
-        min_delta_start_positions = np.subtract(np.full(6, -1.0), pos_tolerance)
-
-        # Definition of environment observation_space
-        max_obs = np.concatenate((target_range, max_joint_positions, max_delta_start_positions))
-        min_obs = np.concatenate((-target_range, min_joint_positions, min_delta_start_positions))
-
-        return spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
-
     # TODO: add typing to method head
     def _set_initial_robot_server_state(self, rs_state, fixed_object_position = None):
         # Set initial state of the Robot Server
@@ -212,15 +188,8 @@ class MovingBoxTargetUR5(UR5BaseAvoidanceEnv):
 
         return self.state, reward, done, info
     
-    def _set_joint_positions(self, joint_positions) -> None:
-        """Set desired robot joint positions with standard indexing."""
-        assert len(joint_positions) == 6
-        self.joint_positions = copy.deepcopy(joint_positions)
-    
-    def _get_joint_positions(self) -> np.array:
-        """Get desired robot joint positions with standard indexing."""
-        return np.array(self.joint_positions)
 
+    
 
     def _robot_server_state_to_env_state(self, rs_state) -> np.array:
         """Transform state from Robot Server to environment format.

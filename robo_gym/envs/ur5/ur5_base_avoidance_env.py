@@ -241,16 +241,10 @@ class UR5BaseAvoidanceEnv(UR5BaseEnv):
 
         return len(env_state)
 
-    # ? move to ee env
     def _set_joint_positions(self, joint_positions) -> None:
-        """Set robot joint positions with standard indexing."""
+        """Set desired robot joint positions with standard indexing."""
         assert len(joint_positions) == 6
-
-        if RANDOM_JOINT_OFFSET:
-            joint_positions_low = np.array(joint_positions) - np.array(RANDOM_JOINT_OFFSET) 
-            joint_positions_high = np.array(joint_positions) + np.array(RANDOM_JOINT_OFFSET) 
-
-        self.joint_positions = np.random.default_rng().uniform(low=joint_positions_low, high=joint_positions_high)
+        self.joint_positions = copy.deepcopy(joint_positions)
     
     def _get_joint_positions(self) -> np.array:
         """Get robot joint positions with standard indexing."""
@@ -309,14 +303,13 @@ class UR5BaseAvoidanceEnv(UR5BaseEnv):
 
         return state
 
-    def _get_observation_space(self):
+    def _get_observation_space(self) -> spaces.Box:
         """Get environment observation space.
 
         Returns:
             gym.spaces: Gym observation space object.
 
         """
-
         # Joint position range tolerance
         pos_tolerance = np.full(6,0.1)
         # Joint positions range used to determine if there is an error in the sensor readings
@@ -324,12 +317,13 @@ class UR5BaseAvoidanceEnv(UR5BaseEnv):
         min_joint_positions = np.subtract(np.full(6, -1.0), pos_tolerance)
         # Target coordinates range
         target_range = np.full(3, np.inf)
-        # Joint velocities range 
-        max_joint_velocities = np.array([np.inf] * 6)
-        min_joint_velocities = - np.array([np.inf] * 6)
+        
+        max_delta_start_positions = np.add(np.full(6, 1.0), pos_tolerance)
+        min_delta_start_positions = np.subtract(np.full(6, -1.0), pos_tolerance)
+
         # Definition of environment observation_space
-        max_obs = np.concatenate((target_range, max_joint_positions, max_joint_velocities))
-        min_obs = np.concatenate((-target_range, min_joint_positions, min_joint_velocities))
+        max_obs = np.concatenate((target_range, max_joint_positions, max_delta_start_positions))
+        min_obs = np.concatenate((-target_range, min_joint_positions, min_delta_start_positions))
 
         return spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
     
