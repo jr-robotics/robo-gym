@@ -27,6 +27,7 @@ build_robo-gym_docker_image:
       --cache-from $CI_REGISTRY_IMAGE:latest
       --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
       .
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
 
 echo_robot_server_image:
   stage: test
