@@ -6,19 +6,19 @@ The goal is for the robot to stay within a predefined minimum distance to the mo
 When feasible the robot should continue to the original configuration, 
 otherwise wait for the obstacle to move away before proceeding
 """
-
-import math, copy
-from robo_gym.envs.ur5.ur5_base_avoidance_env import UR5BaseAvoidanceEnv
+import math
+import gym
 import numpy as np
 from scipy.spatial.transform import Rotation as R
-import gym
-from gym import spaces
+
 from robo_gym.utils import utils, ur_utils
 from robo_gym.utils.exceptions import InvalidStateError, RobotServerError, InvalidActionError
 import robo_gym_server_modules.robot_server.client as rs_client
 from robo_gym.envs.simulation_wrapper import Simulation
 from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
 from typing import Tuple
+from robo_gym.envs.ur5.ur5_base_avoidance_env import UR5BaseAvoidanceEnv
+
 
 DEBUG = True
 MINIMUM_DISTANCE = 0.3 # the distance [cm] the robot should keep to the obstacle
@@ -198,7 +198,7 @@ class MovingBoxTargetUR5(UR5BaseAvoidanceEnv):
 
         return state
 
-    def _get_observation_space(self) -> spaces.Box:
+    def _get_observation_space(self) -> gym.spaces.Box:
         """Get environment observation space.
 
         Returns:
@@ -220,7 +220,7 @@ class MovingBoxTargetUR5(UR5BaseAvoidanceEnv):
         max_obs = np.concatenate((target_range, max_joint_positions, max_delta_start_positions))
         min_obs = np.concatenate((-target_range, min_joint_positions, min_delta_start_positions))
 
-        return spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
+        return gym.spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
 
 class MovingBoxTargetUR5Sim(MovingBoxTargetUR5, Simulation):
     cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \

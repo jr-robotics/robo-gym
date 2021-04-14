@@ -25,7 +25,7 @@ class MovingBoxTargetUR5(UR5BaseEnv):
     
     max_episode_steps = 1000
             
-    def _get_observation_space(self):
+    def _get_observation_space(self) -> gym.spaces.Box:
         """Get environment observation space.
 
         Returns:
@@ -47,7 +47,7 @@ class MovingBoxTargetUR5(UR5BaseEnv):
         max_obs = np.concatenate((target_range, max_joint_positions, max_delta_start_positions))
         min_obs = np.concatenate((-target_range, min_joint_positions, min_delta_start_positions))
 
-        return spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
+        return gym.spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
 
     # TODO: All the stuff we only needed for the positioning task have to be removed in the final avoidance envs
     def reset(self, initial_joint_positions = None, type='random'):
@@ -304,12 +304,12 @@ class MovingBoxTargetUR5(UR5BaseEnv):
         return state
 
 class MovingBoxTargetUR5DoF3(MovingBoxTargetUR5):
-    def _get_action_space(self):
-        return spaces.Box(low=np.full((3), -1.0), high=np.full((3), 1.0), dtype=np.float32)
+    def _get_action_space(self) -> gym.spaces.Box:
+        return gym.spaces.Box(low=np.full((3), -1.0), high=np.full((3), 1.0), dtype=np.float32)
 
 class MovingBoxTargetUR5DoF5(MovingBoxTargetUR5):
     def _get_action_space(self):
-        return spaces.Box(low=np.full((5), -1.0), high=np.full((5), 1.0), dtype=np.float32)
+        return gym.spaces.Box(low=np.full((5), -1.0), high=np.full((5), 1.0), dtype=np.float32)
 
 
 

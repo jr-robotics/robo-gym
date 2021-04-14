@@ -8,19 +8,18 @@ This trajectory is sampled at a frequency of 20 Hz.
 """
 # TODO: add sentence that this is the environment used in the submission to iros 2021 
 
-import os, random, copy, json
+import os, copy, json
 import numpy as np
-from robo_gym.envs.ur5.ur5_base_avoidance_env import UR5BaseAvoidanceEnv
-from scipy.spatial.transform import Rotation as R
 import gym
-from gym import spaces
-from gym.utils import seeding
+from scipy.spatial.transform import Rotation as R
+
 from robo_gym.utils import utils, ur_utils
 from robo_gym.utils.exceptions import InvalidStateError, RobotServerError, InvalidActionError
 import robo_gym_server_modules.robot_server.client as rs_client
 from robo_gym.envs.simulation_wrapper import Simulation
 from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
 from typing import Tuple
+from robo_gym.envs.ur5.ur5_base_avoidance_env import UR5BaseAvoidanceEnv
 
 DEBUG = True
 MINIMUM_DISTANCE = 0.45 # the distance [cm] the robot should keep to the obstacle
@@ -267,7 +266,7 @@ class IrosEnv03UR5Training(UR5BaseAvoidanceEnv):
         return state
 
     # observation space should be fine
-    def _get_observation_space(self) -> spaces.Box:
+    def _get_observation_space(self) -> gym.spaces.Box:
         """Get environment observation space.
 
         Returns:
@@ -293,9 +292,9 @@ class IrosEnv03UR5Training(UR5BaseAvoidanceEnv):
         max_obs = np.concatenate((target_range, max_joint_positions, max_delta_start_positions, max_joint_positions, [1], target_forearm_range))
         min_obs = np.concatenate((-target_range, min_joint_positions, min_delta_start_positions, min_joint_positions, [0], -target_forearm_range))
 
-        return spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
+        return gym.spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
 
-    def _get_robot_server_state_len(self) -> spaces.Box:
+    def _get_robot_server_state_len(self) -> int:
 
         """Get length of the Robot Server state.
 

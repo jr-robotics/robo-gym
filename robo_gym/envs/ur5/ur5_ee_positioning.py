@@ -1,21 +1,18 @@
-from copy import deepcopy
 import copy
 import numpy as np
-from scipy.spatial.transform import Rotation as R
 import gym
-from gym import spaces
+from scipy.spatial.transform import Rotation as R
 
 from robo_gym.utils.exceptions import InvalidStateError, RobotServerError
 from robo_gym.envs.simulation_wrapper import Simulation
 from robo_gym.utils import utils, ur_utils
 from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
-
 from robo_gym.envs.ur5.ur5_base_env import UR5BaseEnv
 
 JOINT_POSITIONS = [0.0, -2.5, 1.5, 0, -1.4, 0]
 RANDOM_JOINT_OFFSET = [0.65, 0.25, 0.5, 3.14, 0.4, 3.14]
 class EndEffectorPositioningUR5(UR5BaseEnv):
-    def _get_observation_space(self):
+    def _get_observation_space(self) -> gym.spaces.Box:
         """Get environment observation space.
 
         Returns:
@@ -36,7 +33,7 @@ class EndEffectorPositioningUR5(UR5BaseEnv):
         max_obs = np.concatenate((target_range, max_joint_positions, max_joint_velocities))
         min_obs = np.concatenate((-target_range, min_joint_positions, min_joint_velocities))
 
-        return spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
+        return gym.spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
     
     def _set_initial_robot_server_state(self, rs_state, ee_target_pose):
         string_params = {"object_0_function": "fixed_position"}

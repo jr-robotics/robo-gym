@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
-
-from copy import deepcopy
-import sys, math, copy, random
+import copy
 import numpy as np
-from scipy.spatial.transform import Rotation as R
 import gym
-from gym import spaces
-from gym.utils import seeding
+from scipy.spatial.transform import Rotation as R
+
+
 from robo_gym.utils import utils, ur_utils
 from robo_gym.utils.exceptions import InvalidStateError, RobotServerError, InvalidActionError
 import robo_gym_server_modules.robot_server.client as rs_client

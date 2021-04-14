@@ -3,10 +3,10 @@
 
 import copy
 import numpy as np
-from scipy.spatial.transform import Rotation as R
 import gym
-from gym import spaces
 from gym.utils import seeding
+from scipy.spatial.transform import Rotation as R
+
 from robo_gym.utils import utils, ur_utils
 from robo_gym.utils.exceptions import InvalidStateError, RobotServerError, InvalidActionError
 import robo_gym_server_modules.robot_server.client as rs_client
@@ -269,7 +269,7 @@ class UR5BaseEnv(gym.Env):
 
         return state
 
-    def _get_observation_space(self):
+    def _get_observation_space(self) -> gym.spaces.Box:
         """Get environment observation space.
 
         Returns:
@@ -289,9 +289,9 @@ class UR5BaseEnv(gym.Env):
         max_obs = np.concatenate((max_joint_positions, max_joint_velocities))
         min_obs = np.concatenate((min_joint_positions, min_joint_velocities))
 
-        return spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
+        return gym.spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
     
-    def _get_action_space(self):
+    def _get_action_space(self)-> gym.spaces.Box:
         """Get environment action space.
 
         Returns:
@@ -301,7 +301,7 @@ class UR5BaseEnv(gym.Env):
         fixed_joints = [self.fix_base, self.fix_shoulder, self.fix_elbow, self.fix_wrist_1, self.fix_wrist_2, self.fix_wrist_3]
         num_control_joints = len(fixed_joints) - sum(fixed_joints)
 
-        return spaces.Box(low=np.full((num_control_joints), -1.0), high=np.full((num_control_joints), 1.0), dtype=np.float32)
+        return gym.spaces.Box(low=np.full((num_control_joints), -1.0), high=np.full((num_control_joints), 1.0), dtype=np.float32)
 
 
 # TODO: remove object target
