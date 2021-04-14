@@ -27,6 +27,7 @@ before_script:
       --cache-from $CI_REGISTRY_IMAGE:latest
       --tag $CI_REGISTRY_IMAGE:$PYTHON_VER-$CI_COMMIT_SHA
       --build-arg PYTHON_VER=$PYTHON_VER
+      --build-arg CACHEBUST=$CI_COMMIT_SHA
       .
     - docker push $CI_REGISTRY_IMAGE:$PYTHON_VER-$CI_COMMIT_SHA
 
