@@ -128,6 +128,8 @@ class UR5BaseEnv(gym.Env):
         return self.state
 
     def _reward(self, rs_state, action):
+        done = False
+        
         # Check if robot is in collision
         collision = True if rs_state[25] == 1 else False
         if collision:
