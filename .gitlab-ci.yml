@@ -39,6 +39,21 @@ build_robo-gym_image_py37:
   <<: *build_robo-gym_image_def
   variables:
       PYTHON_VER: "3.7"
+  only:
+    - schedules
+
+build_robo-gym_image_py38:
+  <<: *build_robo-gym_image_def
+  variables:
+      PYTHON_VER: "3.8"
+  only:
+    - schedules
+build_robo-gym_image_py39:
+  <<: *build_robo-gym_image_def
+  variables:
+      PYTHON_VER: "3.9"
+  only:
+    - schedules
 
 .test_environments: &test_environments_def
   image: docker:18.09
@@ -71,8 +86,22 @@ test_environments_py37:
   <<: *test_environments_def
   variables:
       PYTHON_VER: "3.7"
-  except:
-    - /^capsize.*$/
+  only:
+    - schedules
+
+test_environments_py38:
+  <<: *test_environments_def
+  variables:
+      PYTHON_VER: "3.8"
+  only:
+    - schedules
+
+test_environments_py39:
+  <<: *test_environments_def
+  variables:
+      PYTHON_VER: "3.9"
+  only:
+    - schedules
 
 test_environments_py36_with_rs_master:
   <<: *test_environments_def
