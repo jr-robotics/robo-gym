@@ -2,7 +2,6 @@
 
 from copy import deepcopy
 import sys, math, copy, random
-from robo_gym.envs.ur5.ur5_base_env import UR5BaseEnv
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 import gym
@@ -14,13 +13,13 @@ import robo_gym_server_modules.robot_server.client as rs_client
 from robo_gym.envs.simulation_wrapper import Simulation
 from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
 from typing import Tuple
-
+from robo_gym.envs.ur5.ur5_base_env import UR5BaseEnv
 
 
 
 JOINT_POSITIONS = [0.0, -2.5, 1.5, 0, -1.4, 0]
 RANDOM_JOINT_OFFSET = [0.65, 0.25, 0.5, 3.14, 0.4, 3.14]
-class UR5BaseEnv(gym.Env):
+class UR5BaseAvoidanceEnv(UR5BaseEnv):
     """Universal Robots UR5 base environment.
 
     Args:

@@ -10,7 +10,7 @@ This trajectory is sampled at a frequency of 20 Hz.
 
 import os, random, copy, json
 import numpy as np
-from robo_gym.envs.ur5.ur5_base_env import UR5BaseEnv
+from robo_gym.envs.ur5.ur5_base_avoidance_env import UR5BaseAvoidanceEnv
 from scipy.spatial.transform import Rotation as R
 import gym
 from gym import spaces
@@ -25,7 +25,7 @@ from typing import Tuple
 DEBUG = True
 MINIMUM_DISTANCE = 0.45 # the distance [cm] the robot should keep to the obstacle
 
-class IrosEnv03UR5Training(UR5BaseEnv):
+class IrosEnv03UR5Training(UR5BaseAvoidanceEnv):
     max_episode_steps = 1000
 
     def __init__(self, rs_address=None, **kwargs) -> None:

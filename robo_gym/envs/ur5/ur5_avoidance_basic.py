@@ -8,7 +8,7 @@ otherwise wait for the obstacle to move away before proceeding
 """
 
 import math, copy
-from robo_gym.envs.ur5.ur5_base_env import UR5BaseEnv
+from robo_gym.envs.ur5.ur5_base_avoidance_env import UR5BaseAvoidanceEnv
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 import gym
@@ -24,7 +24,7 @@ DEBUG = True
 MINIMUM_DISTANCE = 0.3 # the distance [cm] the robot should keep to the obstacle
 JOINT_POSITIONS = [-0.78,-1.31,-1.31,-2.18,1.57,0.0]
 
-class MovingBoxTargetUR5(UR5BaseEnv):
+class MovingBoxTargetUR5(UR5BaseAvoidanceEnv):
     
     max_episode_steps = 1000
             
