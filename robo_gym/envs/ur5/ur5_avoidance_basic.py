@@ -28,18 +28,6 @@ JOINT_POSITIONS = [-0.78,-1.31,-1.31,-2.18,1.57,0.0]
 class MovingBoxTargetUR5(UR5BaseEnv):
     
     max_episode_steps = 1000
-
-    def _get_action_space(self):
-        """Get environment action space.
-
-        Returns:
-            gym.spaces: Gym action space object.
-
-        """
-        fixed_joints = [self.fix_base, self.fix_shoulder, self.fix_elbow, self.fix_wrist_1, self.fix_wrist_2, self.fix_wrist_3]
-        num_control_joints = len(fixed_joints) - sum(fixed_joints)
-
-        return spaces.Box(low=np.full((num_control_joints), -1.0), high=np.full((num_control_joints), 1.0), dtype=np.float32)
             
     def _get_observation_space(self) -> spaces.Box:
         """Get environment observation space.

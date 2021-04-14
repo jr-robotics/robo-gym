@@ -81,9 +81,9 @@ class IrosEnv03UR5Training(UR5BaseEnv):
         rs_state = np.zeros(self._get_robot_server_state_len())
         
         # Set initial robot joint positions 
-        self.initial_joint_positions = self._get_desired_joint_positions()
+        self.joint_positions = self._get_joint_positions()
 
-        rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self.initial_joint_positions)
+        rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self.joint_positions)
 
         # Set initial state of the Robot Server
         state_msg = self._set_initial_robot_server_state(rs_state, fixed_object_position)
@@ -109,27 +109,42 @@ class IrosEnv03UR5Training(UR5BaseEnv):
         joint_positions = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
         if DEBUG:
             print("Initial Joint Positions")
-            print(self.initial_joint_positions)
+            print(self.joint_positions)
             print("Joint Positions")
             print(joint_positions)
-        if not np.isclose(joint_positions, self.initial_joint_positions, atol=0.1).all():
+        if not np.isclose(joint_positions, self.joint_positions, atol=0.1).all():
             raise InvalidStateError('Reset joint positions are not within defined range')
             
         return self.state
 
-    def _action_to_delta_joint_pos(self, action) -> np.array:
-        """Convert environment action to Robot Server action"""
+    def add_fixed_joints(self, action) -> np.array:
+        action = action.tolist()
+        fixed_joints = np.array([self.fix_base, self.fix_shoulder, self.fix_elbow, self.fix_wrist_1, self.fix_wrist_2, self.fix_wrist_3])
+        fixed_joint_indices = np.where(fixed_joints)[0]
 
-        desired_joint_positions = self._get_desired_joint_positions()
-        if action.size == 3:
-            desired_joint_positions[1:4] = desired_joint_positions[1:4] + action
-        elif action.size == 5:
-            desired_joint_positions[0:5] = desired_joint_positions[0:5] + action
-        elif action.size == 6:
-            desired_joint_positions = desired_joint_positions + action
-        else:
-            raise InvalidStateError('DOF setting has unsupported value [3, 5, 6]')
-        return desired_joint_positions
+        temp = []
+        for joint in range(len(fixed_joints)):
+            if joint in fixed_joint_indices:
+                temp.append(0)
+            else:
+                temp.append(action.pop(0))
+        return np.array(temp)
+
+    def env_action_to_rs_action(self, action) -> np.array:
+        """Convert environment action to Robot Server action"""
+        action = self.add_fixed_joints(action)
+        
+        # TODO remove from here later
+        if self.last_action is None:
+            self.last_action = action
+
+        rs_action = copy.deepcopy(action)
+
+        joint_positions = self._get_joint_positions() + action
+
+        rs_action = self.ur._ur_joint_list_to_ros_joint_list(joint_positions)
+
+        return action, rs_action  
 
     def step(self, action) -> Tuple[np.array, float, bool, dict]:
         self.elapsed_steps += 1
@@ -141,14 +156,9 @@ class IrosEnv03UR5Training(UR5BaseEnv):
         if not self.action_space.contains(action):
             raise InvalidActionError()
         
-        if self.last_action is None:
-            self.last_action = action
-        
-        # Convert environment action to Robot Server action
-        rs_action = self._action_to_delta_joint_pos(action)
+        # Convert environment action to robot server action
+        action, rs_action = self.env_action_to_rs_action(action)
 
-        # Convert action indexing from ur to ros
-        rs_action = self.ur._ur_joint_list_to_ros_joint_list(rs_action)
         # Send action to Robot Server and get state
         rs_state = self.client.send_action_get_state(rs_action.tolist()).state
 
@@ -164,13 +174,13 @@ class IrosEnv03UR5Training(UR5BaseEnv):
 
         if DEBUG:
             print("Desired Joint Positions")
-            print(self._get_desired_joint_positions())
+            print(self._get_joint_positions())
             print("Joint Positions")
             print(self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12]))
 
         # Check if the robot is at the target position
         if self.target_point_flag:
-            if np.isclose(self._get_desired_joint_positions(), self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12]), atol = 0.1).all():
+            if np.isclose(self._get_joint_positions(), self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12]), atol = 0.1).all():
                 self.target_reached = 1
         if DEBUG:
             print("Target Reached: ")
@@ -320,7 +330,7 @@ class IrosEnv03UR5Training(UR5BaseEnv):
         ur_j_pos_norm = self.ur.normalize_joint_values(joints=ur_j_pos)
 
         # desired joint positions
-        desired_joints = self.ur.normalize_joint_values(self._get_desired_joint_positions())
+        desired_joints = self.ur.normalize_joint_values(self._get_joint_positions())
         delta_joints = ur_j_pos_norm - desired_joints
         target_point_flag = copy.deepcopy(self.target_point_flag)
 
@@ -401,7 +411,7 @@ class IrosEnv03UR5Training(UR5BaseEnv):
 
         return len(rs_state)
 
-    def _get_desired_joint_positions(self) -> np.array:
+    def _get_joint_positions(self) -> np.array:
         """Get desired robot joint positions.
 
         Returns:
@@ -419,8 +429,6 @@ class IrosEnv03UR5Training(UR5BaseEnv):
 
         return joint_positions
 
-    def _get_action_space(self) -> spaces.Box:
-        return spaces.Box(low=np.full((DOF), -1.0), high=np.full((DOF), 1.0), dtype=np.float32)
 
 
 class IrosEnv03UR5TrainingSim(IrosEnv03UR5Training, Simulation):
