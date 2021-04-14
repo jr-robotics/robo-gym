@@ -129,16 +129,20 @@ class UR5BaseEnv(gym.Env):
 
     def _reward(self, rs_state, action):
         done = False
-        
+        info = {}
+
         # Check if robot is in collision
         collision = True if rs_state[25] == 1 else False
         if collision:
             done = True
+            info['final_status'] == 'collision'
 
         if self.elapsed_steps >= self.max_episode_steps:
             done = True
+            info['final_status'] = 'success'
+            
         
-        return 0, done, {}
+        return 0, done, info
 
     def add_fixed_joints(self, action) -> np.array:
         action = action.tolist()
