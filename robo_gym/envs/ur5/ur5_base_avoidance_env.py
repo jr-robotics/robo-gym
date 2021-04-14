@@ -4,7 +4,6 @@ import numpy as np
 import gym
 from scipy.spatial.transform import Rotation as R
 
-
 from robo_gym.utils import utils, ur_utils
 from robo_gym.utils.exceptions import InvalidStateError, RobotServerError, InvalidActionError
 import robo_gym_server_modules.robot_server.client as rs_client
@@ -14,7 +13,7 @@ from typing import Tuple
 from robo_gym.envs.ur5.ur5_base_env import UR5BaseEnv
 
 
-
+DEBUG = True
 JOINT_POSITIONS = [0.0, -2.5, 1.5, 0, -1.4, 0]
 class UR5BaseAvoidanceEnv(UR5BaseEnv):
     """Universal Robots UR5 base environment.
@@ -32,6 +31,12 @@ class UR5BaseAvoidanceEnv(UR5BaseEnv):
         real_robot (bool): True if the environment is controlling a real robot.
 
     """
+    def __init__(self, rs_address=None, fix_base=False, fix_shoulder=False, fix_elbow=False, fix_wrist_1=False, fix_wrist_2=False, fix_wrist_3=True, include_polar_to_elbow=False, **kwargs):
+        self.include_polar_to_elbow = include_polar_to_elbow
+        super().__init__(rs_address, fix_base, fix_shoulder, fix_elbow, fix_wrist_1, fix_wrist_2, fix_wrist_3)
+        
+
+
     def reset(self, joint_positions = None, fixed_object_position = None) -> np.array:
         """Environment reset.
 
@@ -87,6 +92,109 @@ class UR5BaseAvoidanceEnv(UR5BaseEnv):
 
         return self.state
 
+    def _robot_server_state_to_env_state(self, rs_state) -> np.array:
+        """Transform state from Robot Server to environment format.
+
+        Args:
+            rs_state (list): State in Robot Server format.
+
+        Returns:
+            numpy.array: State in environment format.
+
+        """
+        # Convert to numpy array and remove NaN values
+        rs_state = np.nan_to_num(np.array(rs_state))
+
+        # Transform cartesian coordinates of target to polar coordinates 
+        # with respect to the end effector frame
+        target_coord = rs_state[0:3]
+        
+        ee_to_ref_frame_translation = np.array(rs_state[18:21])
+        ee_to_ref_frame_quaternion = np.array(rs_state[21:25])
+        ee_to_ref_frame_rotation = R.from_quat(ee_to_ref_frame_quaternion)
+        ref_frame_to_ee_rotation = ee_to_ref_frame_rotation.inv()
+        # to invert the homogeneous transformation
+        # R' = R^-1
+        ref_frame_to_ee_quaternion = ref_frame_to_ee_rotation.as_quat()
+        # t' = - R^-1 * t
+        ref_frame_to_ee_translation = -ref_frame_to_ee_rotation.apply(ee_to_ref_frame_translation)
+
+        target_coord_ee_frame = utils.change_reference_frame(target_coord,ref_frame_to_ee_translation,ref_frame_to_ee_quaternion)
+        target_polar = utils.cartesian_to_polar_3d(target_coord_ee_frame)
+
+        # Transform joint positions and joint velocities from ROS indexing to
+        # standard indexing
+        ur_j_pos = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
+        #ur_j_vel = self.ur._ros_joint_list_to_ur_joint_list(rs_state[12:18])
+
+        # Normalize joint position values
+        ur_j_pos_norm = self.ur.normalize_joint_values(joints=ur_j_pos)
+
+        # desired joint positions
+        desired_joints = self.ur.normalize_joint_values(self._get_joint_positions())
+        delta_joints = ur_j_pos_norm - desired_joints
+        target_point_flag = copy.deepcopy(self.target_point_flag)
+
+        # Transform cartesian coordinates of target to polar coordinates 
+        # with respect to the forearm
+
+        forearm_to_ref_frame_translation = rs_state[26:29]
+        forearm_to_ref_frame_quaternion = rs_state[29:33]
+        forearm_to_ref_frame_rotation = R.from_quat(forearm_to_ref_frame_quaternion)
+        ref_frame_to_forearm_rotation = forearm_to_ref_frame_rotation.inv()
+        # to invert the homogeneous transformation
+        # R' = R^-1
+        ref_frame_to_forearm_quaternion = ref_frame_to_forearm_rotation.as_quat()
+        # t' = - R^-1 * t
+        ref_frame_to_forearm_translation = -ref_frame_to_forearm_rotation.apply(forearm_to_ref_frame_translation)
+
+        target_coord_forearm_frame = utils.change_reference_frame(target_coord,ref_frame_to_forearm_translation,ref_frame_to_forearm_quaternion)
+        target_polar_forearm = utils.cartesian_to_polar_3d(target_coord_forearm_frame)
+
+        if DEBUG:
+            print('Object coords in ref frame', target_coord)
+            print('Object coords in ee frame', target_coord_ee_frame)
+            print('Object polar coords in ee frame', target_polar)
+            print('Object coords in forearm frame', target_coord_forearm_frame)
+            print('Object polar coords in forearm frame', target_polar_forearm)
+
+        # TODO: reorder as soon as rs state is a dict
+        # Compose environment state
+        if self.include_polar_to_elbow:
+            state = np.concatenate((target_polar, ur_j_pos_norm, delta_joints, target_polar_forearm))
+        else:
+            state = np.concatenate((target_polar, ur_j_pos_norm, delta_joints))
+
+        return state
+
+    def _get_observation_space(self) -> gym.spaces.Box:
+        """Get environment observation space.
+
+        Returns:
+            gym.spaces: Gym observation space object.
+
+        """
+        # Joint position range tolerance
+        pos_tolerance = np.full(6,0.1)
+        # Joint positions range used to determine if there is an error in the sensor readings
+        max_joint_positions = np.add(np.full(6, 1.0), pos_tolerance)
+        min_joint_positions = np.subtract(np.full(6, -1.0), pos_tolerance)
+        # Target coordinates range
+        target_range = np.full(3, np.inf)
+        
+        max_delta_start_positions = np.add(np.full(6, 1.0), pos_tolerance)
+        min_delta_start_positions = np.subtract(np.full(6, -1.0), pos_tolerance)
+
+        # Definition of environment observation_space
+        if self.include_polar_to_elbow:
+            max_obs = np.concatenate((target_range, max_joint_positions, max_delta_start_positions))
+            min_obs = np.concatenate((-target_range, min_joint_positions, min_delta_start_positions))
+        else:
+            max_obs = np.concatenate((target_range, max_joint_positions, max_delta_start_positions, target_range))
+            min_obs = np.concatenate((-target_range, min_joint_positions, min_delta_start_positions, -target_range))
+
+
+        return gym.spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
 
     def add_fixed_joints(self, action) -> np.array:
         action = action.tolist()

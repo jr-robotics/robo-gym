@@ -120,23 +120,23 @@ class MovingBoxTargetUR5(UR5BaseAvoidanceEnv):
             self.last_position_on_success = []
         
 
-        if DEBUG: self.print_state_action(rs_state, action)
+        # if DEBUG: self.print_state_action(rs_state, action)
 
         return reward, done, info
 
-    # TODO: do we want to have a printing method like this? if so i would move it to the URBaseEnv
-    def print_state_action(self, rs_state, action) -> None:
-        env_state = self._robot_server_state_to_env_state(rs_state)
+    # # TODO: do we want to have a printing method like this? if so i would move it to the URBaseEnv
+    # def print_state_action(self, rs_state, action) -> None:
+    #     env_state = self._robot_server_state_to_env_state(rs_state)
 
-        print('Prev Action:', self.last_action)
-        print('Action:', action)
-        print('Distance: {:.3f}'.format(env_state[0]))
-        print('Polar 1 (degree): {:.3f}'.format(env_state[1] * 180/math.pi))
-        print('Polar 2 (degree): {:.3f}'.format(env_state[2] * 180/math.pi))
-        print('Joint Positions: [1]:{:.3f} [2]:{:.3f} [3]:{:.3f} [4]:{:.3f} [5]:{:.3f} [6]:{:.3f}'.format(*env_state[3:9]))
-        print('Joint PosDeltas: [1]:{:.3f} [2]:{:.3f} [3]:{:.3f} [4]:{:.3f} [5]:{:.3f} [6]:{:.3f}'.format(*env_state[9:15]))
-        print('Sum of Deltas: {:.2e}'.format(sum(abs(env_state[9:15]))))
-        print()
+    #     print('Prev Action:', self.last_action)
+    #     print('Action:', action)
+    #     print('Distance: {:.3f}'.format(env_state[0]))
+    #     print('Polar 1 (degree): {:.3f}'.format(env_state[1] * 180/math.pi))
+    #     print('Polar 2 (degree): {:.3f}'.format(env_state[2] * 180/math.pi))
+    #     print('Joint Positions: [1]:{:.3f} [2]:{:.3f} [3]:{:.3f} [4]:{:.3f} [5]:{:.3f} [6]:{:.3f}'.format(*env_state[3:9]))
+    #     print('Joint PosDeltas: [1]:{:.3f} [2]:{:.3f} [3]:{:.3f} [4]:{:.3f} [5]:{:.3f} [6]:{:.3f}'.format(*env_state[9:15]))
+    #     print('Sum of Deltas: {:.2e}'.format(sum(abs(env_state[9:15]))))
+    #     print()
 
 
 
@@ -148,79 +148,6 @@ class MovingBoxTargetUR5(UR5BaseAvoidanceEnv):
 
         return self.state, reward, done, info
     
-
-    
-
-    def _robot_server_state_to_env_state(self, rs_state) -> np.array:
-        """Transform state from Robot Server to environment format.
-
-        Args:
-            rs_state (list): State in Robot Server format.
-
-        Returns:
-            numpy.array: State in environment format.
-
-        """
-        # Convert to numpy array and remove NaN values
-        rs_state = np.nan_to_num(np.array(rs_state))
-
-        # Transform cartesian coordinates of target to polar coordinates 
-        # with respect to the end effector frame
-        target_coord = rs_state[0:3]
-        
-        ee_to_ref_frame_translation = np.array(rs_state[18:21])
-        ee_to_ref_frame_quaternion = np.array(rs_state[21:25])
-        ee_to_ref_frame_rotation = R.from_quat(ee_to_ref_frame_quaternion)
-        ref_frame_to_ee_rotation = ee_to_ref_frame_rotation.inv()
-        # to invert the homogeneous transformation
-        # R' = R^-1
-        ref_frame_to_ee_quaternion = ref_frame_to_ee_rotation.as_quat()
-        # t' = - R^-1 * t
-        ref_frame_to_ee_translation = -ref_frame_to_ee_rotation.apply(ee_to_ref_frame_translation)
-
-        target_coord_ee_frame = utils.change_reference_frame(target_coord,ref_frame_to_ee_translation,ref_frame_to_ee_quaternion)
-        target_polar = utils.cartesian_to_polar_3d(target_coord_ee_frame)
-
-        # Transform joint positions and joint velocities from ROS indexing to
-        # standard indexing
-        ur_j_pos = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
-        ur_j_vel = self.ur._ros_joint_list_to_ur_joint_list(rs_state[12:18])
-
-        # Normalize joint position values
-        ur_j_pos_norm = self.ur.normalize_joint_values(joints=ur_j_pos)
-
-        # start joint positions
-        start_joints = self.ur.normalize_joint_values(self._get_joint_positions())
-        delta_joints = ur_j_pos_norm - start_joints
-
-        # Compose environment state
-        state = np.concatenate((target_polar, ur_j_pos_norm, delta_joints))
-
-        return state
-
-    def _get_observation_space(self) -> gym.spaces.Box:
-        """Get environment observation space.
-
-        Returns:
-            gym.spaces: Gym observation space object.
-
-        """
-        # Joint position range tolerance
-        pos_tolerance = np.full(6,0.1)
-        # Joint positions range used to determine if there is an error in the sensor readings
-        max_joint_positions = np.add(np.full(6, 1.0), pos_tolerance)
-        min_joint_positions = np.subtract(np.full(6, -1.0), pos_tolerance)
-        # Target coordinates range
-        target_range = np.full(3, np.inf)
-        
-        max_delta_start_positions = np.add(np.full(6, 1.0), pos_tolerance)
-        min_delta_start_positions = np.subtract(np.full(6, -1.0), pos_tolerance)
-
-        # Definition of environment observation_space
-        max_obs = np.concatenate((target_range, max_joint_positions, max_delta_start_positions))
-        min_obs = np.concatenate((-target_range, min_joint_positions, min_delta_start_positions))
-
-        return gym.spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
 
 class MovingBoxTargetUR5Sim(MovingBoxTargetUR5, Simulation):
     cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \

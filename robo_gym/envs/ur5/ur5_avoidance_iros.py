@@ -27,8 +27,8 @@ MINIMUM_DISTANCE = 0.45 # the distance [cm] the robot should keep to the obstacl
 class IrosEnv03UR5Training(UR5BaseAvoidanceEnv):
     max_episode_steps = 1000
 
-    def __init__(self, rs_address=None, **kwargs) -> None:
-        super().__init__(rs_address, **kwargs)
+    def __init__(self, rs_address=None, fix_base=False, fix_shoulder=False, fix_elbow=False, fix_wrist_1=False, fix_wrist_2=False, fix_wrist_3=True, include_polar_to_elbow=True, **kwargs) -> None:
+        super().__init__(rs_address, fix_base, fix_shoulder, fix_elbow, fix_wrist_1, fix_wrist_2, fix_wrist_3, include_polar_to_elbow)
 
         file_name = 'trajectory_iros_2021.json'
         file_path = os.path.join(os.path.dirname(__file__), 'robot_trajectories', file_name)
@@ -93,27 +93,6 @@ class IrosEnv03UR5Training(UR5BaseAvoidanceEnv):
             self.target_reached = 0
 
         return self.state, reward, done, info
-
-    # TODO: once we use a dictonary to handle the rs state this method should be redone
-    def print_state_action_info(self, rs_state, action) -> None:
-        env_state = self._robot_server_state_to_env_state(rs_state)
-
-        print('Action:', action)
-        print('Last A:', self.last_action)
-        print('Distance EE: {:.2f} Polar1: {:.2f} Polar2: {:.2f}'.format(env_state[0], env_state[1], env_state[2]))
-        print('Distance Elbow: {:.2f} Polar1: {:.2f} Polar2: {:.2f}'.format(env_state[-6], env_state[-5], env_state[-4]))
-        print('Elbow Cartesian: x={:.2f}, y={:.2f}, z={:.2f}'.format(env_state[-3], env_state[-2], env_state[-1]))
-        
-        print('Joint Positions: [1]:{:.2f} [2]:{:.2f} [3]:{:.2f} [4]:{:.2f} [5]:{:.2f} [6]:{:.2f}'.format(*env_state[3:9]))
-        print('Joint PosDeltas: [1]:{:.2f} [2]:{:.2f} [3]:{:.2f} [4]:{:.2f} [5]:{:.2f} [6]:{:.2f}'.format(*env_state[9:15]))
-        print('Current Desired: [1]:{:.2f} [2]:{:.2f} [3]:{:.2f} [4]:{:.2f} [5]:{:.2f} [6]:{:.2f}'.format(*env_state[15:21]))
-        print('Is current disred a target?', env_state[21])
-        print('Targets reached', self.target_reached_counter)
-
-        print('Target Reached: {}'.format(self.target_reached))
-        print('State number: {}'.format(self.state_n))
-
-        print()
 
 
     def _reward(self, rs_state, action) -> Tuple[float, bool, dict]:
@@ -189,9 +168,9 @@ class IrosEnv03UR5Training(UR5BaseAvoidanceEnv):
             info['targets_reached'] = self.target_reached_counter
             info['obstacle_coords'] = self.obstacle_coords
 
-        if DEBUG: 
-            self.print_state_action_info(rs_state, action)
-            print('Distance 1: {:.2f} Distance 2: {:.2f}'.format(distance_to_ee, distance_to_elbow))
+        # if DEBUG: 
+        #     self.print_state_action_info(rs_state, action)
+        #     print('Distance 1: {:.2f} Distance 2: {:.2f}'.format(distance_to_ee, distance_to_elbow))
 
         return reward, done, info
 
@@ -205,63 +184,12 @@ class IrosEnv03UR5Training(UR5BaseAvoidanceEnv):
             numpy.array: State in environment format.
 
         """
-        # Convert to numpy array and remove NaN values
-        rs_state = np.nan_to_num(np.array(rs_state))
+        state = super()._robot_server_state_to_env_state(rs_state)
 
-        # Transform cartesian coordinates of target to polar coordinates 
-        # with respect to the end effector frame
-        target_coord = rs_state[0:3]
-        
-        ee_to_ref_frame_translation = np.array(rs_state[18:21])
-        ee_to_ref_frame_quaternion = np.array(rs_state[21:25])
-        ee_to_ref_frame_rotation = R.from_quat(ee_to_ref_frame_quaternion)
-        ref_frame_to_ee_rotation = ee_to_ref_frame_rotation.inv()
-        # to invert the homogeneous transformation
-        # R' = R^-1
-        ref_frame_to_ee_quaternion = ref_frame_to_ee_rotation.as_quat()
-        # t' = - R^-1 * t
-        ref_frame_to_ee_translation = -ref_frame_to_ee_rotation.apply(ee_to_ref_frame_translation)
-
-        target_coord_ee_frame = utils.change_reference_frame(target_coord,ref_frame_to_ee_translation,ref_frame_to_ee_quaternion)
-        target_polar = utils.cartesian_to_polar_3d(target_coord_ee_frame)
-
-        # Transform joint positions and joint velocities from ROS indexing to
-        # standard indexing
-        ur_j_pos = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
-        #ur_j_vel = self.ur._ros_joint_list_to_ur_joint_list(rs_state[12:18])
-
-        # Normalize joint position values
-        ur_j_pos_norm = self.ur.normalize_joint_values(joints=ur_j_pos)
-
-        # desired joint positions
         desired_joints = self.ur.normalize_joint_values(self._get_joint_positions())
-        delta_joints = ur_j_pos_norm - desired_joints
         target_point_flag = copy.deepcopy(self.target_point_flag)
 
-        # Transform cartesian coordinates of target to polar coordinates 
-        # with respect to the forearm
-
-        forearm_to_ref_frame_translation = rs_state[26:29]
-        forearm_to_ref_frame_quaternion = rs_state[29:33]
-        forearm_to_ref_frame_rotation = R.from_quat(forearm_to_ref_frame_quaternion)
-        ref_frame_to_forearm_rotation = forearm_to_ref_frame_rotation.inv()
-        # to invert the homogeneous transformation
-        # R' = R^-1
-        ref_frame_to_forearm_quaternion = ref_frame_to_forearm_rotation.as_quat()
-        # t' = - R^-1 * t
-        ref_frame_to_forearm_translation = -ref_frame_to_forearm_rotation.apply(forearm_to_ref_frame_translation)
-
-        target_coord_forearm_frame = utils.change_reference_frame(target_coord,ref_frame_to_forearm_translation,ref_frame_to_forearm_quaternion)
-        target_polar_forearm = utils.cartesian_to_polar_3d(target_coord_forearm_frame)
-
-        if DEBUG:
-            print('Object coords in ref frame', target_coord)
-            print('Object coords in ee frame', target_coord_ee_frame)
-            print('Object polar coords in ee frame', target_polar)
-            print('Object coords in forearm frame', target_coord_forearm_frame)
-            print('Object polar coords in forearm frame', target_polar_forearm)
-        # Compose environment state
-        state = np.concatenate((target_polar, ur_j_pos_norm, delta_joints, desired_joints, [target_point_flag], target_polar_forearm))
+        state = np.concatenate((state, desired_joints, [target_point_flag]))
 
         return state
 
@@ -287,10 +215,14 @@ class IrosEnv03UR5Training(UR5BaseAvoidanceEnv):
 
         # Target coordinates (with respect to forearm frame) range
         target_forearm_range = np.full(3, np.inf)
-
+        
         # Definition of environment observation_space
-        max_obs = np.concatenate((target_range, max_joint_positions, max_delta_start_positions, max_joint_positions, [1], target_forearm_range))
-        min_obs = np.concatenate((-target_range, min_joint_positions, min_delta_start_positions, min_joint_positions, [0], -target_forearm_range))
+        if self.include_polar_to_elbow:
+            max_obs = np.concatenate((target_range, max_joint_positions, max_delta_start_positions, target_forearm_range, max_joint_positions, [1]))
+            min_obs = np.concatenate((-target_range, min_joint_positions, min_delta_start_positions, -target_forearm_range, min_joint_positions, [0]))
+        else:
+            max_obs = np.concatenate((target_range, max_joint_positions, max_delta_start_positions, max_joint_positions, [1]))
+            min_obs = np.concatenate((-target_range, min_joint_positions, min_delta_start_positions, min_joint_positions, [0]))
 
         return gym.spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
 
