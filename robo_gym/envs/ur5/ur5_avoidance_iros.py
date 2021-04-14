@@ -23,7 +23,6 @@ from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_p
 from typing import Tuple
 
 DEBUG = True
-DOF = 5 # degrees of freedom the robotic arm can use [5, 6]
 MINIMUM_DISTANCE = 0.45 # the distance [cm] the robot should keep to the obstacle
 
 class IrosEnv03UR5Training(UR5BaseEnv):
