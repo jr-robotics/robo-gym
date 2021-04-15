@@ -320,7 +320,8 @@ class UR5BaseEnv(gym.Env):
 
 # TODO: remove object target
 class EmptyEnvironmentUR5Sim(UR5BaseEnv, Simulation):
-    cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
+    cmd = "roslaunch ur_robot_server ur_robot_server.launch \
+        ur_model:=ur5 \
         world_name:=tabletop_sphere50.world \
         yaw:=-0.78 \
         reference_frame:=base_link \

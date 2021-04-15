@@ -216,7 +216,7 @@ class EndEffectorPositioningUR5(UR5BaseEnv):
         return reward, done, info
         
 class EndEffectorPositioningUR5Sim(EndEffectorPositioningUR5, Simulation):
-    cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
+    cmd = "roslaunch ur_robot_server ur_robot_server.launch \
         ur_model:=ur5 \
         world_name:=tabletop_sphere50.world \
         yaw:=-0.78 \
