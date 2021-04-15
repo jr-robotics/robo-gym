@@ -9,9 +9,10 @@ services:
 
   robo-gym:
     container_name: robo-gym
-    build:
-      context: .
-      dockerfile: Dockerfile
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
+    image: robo-gym
     restart: always
     entrypoint: tail -f /dev/null
     depends_on:

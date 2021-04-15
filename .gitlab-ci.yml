@@ -1,17 +1,62 @@
 stages:
+  - build
   - test
   - deploy
 
 variables:
   ROBOT_SERVERS_IMAGE: "robotics-git.joanneum.at:4567/robo-gym/robot-servers/develop:latest"
 
-echo_robot_server_image:
-  stage: test
-  script:
-    - echo "$ROBOT_SERVERS_IMAGE"  
-  
+before_script:
+  # docker login asks for the password to be passed through stdin for security
+  # we use $CI_JOB_TOKEN here which is a special token provided by GitLab
+  - echo -n $CI_JOB_TOKEN | docker login -u gitlab-ci-token --password-stdin $CI_REGISTRY
 
-test_environments:
+.build_robo-gym_image: &build_robo-gym_image_def
+  image: docker:18.09
+  services:
+    - docker:18.09-dind
+  tags:
+    - docker-executor
+  stage: build
+  script:
+    # fetch the latest image (not failing if image is not found)
+    - docker pull $CI_REGISTRY_IMAGE:latest || true
+    - >
+      docker build
+      --pull
+      --cache-from $CI_REGISTRY_IMAGE:latest
+      --tag $CI_REGISTRY_IMAGE:$PYTHON_VER-$CI_COMMIT_SHA
+      --build-arg PYTHON_VER=$PYTHON_VER
+      --build-arg CACHEBUST=$CI_COMMIT_SHA
+      .
+    - docker push $CI_REGISTRY_IMAGE:$PYTHON_VER-$CI_COMMIT_SHA
+
+build_robo-gym_image_py36:
+  <<: *build_robo-gym_image_def
+  variables:
+      PYTHON_VER: "3.6"
+
+build_robo-gym_image_py37:
+  <<: *build_robo-gym_image_def
+  variables:
+      PYTHON_VER: "3.7"
+  only:
+    - schedules
+
+build_robo-gym_image_py38:
+  <<: *build_robo-gym_image_def
+  variables:
+      PYTHON_VER: "3.8"
+  only:
+    - schedules
+build_robo-gym_image_py39:
+  <<: *build_robo-gym_image_def
+  variables:
+      PYTHON_VER: "3.9"
+  only:
+    - schedules
+
+.test_environments: &test_environments_def
   image: docker:18.09
   before_script:
   - apk add docker-compose
@@ -21,88 +66,67 @@ test_environments:
     - docker-executor
   stage: test
   script:
-    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
+    - echo "Python Version:$PYTHON_VER Robot Servers image:$ROBOT_SERVERS_IMAGE"  
+    - echo -n $CI_JOB_TOKEN | docker login -u gitlab-ci-token --password-stdin $CI_REGISTRY
+    - docker pull $CI_REGISTRY_IMAGE:$PYTHON_VER-$CI_COMMIT_SHA
+    - docker tag $CI_REGISTRY_IMAGE:$PYTHON_VER-$CI_COMMIT_SHA robo-gym
     - docker pull $ROBOT_SERVERS_IMAGE
     - docker tag $ROBOT_SERVERS_IMAGE robot-servers
     - docker-compose -f docker-compose-test-melodic.yml up -d
-    - docker exec robo-gym pytest
+    - docker exec robo-gym pytest -x
     - docker-compose -f docker-compose-test-melodic.yml down
+
+test_environments_py36:
+  <<: *test_environments_def
+  variables:
+      PYTHON_VER: "3.6"
   except:
     - /^capsize.*$/
-  
-test_environments_with_master:
-  image: docker:18.09
-  before_script:
-  - apk add docker-compose
-  services:
-    - docker:18.09-dind
-  tags:
-    - docker-executor
-  stage: test
-  script:
-    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
-    - docker pull robotics-git.joanneum.at:4567/robo-gym/robot-servers/master:latest
-    - docker tag robotics-git.joanneum.at:4567/robo-gym/robot-servers/master:latest robot-servers
-    - docker-compose -f docker-compose-test-melodic.yml up -d
-    - docker exec robo-gym pytest -x
-    - docker-compose -f docker-compose-test-melodic.yml down
+
+test_environments_py37:
+  <<: *test_environments_def
+  variables:
+      PYTHON_VER: "3.7"
+  only:
+    - schedules
+
+test_environments_py38:
+  <<: *test_environments_def
+  variables:
+      PYTHON_VER: "3.8"
+  only:
+    - schedules
+
+test_environments_py39:
+  <<: *test_environments_def
+  variables:
+      PYTHON_VER: "3.9"
+  only:
+    - schedules
+
+test_environments_py36_with_rs_master:
+  <<: *test_environments_def
+  variables:
+      PYTHON_VER: "3.6"
+      ROBOT_SERVERS_IMAGE: "robotics-git.joanneum.at:4567/robo-gym/robot-servers/master:latest"
   only:
     - master
-
-test_environments_with_rs_manual_deploy:
-  image: docker:18.09
-  before_script:
-  - apk add docker-compose
-  services:
-    - docker:18.09-dind
-  tags:
-    - docker-executor
-  stage: test
-  script:
-    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
-    - docker pull robotics-git.joanneum.at:4567/robo-gym/robot-servers/manual_deploy:latest
-    - docker tag robotics-git.joanneum.at:4567/robo-gym/robot-servers/manual_deploy:latest robot-servers
-    - docker-compose -f docker-compose-test-melodic.yml up -d
-    - docker exec robo-gym pytest -x
-    - docker-compose -f docker-compose-test-melodic.yml down
+  
+test_environments_py36_with_rs_manual_deploy:
+  <<: *test_environments_def
+  variables:
+      PYTHON_VER: "3.6"
+      ROBOT_SERVERS_IMAGE: "robotics-git.joanneum.at:4567/robo-gym/robot-servers/manual_deploy:latest"
   when: manual
 
-capsize_test_environments_with_rs_master:
-  image: docker:18.09
-  before_script:
-  - apk add docker-compose
-  services:
-    - docker:18.09-dind
-  tags:
-    - docker-executor
-  stage: test
-  script:
-    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
-    - docker pull robotics-git.joanneum.at:4567/robo-gym/robot-servers/capsize_master:latest
-    - docker tag robotics-git.joanneum.at:4567/robo-gym/robot-servers/capsize_master:latest robot-servers
-    - docker-compose -f docker-compose-test-melodic.yml up -d
-    - docker exec robo-gym pytest -x
-    - docker-compose -f docker-compose-test-melodic.yml down
+capsize_test_environments_py36_with_rs_master:
+  <<: *test_environments_def
+  variables:
+      PYTHON_VER: "3.6"
+      ROBOT_SERVERS_IMAGE: "robotics-git.joanneum.at:4567/robo-gym/robot-servers/capsize_master:latest"
   only:
     - /^capsize.*$/
 
-capsize_test_environments_with_rs_develop:
-  image: docker:18.09
-  before_script:
-  - apk add docker-compose
-  services:
-    - docker:18.09-dind
-  tags:
-    - docker-executor
-  stage: test
-  script:
-    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
-    - docker pull robotics-git.joanneum.at:4567/robo-gym/robot-servers/capsize_develop:latest
-    - docker tag robotics-git.joanneum.at:4567/robo-gym/robot-servers/capsize_develop:latest robot-servers
-    - docker-compose -f docker-compose-test-melodic.yml up -d
-    - docker exec robo-gym pytest -x
-    - docker-compose -f docker-compose-test-melodic.yml down
-  when: manual
 
 deploy_production:
   image: python:3.6-slim-buster
