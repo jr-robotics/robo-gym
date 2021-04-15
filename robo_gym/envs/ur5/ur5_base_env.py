@@ -37,8 +37,8 @@ class UR5BaseEnv(gym.Env):
     real_robot = False
     max_episode_steps = 300
 
-    def __init__(self, rs_address=None, fix_base=False, fix_shoulder=False, fix_elbow=False, fix_wrist_1=False, fix_wrist_2=False, fix_wrist_3=True, **kwargs):
-        self.ur = ur_utils.UR(model="ur5")
+    def __init__(self, rs_address=None, ur_model='ur5', fix_base=False, fix_shoulder=False, fix_elbow=False, fix_wrist_1=False, fix_wrist_2=False, fix_wrist_3=True, **kwargs):
+        self.ur = ur_utils.UR(model=ur_model)
         self.elapsed_steps = 0
 
         self.fix_base = fix_base
@@ -321,7 +321,6 @@ class UR5BaseEnv(gym.Env):
 # TODO: remove object target
 class EmptyEnvironmentUR5Sim(UR5BaseEnv, Simulation):
     cmd = "roslaunch ur_robot_server ur_robot_server.launch \
-        ur_model:=ur5 \
         world_name:=tabletop_sphere50.world \
         yaw:=-0.78 \
         reference_frame:=base_link \
@@ -334,9 +333,11 @@ class EmptyEnvironmentUR5Sim(UR5BaseEnv, Simulation):
         n_objects:=1.0 \
         object_0_model_name:=sphere50 \
         object_0_frame:=target"
-    def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
+    def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, ur_model='ur5', **kwargs):
+        self.cmd = self.cmd + ' ' + 'ur_model:=' + ur_model
+        print(self.cmd)
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
-        UR5BaseEnv.__init__(self, rs_address=self.robot_server_ip, **kwargs)
+        UR5BaseEnv.__init__(self, rs_address=self.robot_server_ip, ur_model=ur_model, **kwargs)
 
 class EmptyEnvironmentUR5Rob(UR5BaseEnv):
     real_robot = True
