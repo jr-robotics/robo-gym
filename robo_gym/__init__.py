@@ -25,6 +25,16 @@ register(
 
 # UR5 Environments
 register(
+    id='EmptyEnvironmentUR5Sim-v0',
+    entry_point='robo_gym.envs:EmptyEnvironmentUR5Sim',
+)
+
+register(
+    id='EmptyEnvironmentUR5Rob-v0',
+    entry_point='robo_gym.envs:EmptyEnvironmentUR5Rob',
+)
+
+register(
     id='EndEffectorPositioningUR5Sim-v0',
     entry_point='robo_gym.envs:EndEffectorPositioningUR5Sim',
 )

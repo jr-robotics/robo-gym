@@ -1,18 +1,23 @@
 #!/usr/bin/env python3
 
-from copy import deepcopy
-import sys, math, copy, random
+
+import copy
 import numpy as np
-from scipy.spatial.transform import Rotation as R
 import gym
-from gym import spaces
 from gym.utils import seeding
+from scipy.spatial.transform import Rotation as R
+
 from robo_gym.utils import utils, ur_utils
 from robo_gym.utils.exceptions import InvalidStateError, RobotServerError, InvalidActionError
 import robo_gym_server_modules.robot_server.client as rs_client
 from robo_gym.envs.simulation_wrapper import Simulation
 from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
+from typing import Tuple
 
+
+# TODO: remove env state len function is not used anywhere
+
+JOINT_POSITIONS = [0.0, -2.5, 1.5, 0, -1.4, 0]
 class UR5BaseEnv(gym.Env):
     """Universal Robots UR5 base environment.
 
@@ -32,17 +37,22 @@ class UR5BaseEnv(gym.Env):
     real_robot = False
     max_episode_steps = 300
 
-    def __init__(self, rs_address=None, fix_wrist3=True, **kwargs):
+    def __init__(self, rs_address=None, fix_base=False, fix_shoulder=False, fix_elbow=False, fix_wrist_1=False, fix_wrist_2=False, fix_wrist_3=True, **kwargs):
         self.ur = ur_utils.UR(model="ur5")
         self.elapsed_steps = 0
-        self.fix_wrist3 = fix_wrist3
+
+        self.fix_base = fix_base
+        self.fix_shoulder = fix_shoulder
+        self.fix_elbow = fix_elbow
+        self.fix_wrist_1 = fix_wrist_1
+        self.fix_wrist_2 = fix_wrist_2
+        self.fix_wrist_3 = fix_wrist_3
+
         self.observation_space = self._get_observation_space()
         self.action_space = self._get_action_space()
         self.seed()
         self.distance_threshold = 0.1
         self.abs_joint_pos_range = self.ur.get_max_joint_positions()
-        self.last_position_on_success = []
-        self.prev_rs_state = None
         self.last_action = None
         
         # Connect to Robot Server
@@ -56,55 +66,42 @@ class UR5BaseEnv(gym.Env):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
-    def reset(self, initial_joint_positions = None, ee_target_pose = None, type='continue'):
+    def _set_initial_robot_server_state(self, rs_state):
+        string_params = {}
+        float_params = {}
+
+        state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
+        return state_msg
+
+    def reset(self, joint_positions = None):
         """Environment reset.
 
         Args:
-            initial_joint_positions (list[6] or np.array[6]): robot joint positions in radians.
+            joint_positions (list[6] or np.array[6]): robot joint positions in radians.
             ee_target_pose (list[6] or np.array[6]): [x,y,z,r,p,y] target end effector pose.
-            type (random or continue):
-                random: reset at a random position within the range defined in _set_initial_joint_positions_range
-                continue: if the episode terminated with success the robot starts the next episode from this location, otherwise it starts at a random position
-
+        
         Returns:
             np.array: Environment state.
 
         """
         self.elapsed_steps = 0
 
-        self.last_action = None
-        self.prev_base_reward = None
-
         # Initialize environment state
         self.state = np.zeros(self._get_env_state_len())
         rs_state = np.zeros(self._get_robot_server_state_len())
-        
+
         # Set initial robot joint positions
-        if initial_joint_positions:
-            assert len(initial_joint_positions) == 6
-            self.initial_joint_positions = initial_joint_positions
-        elif (len(self.last_position_on_success) != 0) and (type=='continue'):
-            self.initial_joint_positions = self.last_position_on_success
+        if joint_positions:
+            assert len(joint_positions) == 6
+            self.joint_positions = joint_positions
         else:
-            self.initial_joint_positions = self._get_desired_joint_positions()
+            self._set_joint_positions(JOINT_POSITIONS)
 
-        rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self.initial_joint_positions)
-
-        # Set target End Effector pose
-        if ee_target_pose:
-            assert len(ee_target_pose) == 6
-        else:
-            ee_target_pose = self._get_target_pose()
+        rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self.joint_positions)
 
         # Set initial state of the Robot Server
-
-        # Object in a fixed position
-        string_params = {"object_0_function": "fixed_position"}
-        float_params = {"object_0_x": ee_target_pose[0], 
-                        "object_0_y": ee_target_pose[1], 
-                        "object_0_z": ee_target_pose[2]}
+        state_msg = self._set_initial_robot_server_state(rs_state)
         
-        state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
         if not self.client.set_state_msg(state_msg):
             raise RobotServerError("set_state")
 
@@ -123,34 +120,72 @@ class UR5BaseEnv(gym.Env):
         if not self.observation_space.contains(self.state):
             raise InvalidStateError()
         
-        # check if current position is in the range of the initial joint positions
-        if (len(self.last_position_on_success) == 0) or (type=='random'):
-            joint_positions = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
-            if not np.isclose(joint_positions, self.initial_joint_positions, atol=0.1).all():
-                raise InvalidStateError('Reset joint positions are not within defined range')
+        # Check if current position is in the range of the initial joint positions
+        joint_positions = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
+        if not np.isclose(joint_positions, self.joint_positions, atol=0.1).all():
+            raise InvalidStateError('Reset joint positions are not within defined range')
             
         return self.state
 
     def _reward(self, rs_state, action):
-        return 0, False, {}
+        done = False
+        info = {}
 
-    def step(self, action):
+        # Check if robot is in collision
+        collision = True if rs_state[25] == 1 else False
+        if collision:
+            done = True
+            info['final_status'] = 'collision'
+
+        if self.elapsed_steps >= self.max_episode_steps:
+            done = True
+            info['final_status'] = 'success'
+            
+        
+        return 0, done, info
+
+    def add_fixed_joints(self, action) -> np.array:
+        action = action.tolist()
+        fixed_joints = np.array([self.fix_base, self.fix_shoulder, self.fix_elbow, self.fix_wrist_1, self.fix_wrist_2, self.fix_wrist_3])
+        fixed_joint_indices = np.where(fixed_joints)[0]
+
+        joints_position_norm = self.ur.normalize_joint_values(joints=self._get_joint_positions())
+
+        temp = []
+        for joint in range(len(fixed_joints)):
+            if joint in fixed_joint_indices:
+                temp.append(joints_position_norm[joint])
+            else:
+                temp.append(action.pop(0))
+        return np.array(temp)
+
+    def env_action_to_rs_action(self, action) -> np.array:
+        """Convert environment action to Robot Server action"""
+        action = self.add_fixed_joints(action)
+        rs_action = copy.deepcopy(action)
+
+        # Scale action
+        rs_action = np.multiply(rs_action, self.abs_joint_pos_range)
+        # Convert action indexing from ur to ros
+        rs_action = self.ur._ur_joint_list_to_ros_joint_list(rs_action)
+
+        return action, rs_action        
+
+    def step(self, action) -> Tuple[np.array, float, bool, dict]:
+        if type(action) == list: action = np.array(action)
+            
         self.elapsed_steps += 1
 
         # Check if the action is contained in the action space
         if not self.action_space.contains(action):
             raise InvalidActionError()
-        # If fix_wrist3 append 0.0 to environment action 
-        if self.fix_wrist3:
-            action = np.append(action, [0.0])
-        # Convert environment action to Robot Server action
-        rs_action = copy.deepcopy(action)
-        # Scale action
-        rs_action = np.multiply(rs_action, self.abs_joint_pos_range)
-        # Convert action indexing from ur to ros
-        rs_action = self.ur._ur_joint_list_to_ros_joint_list(rs_action)
+
+        # Convert environment action to robot server action
+        action, rs_action = self.env_action_to_rs_action(action)
+
         # Send action to Robot Server and get state
         rs_state = self.client.send_action_get_state(rs_action.tolist()).state
+        
         # Convert the state from Robot Server format to environment format
         self.state = self._robot_server_state_to_env_state(rs_state)
 
@@ -162,7 +197,6 @@ class UR5BaseEnv(gym.Env):
         reward = 0
         done = False
         reward, done, info = self._reward(rs_state=rs_state, action=action)
-        self.last_action = action
 
         return self.state, reward, done, info
 
@@ -179,7 +213,7 @@ class UR5BaseEnv(gym.Env):
             int: Length of the Robot Server state.
 
         """
-
+        #TODO: remove target from rs state
         target = [0.0]*6
         ur_j_pos = [0.0]*6
         ur_j_vel = [0.0]*6
@@ -199,26 +233,21 @@ class UR5BaseEnv(gym.Env):
             int: Length of the environment state
 
         """
-
-        target_polar = [0.0]*3
         ur_j_pos = [0.0]*6
         ur_j_vel = [0.0]*6
-        env_state = target_polar + ur_j_pos + ur_j_vel
+        env_state = ur_j_pos + ur_j_vel
 
         return len(env_state)
 
-    def _get_desired_joint_positions(self):
-        """Generate random desired robot joint positions.
+    def _set_joint_positions(self, joint_positions) -> None:
+        """Set desired robot joint positions with standard indexing."""
+        assert len(joint_positions) == 6
+        self.joint_positions = copy.deepcopy(joint_positions)
+    def _get_joint_positions(self) -> np.array:
+        """Get robot joint positions with standard indexing."""
+        return np.array(self.joint_positions)
 
-        Returns:
-            np.array: Joint positions with standard indexing.
-
-        """
-        # Random desired joint positions
-        joint_positions = np.random.default_rng().uniform(low=np.array([-0.65, -2.75, 1.0, -3.14, -1.7, -3.14]), high=np.array([0.65, -2.0, 2.5, 3.14, -1.0, 3.14]))
-
-        return joint_positions
-
+    # ? move to ee env
     def _get_target_pose(self):
         """Generate target End Effector pose.
 
@@ -226,7 +255,6 @@ class UR5BaseEnv(gym.Env):
             np.array: [x,y,z,alpha,theta,gamma] pose.
 
         """
-
         return self.ur.get_random_workspace_pose()
 
     def _robot_server_state_to_env_state(self, rs_state):
@@ -242,23 +270,6 @@ class UR5BaseEnv(gym.Env):
         # Convert to numpy array and remove NaN values
         rs_state = np.nan_to_num(np.array(rs_state))
 
-        # Transform cartesian coordinates of target to polar coordinates 
-        # with respect to the end effector frame
-        target_coord = rs_state[0:3]
-        
-        ee_to_ref_frame_translation = np.array(rs_state[18:21])
-        ee_to_ref_frame_quaternion = np.array(rs_state[21:25])
-        ee_to_ref_frame_rotation = R.from_quat(ee_to_ref_frame_quaternion)
-        ref_frame_to_ee_rotation = ee_to_ref_frame_rotation.inv()
-        # to invert the homogeneous transformation
-        # R' = R^-1
-        ref_frame_to_ee_quaternion = ref_frame_to_ee_rotation.as_quat()
-        # t' = - R^-1 * t
-        ref_frame_to_ee_translation = -ref_frame_to_ee_rotation.apply(ee_to_ref_frame_translation)
-
-        target_coord_ee_frame = utils.change_reference_frame(target_coord,ref_frame_to_ee_translation,ref_frame_to_ee_quaternion)
-        target_polar = utils.cartesian_to_polar_3d(target_coord_ee_frame)
-
         # Transform joint positions and joint velocities from ROS indexing to
         # standard indexing
         ur_j_pos = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
@@ -268,47 +279,65 @@ class UR5BaseEnv(gym.Env):
         ur_j_pos_norm = self.ur.normalize_joint_values(joints=ur_j_pos)
 
         # Compose environment state
-        state = np.concatenate((target_polar, ur_j_pos_norm, ur_j_vel))
+        state = np.concatenate((ur_j_pos_norm, ur_j_vel))
 
         return state
 
-    def _get_observation_space(self):
+    def _get_observation_space(self) -> gym.spaces.Box:
         """Get environment observation space.
 
         Returns:
             gym.spaces: Gym observation space object.
 
         """
-
         # Joint position range tolerance
         pos_tolerance = np.full(6,0.1)
+
         # Joint positions range used to determine if there is an error in the sensor readings
         max_joint_positions = np.add(np.full(6, 1.0), pos_tolerance)
         min_joint_positions = np.subtract(np.full(6, -1.0), pos_tolerance)
-        # Target coordinates range
-        target_range = np.full(3, np.inf)
         # Joint velocities range 
         max_joint_velocities = np.array([np.inf] * 6)
-        min_joint_velocities = - np.array([np.inf] * 6)
+        min_joint_velocities = -np.array([np.inf] * 6)
         # Definition of environment observation_space
-        max_obs = np.concatenate((target_range, max_joint_positions, max_joint_velocities))
-        min_obs = np.concatenate((-target_range, min_joint_positions, min_joint_velocities))
+        max_obs = np.concatenate((max_joint_positions, max_joint_velocities))
+        min_obs = np.concatenate((min_joint_positions, min_joint_velocities))
 
-        return spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
+        return gym.spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
     
-    def _get_action_space(self):
+    def _get_action_space(self)-> gym.spaces.Box:
         """Get environment action space.
 
         Returns:
             gym.spaces: Gym action space object.
 
         """
+        fixed_joints = [self.fix_base, self.fix_shoulder, self.fix_elbow, self.fix_wrist_1, self.fix_wrist_2, self.fix_wrist_3]
+        num_control_joints = len(fixed_joints) - sum(fixed_joints)
 
-        if self.fix_wrist3:
-            return spaces.Box(low=np.full((5), -1.0), high=np.full((5), 1.0), dtype=np.float32)
-        else:
-            return spaces.Box(low=np.full((6), -1.0), high=np.full((6), 1.0), dtype=np.float32)
-
+        return gym.spaces.Box(low=np.full((num_control_joints), -1.0), high=np.full((num_control_joints), 1.0), dtype=np.float32)
 
 
+# TODO: remove object target
+class EmptyEnvironmentUR5Sim(UR5BaseEnv, Simulation):
+    cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
+        world_name:=tabletop_sphere50.world \
+        yaw:=-0.78 \
+        reference_frame:=base_link \
+        max_velocity_scale_factor:=0.2 \
+        action_cycle_rate:=20 \
+        rviz_gui:=false \
+        gazebo_gui:=true \
+        objects_controller:=true \
+        target_mode:=1object \
+        n_objects:=1.0 \
+        object_0_model_name:=sphere50 \
+        object_0_frame:=target"
+    def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
+        Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
+        UR5BaseEnv.__init__(self, rs_address=self.robot_server_ip, **kwargs)
 
+class EmptyEnvironmentUR5Rob(UR5BaseEnv):
+    real_robot = True
+
+# roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=moving
