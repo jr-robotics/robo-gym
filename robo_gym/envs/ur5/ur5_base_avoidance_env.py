@@ -31,9 +31,9 @@ class UR5BaseAvoidanceEnv(UR5BaseEnv):
         real_robot (bool): True if the environment is controlling a real robot.
 
     """
-    def __init__(self, rs_address=None, fix_base=False, fix_shoulder=False, fix_elbow=False, fix_wrist_1=False, fix_wrist_2=False, fix_wrist_3=True, include_polar_to_elbow=False, **kwargs):
+    def __init__(self, rs_address=None, ur_model='ur5', fix_base=False, fix_shoulder=False, fix_elbow=False, fix_wrist_1=False, fix_wrist_2=False, fix_wrist_3=True, include_polar_to_elbow=False, **kwargs):
         self.include_polar_to_elbow = include_polar_to_elbow
-        super().__init__(rs_address, fix_base, fix_shoulder, fix_elbow, fix_wrist_1, fix_wrist_2, fix_wrist_3)
+        super().__init__(rs_address, ur_model, fix_base, fix_shoulder, fix_elbow, fix_wrist_1, fix_wrist_2, fix_wrist_3)
         
 
 
