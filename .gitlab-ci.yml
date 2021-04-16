@@ -56,7 +56,29 @@ build_robo-gym_image_py39:
   only:
     - schedules
 
-.test_environments: &test_environments_def
+test_environments:
+  image: docker:18.09
+  before_script:
+  - apk add docker-compose
+  services:
+    - docker:18.09-dind
+  tags:
+    - docker-executor
+  stage: test
+  variables:
+      PYTHON_VER: "3.6"
+  script:
+    - echo "Python Version:$PYTHON_VER Robot Servers image:$ROBOT_SERVERS_IMAGE"  
+    - echo -n $CI_JOB_TOKEN | docker login -u gitlab-ci-token --password-stdin $CI_REGISTRY
+    - docker pull $CI_REGISTRY_IMAGE:$PYTHON_VER-$CI_COMMIT_SHA
+    - docker tag $CI_REGISTRY_IMAGE:$PYTHON_VER-$CI_COMMIT_SHA robo-gym
+    - docker pull $ROBOT_SERVERS_IMAGE
+    - docker tag $ROBOT_SERVERS_IMAGE robot-servers
+    - docker-compose -f docker-compose-test-melodic.yml up -d
+    - docker exec robo-gym pytest -m "not nightly"
+    - docker-compose -f docker-compose-test-melodic.yml down
+
+.full_test_environments: &full_test_environments_def
   image: docker:18.09
   before_script:
   - apk add docker-compose
@@ -76,51 +98,51 @@ build_robo-gym_image_py39:
     - docker exec robo-gym pytest
     - docker-compose -f docker-compose-test-melodic.yml down
 
-test_environments_py36:
-  <<: *test_environments_def
+full_test_environments_py36:
+  <<: *full_test_environments_def
   variables:
       PYTHON_VER: "3.6"
-  except:
-    - /^capsize.*$/
+  only:
+    - schedules
 
-test_environments_py37:
-  <<: *test_environments_def
+full_test_environments_py37:
+  <<: *full_test_environments_def
   variables:
       PYTHON_VER: "3.7"
   only:
     - schedules
 
-test_environments_py38:
-  <<: *test_environments_def
+full_test_environments_py38:
+  <<: *full_test_environments_def
   variables:
       PYTHON_VER: "3.8"
   only:
     - schedules
 
-test_environments_py39:
-  <<: *test_environments_def
+full_test_environments_py39:
+  <<: *full_test_environments_def
   variables:
       PYTHON_VER: "3.9"
   only:
     - schedules
 
-test_environments_py36_with_rs_master:
-  <<: *test_environments_def
+full_test_environments_py36_with_rs_master:
+  <<: *full_test_environments_def
   variables:
       PYTHON_VER: "3.6"
       ROBOT_SERVERS_IMAGE: "robotics-git.joanneum.at:4567/robo-gym/robot-servers/master:latest"
   only:
     - master
   
-test_environments_py36_with_rs_manual_deploy:
-  <<: *test_environments_def
+full_test_environments_py36_with_rs_manual_deploy:
+  <<: *full_test_environments_def
   variables:
       PYTHON_VER: "3.6"
       ROBOT_SERVERS_IMAGE: "robotics-git.joanneum.at:4567/robo-gym/robot-servers/manual_deploy:latest"
   when: manual
 
-capsize_test_environments_py36_with_rs_master:
-  <<: *test_environments_def
+full_capsize_test_environments_py36_with_rs_master:
+  <<: *full_test_environments_def
   variables:
       PYTHON_VER: "3.6"
       ROBOT_SERVERS_IMAGE: "robotics-git.joanneum.at:4567/robo-gym/robot-servers/capsize_master:latest"
