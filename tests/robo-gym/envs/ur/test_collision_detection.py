@@ -6,13 +6,13 @@ import robo_gym
 from robo_gym.utils import ur_utils
 
 
-
+# TODO: add collisions tests for other ur models
 
 test_ur_collision = [
-    ('EmptyEnvironmentUR5Sim-v0', [0.0, -1.26, -3.14, 0.0, 0.0], 'ur5'), # self-collision
-    ('EmptyEnvironmentUR5Sim-v0', [0.0, 1.0, 1.8, 0.0, 0.0], 'ur5'), # collision with ground 
-    ('EndEffectorPositioningUR5Sim-v0', [0.0, -1.26, -3.14, 0.0, 0.0], 'ur5'), # self-collision
-    ('EndEffectorPositioningUR5Sim-v0', [0.0, 1.0, 1.8, 0.0, 0.0], 'ur5') # collision with ground 
+    ('EmptyEnvironmentURSim-v0', [0.0, -1.26, -3.14, 0.0, 0.0], 'ur5'), # self-collision
+    ('EmptyEnvironmentURSim-v0', [0.0, 1.0, 1.8, 0.0, 0.0], 'ur5'), # collision with ground 
+    ('EndEffectorPositioningURSim-v0', [0.0, -1.26, -3.14, 0.0, 0.0], 'ur5'), # self-collision
+    ('EndEffectorPositioningURSim-v0', [0.0, 1.0, 1.8, 0.0, 0.0], 'ur5') # collision with ground 
 #    ('EndEffectorPositioningUR10Sim-v0', [0.0, -1.5, 3.14, 0.0, 0.0, 0.0], 'ur10'), # self-collision
 #    ('EndEffectorPositioningUR10Sim-v0', [0.0, 1.0, 1.15, 0.0, 0.0, 0.0], 'ur10')  # collision with ground 
 
