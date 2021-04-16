@@ -1,4 +1,3 @@
-from os.path import join
 import numpy as np
 import gym
 import pytest
