@@ -14,8 +14,8 @@ robo_gym_path = pathlib.Path(__file__).parent.parent.parent.parent.parent.absolu
 
 
 test_robot_trajectory_iros_params = [
-    ('IrosEnv03URTrainingSim-v0', 'ur5', 'envs/ur5/robot_trajectories/trajectory_iros_2021.json'),
-    ('IrosEnv03URTestFixedSplinesSim-v0', 'ur5', 'envs/ur5/robot_trajectories/trajectory_iros_2021.json')
+    ('IrosEnv03URTrainingSim-v0', 'ur5', 'envs/ur/robot_trajectories/trajectory_iros_2021.json'),
+    ('IrosEnv03URTestFixedSplinesSim-v0', 'ur5', 'envs/ur/robot_trajectories/trajectory_iros_2021.json')
     ]
 
 
