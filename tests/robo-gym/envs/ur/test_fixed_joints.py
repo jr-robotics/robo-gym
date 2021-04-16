@@ -32,7 +32,7 @@ test_ur_fixed_joints = [
 
 ]
 
-
+@pytest.mark.nightly
 @pytest.mark.parametrize('env_name, fix_base, fix_shoulder, fix_elbow, fix_wrist_1, fix_wrist_2, fix_wrist_3, ur_model', test_ur_fixed_joints)
 @pytest.mark.flaky(reruns=3)
 def test_fixed_joints(env_name, fix_base, fix_shoulder, fix_elbow, fix_wrist_1, fix_wrist_2, fix_wrist_3, ur_model):
