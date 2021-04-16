@@ -5,11 +5,11 @@ import pytest
 
 
 envs = [
-    ('EmptyEnvironmentUR5Sim-v0', 'ur5'),
-    ('EndEffectorPositioningUR5Sim-v0', 'ur5'),
-    ('MovingBoxTargetUR5Sim-v0', 'ur5'),
-    ('IrosEnv03UR5TrainingSim-v0', 'ur5'),
-    ('IrosEnv03UR5TestFixedSplinesSim-v0', 'ur5')
+    ('EmptyEnvironmentURSim-v0', 'ur5'),
+    ('EndEffectorPositioningUR5im-v0', 'ur5'),
+    ('MovingBoxTargetURSim-v0', 'ur5'),
+    ('IrosEnv03URTrainingSim-v0', 'ur5'),
+    ('IrosEnv03URTestFixedSplinesSim-v0', 'ur5')
 ]
 
 
