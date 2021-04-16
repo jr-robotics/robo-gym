@@ -10,30 +10,40 @@ import math
 
 
 
-test_ur_fixed_wrist_3 = [
-    ('EmptyEnvironmentUR5Sim-v0', False, False, False, False, False, True, 'ur5'), # fixed wrist_3
-    ('EndEffectorPositioningUR5Sim-v0', False, False, False, False, False, True, 'ur5'), # fixed wrist_3
-    ('MovingBoxTargetUR5Sim-v0', False, False, False, False, False, True, 'ur5'), # fixed wrist_3
-    ('IrosEnv03UR5TrainingSim-v0', False, False, False, False, False, True, 'ur5'), # fixed wrist_3
-    ('IrosEnv03UR5TestFixedSplinesSim-v0', False, False, False, False, False, True, 'ur5'), # fixed wrist_3
-    ('EmptyEnvironmentUR5Sim-v0', True, False, True, False, False, False, 'ur5'), # fixed Base and Elbow
-    ('EndEffectorPositioningUR5Sim-v0', True, False, True, False, False, False, 'ur5'), # fixed Base and Elbow
-    ('MovingBoxTargetUR5Sim-v0', True, False, True, False, False, False, 'ur5'), # fixed Base and Elbow
-    ('IrosEnv03UR5TrainingSim-v0', True, False, True, False, False, False, 'ur5'), # fixed Base and Elbow
-    ('IrosEnv03UR5TestFixedSplinesSim-v0', True, False, True, False, False, False, 'ur5') # fixed Base and Elbow
+test_ur_fixed_joints = [
+    ('EmptyEnvironmentURSim-v0', False, False, False, False, False, True, 'ur5'), # fixed wrist_3
+    ('EndEffectorPositioningURSim-v0', False, False, False, False, False, True, 'ur5'), # fixed wrist_3
+    ('MovingBoxTargetURSim-v0', False, False, False, False, False, True, 'ur5'), # fixed wrist_3
+    ('IrosEnv03URTrainingSim-v0', False, False, False, False, False, True, 'ur5'), # fixed wrist_3
+    ('IrosEnv03URTestFixedSplinesSim-v0', False, False, False, False, False, True, 'ur5'), # fixed wrist_3
+
+    ('EmptyEnvironmentURSim-v0', True, False, True, False, False, False, 'ur5'), # fixed Base and Elbow
+    ('EndEffectorPositioningURSim-v0', True, False, True, False, False, False, 'ur5'), # fixed Base and Elbow
+    ('MovingBoxTargetURSim-v0', True, False, True, False, False, False, 'ur5'), # fixed Base and Elbow
+    ('IrosEnv03URTrainingSim-v0', True, False, True, False, False, False, 'ur5'), # fixed Base and Elbow
+    ('IrosEnv03URTestFixedSplinesSim-v0', True, False, True, False, False, False, 'ur5'), # fixed Base and Elbow
+
+    ('EmptyEnvironmentURSim-v0', False, False, False, False, False, True, 'ur10'), # fixed wrist_3
+    ('EndEffectorPositioningURSim-v0', False, False, False, False, False, True, 'ur10'), # fixed wrist_3
+    ('MovingBoxTargetURSim-v0', False, False, False, False, False, True, 'ur10'), # fixed wrist_3
+
+    ('EmptyEnvironmentURSim-v0', True, False, True, False, False, False, 'ur10'), # fixed Base and Elbow
+    ('EndEffectorPositioningURSim-v0', True, False, True, False, False, False, 'ur10'), # fixed Base and Elbow
+    ('MovingBoxTargetURSim-v0', True, False, True, False, False, False, 'ur10'), # fixed Base and Elbow
+
 ]
 
 
-@pytest.mark.parametrize('env_name, fix_base, fix_shoulder, fix_elbow, fix_wrist_1, fix_wrist_2, fix_wrist_3, ur_model', test_ur_fixed_wrist_3)
+@pytest.mark.parametrize('env_name, fix_base, fix_shoulder, fix_elbow, fix_wrist_1, fix_wrist_2, fix_wrist_3, ur_model', test_ur_fixed_joints)
 @pytest.mark.flaky(reruns=3)
 def test_fixed_joints(env_name, fix_base, fix_shoulder, fix_elbow, fix_wrist_1, fix_wrist_2, fix_wrist_3, ur_model):
     ur = ur_utils.UR(model=ur_model)
     env = gym.make(env_name, ip='robot-servers', fix_base=fix_base, fix_shoulder=fix_shoulder, fix_elbow=fix_elbow, 
-                                                fix_wrist_1=fix_wrist_1, fix_wrist_2=fix_wrist_2, fix_wrist_3=fix_wrist_3)
+                                                fix_wrist_1=fix_wrist_1, fix_wrist_2=fix_wrist_2, fix_wrist_3=fix_wrist_3, ur_model=ur_model)
     state = env.reset()
     
     initial_joint_positions = [0.0]*6
-    if env_name == 'EmptyEnvironmentUR5Sim-v0':
+    if env_name == 'EmptyEnvironmentURSim-v0':
         initial_joint_positions = state[0:6]
     else:
         initial_joint_positions = state[3:9]
@@ -44,7 +54,7 @@ def test_fixed_joints(env_name, fix_base, fix_shoulder, fix_elbow, fix_wrist_1, 
         state, _, _, _ = env.step(action)
     
     joint_positions = [0.0]*6
-    if env_name == 'EmptyEnvironmentUR5Sim-v0':
+    if env_name == 'EmptyEnvironmentURSim-v0':
         joint_positions = state[0:6]
     else:
         joint_positions = state[3:9]

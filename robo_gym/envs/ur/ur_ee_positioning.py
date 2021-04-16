@@ -7,11 +7,11 @@ from robo_gym.utils.exceptions import InvalidStateError, RobotServerError
 from robo_gym.envs.simulation_wrapper import Simulation
 from robo_gym.utils import utils, ur_utils
 from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
-from robo_gym.envs.ur5.ur5_base_env import UR5BaseEnv
+from robo_gym.envs.ur.ur_base_env import URBaseEnv
 
 JOINT_POSITIONS = [0.0, -2.5, 1.5, 0, -1.4, 0]
 RANDOM_JOINT_OFFSET = [0.65, 0.25, 0.5, 3.14, 0.4, 3.14]
-class EndEffectorPositioningUR5(UR5BaseEnv):
+class EndEffectorPositioningUR(URBaseEnv):
     def _get_observation_space(self) -> gym.spaces.Box:
         """Get environment observation space.
 
@@ -215,9 +215,8 @@ class EndEffectorPositioningUR5(UR5BaseEnv):
 
         return reward, done, info
         
-class EndEffectorPositioningUR5Sim(EndEffectorPositioningUR5, Simulation):
+class EndEffectorPositioningURSim(EndEffectorPositioningUR, Simulation):
     cmd = "roslaunch ur_robot_server ur_robot_server.launch \
-        ur_model:=ur5 \
         world_name:=tabletop_sphere50.world \
         yaw:=-0.78 \
         reference_frame:=base_link \
@@ -230,11 +229,12 @@ class EndEffectorPositioningUR5Sim(EndEffectorPositioningUR5, Simulation):
         n_objects:=1.0 \
         object_0_model_name:=sphere50 \
         object_0_frame:=target"
-    def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
+    def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, ur_model='ur5', **kwargs):
+        self.cmd = self.cmd + ' ' + 'ur_model:=' + ur_model
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
-        EndEffectorPositioningUR5.__init__(self, rs_address=self.robot_server_ip, **kwargs)
+        EndEffectorPositioningUR.__init__(self, rs_address=self.robot_server_ip, **kwargs)
 
-class EndEffectorPositioningUR5Rob(EndEffectorPositioningUR5):
+class EndEffectorPositioningURRob(EndEffectorPositioningUR):
     real_robot = True
 
 # roslaunch ur_robot_server ur_robot_server.launch ur_model:=ur5 real_robot:=true rviz_gui:=true gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=moving

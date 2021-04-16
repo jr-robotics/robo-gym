@@ -14,15 +14,15 @@ robo_gym_path = pathlib.Path(__file__).parent.parent.parent.parent.parent.absolu
 
 
 test_robot_trajectory_iros_params = [
-    ('IrosEnv03UR5TrainingSim-v0', 'ur5', 'envs/ur5/robot_trajectories/trajectory_iros_2021.json'),
-    ('IrosEnv03UR5TestFixedSplinesSim-v0', 'ur5', 'envs/ur5/robot_trajectories/trajectory_iros_2021.json')
+    ('IrosEnv03URTrainingSim-v0', 'ur5', 'envs/ur5/robot_trajectories/trajectory_iros_2021.json'),
+    ('IrosEnv03URTestFixedSplinesSim-v0', 'ur5', 'envs/ur5/robot_trajectories/trajectory_iros_2021.json')
     ]
 
 
 @pytest.mark.parametrize('env_name, ur_model, traj_relative_path', test_robot_trajectory_iros_params)
 def test_robot_trajectory_iros(env_name, ur_model, traj_relative_path):
     ur = ur_utils.UR(model=ur_model)
-    env = gym.make(env_name, ip='robot-servers')
+    env = gym.make(env_name, ip='robot-servers', ur_model=ur_model)
     env.reset()
 
     # load trajectory 

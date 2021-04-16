@@ -18,7 +18,7 @@ from typing import Tuple
 # TODO: remove env state len function is not used anywhere
 
 JOINT_POSITIONS = [0.0, -2.5, 1.5, 0, -1.4, 0]
-class UR5BaseEnv(gym.Env):
+class URBaseEnv(gym.Env):
     """Universal Robots UR5 base environment.
 
     Args:
@@ -319,7 +319,7 @@ class UR5BaseEnv(gym.Env):
 
 
 # TODO: remove object target
-class EmptyEnvironmentUR5Sim(UR5BaseEnv, Simulation):
+class EmptyEnvironmentURSim(URBaseEnv, Simulation):
     cmd = "roslaunch ur_robot_server ur_robot_server.launch \
         world_name:=tabletop_sphere50.world \
         yaw:=-0.78 \
@@ -335,11 +335,10 @@ class EmptyEnvironmentUR5Sim(UR5BaseEnv, Simulation):
         object_0_frame:=target"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, ur_model='ur5', **kwargs):
         self.cmd = self.cmd + ' ' + 'ur_model:=' + ur_model
-        print(self.cmd)
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
-        UR5BaseEnv.__init__(self, rs_address=self.robot_server_ip, ur_model=ur_model, **kwargs)
+        URBaseEnv.__init__(self, rs_address=self.robot_server_ip, ur_model=ur_model, **kwargs)
 
-class EmptyEnvironmentUR5Rob(UR5BaseEnv):
+class EmptyEnvironmentURRob(URBaseEnv):
     real_robot = True
 
 # roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=moving
