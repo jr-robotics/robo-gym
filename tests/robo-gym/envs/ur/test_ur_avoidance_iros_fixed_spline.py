@@ -51,7 +51,8 @@ def test_object_collision(env):
        _, _, done, info = env.step(np.zeros(5))
        i += 1
    assert info['final_status'] == 'collision'
-    
+
+@pytest.mark.commit     
 def test_robot_trajectory(env):
     params = {
     'ur5': {'traj_relative_path':'envs/ur/robot_trajectories/trajectory_iros_2021.json'}  

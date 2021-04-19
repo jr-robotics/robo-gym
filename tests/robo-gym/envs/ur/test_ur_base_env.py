@@ -22,6 +22,7 @@ def env(request):
     env.kill_sim()
     env.close()
 
+@pytest.mark.commit 
 def test_initialization(env):
     env.reset()
     done = False
@@ -32,6 +33,7 @@ def test_initialization(env):
 
     assert env.observation_space.contains(observation)
 
+@pytest.mark.commit 
 @pytest.mark.flaky(reruns=3)
 def test_self_collision(env):
     collision_joint_config = {'ur5': [0.0, -1.26, -3.14, 0.0, 0.0], \
@@ -43,7 +45,7 @@ def test_self_collision(env):
         _, _, done, info = env.step(action)    
     assert info['final_status'] == 'collision'
 
-
+@pytest.mark.commit 
 @pytest.mark.flaky(reruns=3)
 def test_collision_with_ground(env):
     collision_joint_config = {'ur5': [0.0, 1.0, 1.8, 0.0, 0.0], \
@@ -54,7 +56,8 @@ def test_collision_with_ground(env):
     while not done:
         _, _, done, info = env.step(action)    
     assert info['final_status'] == 'collision'
-    
+
+@pytest.mark.commit     
 def test_reset_joint_positions(env):
    joint_positions =  [0.2, -2.5, 1.1, -2.0, -1.2, 1.2]
 
