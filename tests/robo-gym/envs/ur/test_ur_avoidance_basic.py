@@ -33,30 +33,6 @@ def test_initialization(env):
 
     assert env.observation_space.contains(observation)
 
-@pytest.mark.nightly
-@pytest.mark.flaky(reruns=3)
-def test_self_collision(env):
-    collision_joint_config = {'ur5': [0.0, -1.26, -3.14, 0.0, 0.0], \
-                              'ur10': [0.0, -1.5, 3.14, 0.0, 0.0]}
-    env.reset()
-    action = env.ur.normalize_joint_values(collision_joint_config[env.ur.model])
-    done = False
-    while not done:
-        _, _, done, info = env.step(action)    
-    assert info['final_status'] == 'collision'
-
-@pytest.mark.nightly
-@pytest.mark.flaky(reruns=3)
-def test_collision_with_ground(env):
-    collision_joint_config = {'ur5': [0.0, 1.0, 1.8, 0.0, 0.0], \
-                              'ur10': [0.0, 1.0, 1.15, 0.0, 0.0]}
-    env.reset()
-    action = env.ur.normalize_joint_values(collision_joint_config[env.ur.model])
-    done = False
-    while not done:
-        _, _, done, info = env.step(action)    
-    assert info['final_status'] == 'collision'
-
 @pytest.mark.skip(reason="This fails only in CI")
 @pytest.mark.flaky(reruns=3)
 def test_object_collision(env):
