@@ -21,7 +21,7 @@ ur_models = [pytest.param('ur3', marks=pytest.mark.skip(reason='not implemented 
 
 @pytest.fixture(autouse=True, scope='module', params=ur_models)
 def env(request):
-    env = gym.make('IrosEnv03URTrainingSim-v0', ip='robot-servers', ur_model=request.param)
+    env = gym.make('IrosEnv03URTestFixedSplinesSim-v0', ip='robot-servers', ur_model=request.param)
     yield env
     env.kill_sim()
     env.close()
@@ -51,16 +51,7 @@ def test_object_collision(env):
        _, _, done, info = env.step(np.zeros(5))
        i += 1
    assert info['final_status'] == 'collision'
-  
-def test_object_coordinates(env):
-   params = {
-   'ur5': {'object_coords':[0.3, 0.1, 1.0, 0.0, 0.0, 0.0], 'polar_coords_ee':{'r': 0.980, 'theta': 2.488, 'phi': 1.246}, 'polar_coords_forearm':{'r': 0.607, 'theta': 1.023, 'phi': -0.825}}  
-   }
-
-   state = env.reset(fixed_object_position=params[env.ur.model]['object_coords'])
-   assert np.isclose([params[env.ur.model]['polar_coords_ee']['r'], params[env.ur.model]['polar_coords_ee']['phi'], params[env.ur.model]['polar_coords_ee']['theta']], state[0:3], atol=0.1).all()
-   assert np.isclose([params[env.ur.model]['polar_coords_forearm']['r'], params[env.ur.model]['polar_coords_forearm']['phi'], params[env.ur.model]['polar_coords_forearm']['theta']], state[15:18], atol=0.1).all()
-   
+    
 def test_robot_trajectory(env):
     params = {
     'ur5': {'traj_relative_path':'envs/ur/robot_trajectories/trajectory_iros_2021.json'}  
@@ -92,8 +83,8 @@ def test_robot_trajectory(env):
 
 
 test_ur_fixed_joints = [
-    ('IrosEnv03URTrainingSim-v0', False, False, False, False, False, True, 'ur5'), # fixed wrist_3
-    ('IrosEnv03URTrainingSim-v0', True, False, True, False, False, False, 'ur5'), # fixed Base and Elbow
+    ('IrosEnv03URTestFixedSplinesSim-v0', False, False, False, False, False, True, 'ur5'), # fixed wrist_3
+    ('IrosEnv03URTestFixedSplinesSim-v0', True, False, True, False, False, False, 'ur5'), # fixed Base and Elbow
 ]
 
 @pytest.mark.nightly
