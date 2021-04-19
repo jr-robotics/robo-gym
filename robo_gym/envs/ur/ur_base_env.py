@@ -18,7 +18,7 @@ from typing import Tuple
 # TODO: remove env state len function is not used anywhere
 
 JOINT_POSITIONS = [0.0, -2.5, 1.5, 0, -1.4, 0]
-class UR5BaseEnv(gym.Env):
+class URBaseEnv(gym.Env):
     """Universal Robots UR5 base environment.
 
     Args:
@@ -37,8 +37,8 @@ class UR5BaseEnv(gym.Env):
     real_robot = False
     max_episode_steps = 300
 
-    def __init__(self, rs_address=None, fix_base=False, fix_shoulder=False, fix_elbow=False, fix_wrist_1=False, fix_wrist_2=False, fix_wrist_3=True, **kwargs):
-        self.ur = ur_utils.UR(model="ur5")
+    def __init__(self, rs_address=None, fix_base=False, fix_shoulder=False, fix_elbow=False, fix_wrist_1=False, fix_wrist_2=False, fix_wrist_3=True, ur_model='ur5', **kwargs):
+        self.ur = ur_utils.UR(model=ur_model)
         self.elapsed_steps = 0
 
         self.fix_base = fix_base
@@ -319,8 +319,8 @@ class UR5BaseEnv(gym.Env):
 
 
 # TODO: remove object target
-class EmptyEnvironmentUR5Sim(UR5BaseEnv, Simulation):
-    cmd = "roslaunch ur_robot_server ur5_sim_robot_server.launch \
+class EmptyEnvironmentURSim(URBaseEnv, Simulation):
+    cmd = "roslaunch ur_robot_server ur_robot_server.launch \
         world_name:=tabletop_sphere50.world \
         yaw:=-0.78 \
         reference_frame:=base_link \
@@ -333,11 +333,12 @@ class EmptyEnvironmentUR5Sim(UR5BaseEnv, Simulation):
         n_objects:=1.0 \
         object_0_model_name:=sphere50 \
         object_0_frame:=target"
-    def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
+    def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, ur_model='ur5', **kwargs):
+        self.cmd = self.cmd + ' ' + 'ur_model:=' + ur_model
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
-        UR5BaseEnv.__init__(self, rs_address=self.robot_server_ip, **kwargs)
+        URBaseEnv.__init__(self, rs_address=self.robot_server_ip, ur_model=ur_model, **kwargs)
 
-class EmptyEnvironmentUR5Rob(UR5BaseEnv):
+class EmptyEnvironmentURRob(URBaseEnv):
     real_robot = True
 
 # roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=moving

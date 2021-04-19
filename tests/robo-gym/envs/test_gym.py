@@ -1,37 +1,32 @@
 import gym
+import robo_gym
 import pytest
 
-import robo_gym
+
 
 envs = [
-    'EmptyEnvironmentUR5Sim-v0',
-    # 'NoObstacleNavigationMir100Sim-v0', 
-    # 'ObstacleAvoidanceMir100Sim-v0', 
-    # 'EndEffectorPositioningUR10Sim-v0', 
-    # 'EndEffectorPositioningUR10DoF5Sim-v0',
-    'EndEffectorPositioningUR5Sim-v0',
-    # 'EndEffectorPositioningUR5DoF5Sim-v0',
-    'MovingBoxTargetUR5Sim-v0',
-    # 'MovingBoxTargetUR5DoF3Sim-v0',
-    # 'MovingBoxTargetUR5DoF5Sim-v0',
-    'IrosEnv03UR5TrainingSim-v0',
-    'IrosEnv03UR5TestFixedSplinesSim-v0'
+    # ('EmptyEnvironmentURSim-v0', 'ur5'),
+    # ('EndEffectorPositioningURSim-v0', 'ur5'),
+    # ('MovingBoxTargetURSim-v0', 'ur5'),
+    # ('IrosEnv03URTrainingSim-v0', 'ur5'),
+    # ('IrosEnv03URTestFixedSplinesSim-v0', 'ur5')
 ]
 
 
-@pytest.mark.parametrize('env_name', envs)
-@pytest.mark.filterwarnings('ignore:UserWarning')
-def test_env_initialization(env_name):
-    env = gym.make(env_name, ip='robot-servers')
 
-    env.reset()
-    done = False
-    for i in range(5):
-        if not done:
-            action = env.action_space.sample()
-            observation, reward, done, info = env.step(action)
+# @pytest.mark.parametrize('env_name, ur_model', envs)
+# @pytest.mark.filterwarnings('ignore:UserWarning')
+# def test_env_initialization(env_name, ur_model):
+#     env = gym.make(env_name, ip='robot-servers', ur_model=ur_model)
 
-    assert env.observation_space.contains(observation)
+#     env.reset()
+#     done = False
+#     for _ in range(10):
+#         if not done:
+#             action = env.action_space.sample()
+#             observation, _, done, _ = env.step(action)
 
-    env.kill_sim()
-    env.close()
+#     assert env.observation_space.contains(observation)
+
+#     env.kill_sim()
+#     env.close()

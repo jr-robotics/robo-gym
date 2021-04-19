@@ -23,78 +23,58 @@ register(
     entry_point='robo_gym.envs:ObstacleAvoidanceMir100Rob',
 )
 
-# UR5 Environments
+# UR Environments
 register(
-    id='EmptyEnvironmentUR5Sim-v0',
-    entry_point='robo_gym.envs:EmptyEnvironmentUR5Sim',
+    id='EmptyEnvironmentURSim-v0',
+    entry_point='robo_gym.envs:EmptyEnvironmentURSim',
 )
 
 register(
-    id='EmptyEnvironmentUR5Rob-v0',
-    entry_point='robo_gym.envs:EmptyEnvironmentUR5Rob',
+    id='EmptyEnvironmentURRob-v0',
+    entry_point='robo_gym.envs:EmptyEnvironmentURRob',
 )
 
 register(
-    id='EndEffectorPositioningUR5Sim-v0',
-    entry_point='robo_gym.envs:EndEffectorPositioningUR5Sim',
+    id='EndEffectorPositioningURSim-v0',
+    entry_point='robo_gym.envs:EndEffectorPositioningURSim',
 )
 
 register(
-    id='EndEffectorPositioningUR5Rob-v0',
-    entry_point='robo_gym.envs:EndEffectorPositioningUR5Rob',
+    id='EndEffectorPositioningURRob-v0',
+    entry_point='robo_gym.envs:EndEffectorPositioningURRob',
 )
 
 register(
-    id='MovingBoxTargetUR5Sim-v0',
-    entry_point='robo_gym.envs:MovingBoxTargetUR5Sim',
+    id='MovingBoxTargetURSim-v0',
+    entry_point='robo_gym.envs:MovingBoxTargetURSim',
 )
 
 register(
-    id='MovingBoxTargetUR5Rob-v0',
-    entry_point='robo_gym.envs:MovingBoxTargetUR5Rob',
+    id='MovingBoxTargetURRob-v0',
+    entry_point='robo_gym.envs:MovingBoxTargetURRob',
 )
 
 # Iros Env 03
 register(
-    id='IrosEnv03UR5TrainingSim-v0',
-    entry_point='robo_gym.envs:IrosEnv03UR5TrainingSim',
+    id='IrosEnv03URTrainingSim-v0',
+    entry_point='robo_gym.envs:IrosEnv03URTrainingSim',
 )
 
 register(
-    id='IrosEnv03UR5TrainingRob-v0',
-    entry_point='robo_gym.envs:IrosEnv03UR5TrainingRob',
+    id='IrosEnv03URTrainingRob-v0',
+    entry_point='robo_gym.envs:IrosEnv03URTrainingRob',
 )
 
 register(
-    id='IrosEnv03UR5TestFixedSplinesSim-v0',
-    entry_point='robo_gym.envs:IrosEnv03UR5TestFixedSplinesSim',
+    id='IrosEnv03URTestFixedSplinesSim-v0',
+    entry_point='robo_gym.envs:IrosEnv03URTestFixedSplinesSim',
 )
 
 register(
-    id='IrosEnv03UR5TestFixedSplinesRob-v0',
-    entry_point='robo_gym.envs:IrosEnv03UR5TestFixedSplinesRob',
+    id='IrosEnv03URTestFixedSplinesRob-v0',
+    entry_point='robo_gym.envs:IrosEnv03URTestFixedSplinesRob',
 )
 
-## UR10 Environments
-register(
-    id='EndEffectorPositioningUR10Sim-v0',
-    entry_point='robo_gym.envs:EndEffectorPositioningUR10Sim',
-)
-
-register(
-    id='EndEffectorPositioningUR10Rob-v0',
-    entry_point='robo_gym.envs:EndEffectorPositioningUR10Rob',
-)
-
-register(
-    id='EndEffectorPositioningUR10DoF5Sim-v0',
-    entry_point='robo_gym.envs:EndEffectorPositioningUR10DoF5Sim',
-)
-
-register(
-    id='EndEffectorPositioningUR10DoF5Rob-v0',
-    entry_point='robo_gym.envs:EndEffectorPositioningUR10DoF5Rob',
-)
 
 
 

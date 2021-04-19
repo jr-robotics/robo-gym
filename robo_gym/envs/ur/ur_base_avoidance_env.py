@@ -10,12 +10,12 @@ import robo_gym_server_modules.robot_server.client as rs_client
 from robo_gym.envs.simulation_wrapper import Simulation
 from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
 from typing import Tuple
-from robo_gym.envs.ur5.ur5_base_env import UR5BaseEnv
+from robo_gym.envs.ur.ur_base_env import URBaseEnv
 
 
 DEBUG = True
 JOINT_POSITIONS = [0.0, -2.5, 1.5, 0, -1.4, 0]
-class UR5BaseAvoidanceEnv(UR5BaseEnv):
+class URBaseAvoidanceEnv(URBaseEnv):
     """Universal Robots UR5 base environment.
 
     Args:
@@ -31,9 +31,9 @@ class UR5BaseAvoidanceEnv(UR5BaseEnv):
         real_robot (bool): True if the environment is controlling a real robot.
 
     """
-    def __init__(self, rs_address=None, fix_base=False, fix_shoulder=False, fix_elbow=False, fix_wrist_1=False, fix_wrist_2=False, fix_wrist_3=True, include_polar_to_elbow=False, **kwargs):
+    def __init__(self, rs_address=None, fix_base=False, fix_shoulder=False, fix_elbow=False, fix_wrist_1=False, fix_wrist_2=False, fix_wrist_3=True, ur_model='ur5', include_polar_to_elbow=False, **kwargs):
         self.include_polar_to_elbow = include_polar_to_elbow
-        super().__init__(rs_address, fix_base, fix_shoulder, fix_elbow, fix_wrist_1, fix_wrist_2, fix_wrist_3)
+        super().__init__(rs_address, fix_base, fix_shoulder, fix_elbow, fix_wrist_1, fix_wrist_2, fix_wrist_3, ur_model)
         
 
 

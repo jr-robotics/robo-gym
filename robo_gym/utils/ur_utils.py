@@ -25,6 +25,8 @@ class UR():
     def __init__(self, model):
 
         assert model in ["ur3", "ur3e", "ur5", "ur5e", "ur10", "ur10e", "ur16e"]
+
+        self.model = model
         
         file_name = model + ".yaml"
         file_path = os.path.join(os.path.dirname(__file__), 'ur_parameters', file_name)

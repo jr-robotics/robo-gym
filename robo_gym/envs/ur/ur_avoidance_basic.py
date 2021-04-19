@@ -17,14 +17,14 @@ import robo_gym_server_modules.robot_server.client as rs_client
 from robo_gym.envs.simulation_wrapper import Simulation
 from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
 from typing import Tuple
-from robo_gym.envs.ur5.ur5_base_avoidance_env import UR5BaseAvoidanceEnv
+from robo_gym.envs.ur.ur_base_avoidance_env import URBaseAvoidanceEnv
 
 
 DEBUG = True
 MINIMUM_DISTANCE = 0.3 # the distance [cm] the robot should keep to the obstacle
 JOINT_POSITIONS = [-0.78,-1.31,-1.31,-2.18,1.57,0.0]
 
-class MovingBoxTargetUR5(UR5BaseAvoidanceEnv):
+class MovingBoxTargetUR(URBaseAvoidanceEnv):
     
     max_episode_steps = 1000
             
@@ -130,9 +130,8 @@ class MovingBoxTargetUR5(UR5BaseAvoidanceEnv):
         return self.state, reward, done, info
     
 # TODO: yaw is different from the iros env -> check 
-class MovingBoxTargetUR5Sim(MovingBoxTargetUR5, Simulation):
+class MovingBoxTargetURSim(MovingBoxTargetUR, Simulation):
     cmd = "roslaunch ur_robot_server ur_robot_server.launch \
-        ur_model:=ur5 \
         world_name:=tabletop_sphere50.world \
         yaw:=3.14\
         reference_frame:=base_link \
@@ -145,11 +144,12 @@ class MovingBoxTargetUR5Sim(MovingBoxTargetUR5, Simulation):
         n_objects:=1.0 \
         object_0_model_name:=sphere50 \
         object_0_frame:=target"
-    def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
+    def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, ur_model='ur5', **kwargs):
+        self.cmd = self.cmd + ' ' + 'ur_model:=' + ur_model
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
-        MovingBoxTargetUR5.__init__(self, rs_address=self.robot_server_ip, **kwargs)
+        MovingBoxTargetUR.__init__(self, rs_address=self.robot_server_ip, **kwargs)
 
-class MovingBoxTargetUR5Rob(MovingBoxTargetUR5):
+class MovingBoxTargetURRob(MovingBoxTargetUR):
     real_robot = True 
 
 # roslaunch ur_robot_server ur_robot_server.launch ur_model:=ur5 real_robot:=true rviz_gui:=true gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=moving
