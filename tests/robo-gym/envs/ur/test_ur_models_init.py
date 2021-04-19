@@ -5,9 +5,9 @@ import pytest
 
 
 envs = [
-    'EmptyEnvironmentURSim-v0',
-    'EndEffectorPositioningURSim-v0',
-    'MovingBoxTargetURSim-v0',
+    # 'EmptyEnvironmentURSim-v0',
+    # 'EndEffectorPositioningURSim-v0',
+    # 'MovingBoxTargetURSim-v0',
     'IrosEnv03URTrainingSim-v0', 
     'IrosEnv03URTestFixedSplinesSim-v0'
 ]
