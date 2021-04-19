@@ -17,7 +17,7 @@ ur_models = [pytest.param('ur3', marks=pytest.mark.skip(reason='not implemented 
 
 @pytest.fixture(autouse=True, scope='module', params=ur_models)
 def env(request):
-    env = gym.make('MovingBoxTargetUR5Sim-v0', ip='robot-servers', ur_model=request.param)
+    env = gym.make('MovingBoxTargetURSim-v0', ip='robot-servers', ur_model=request.param)
     yield env
     env.kill_sim()
     env.close()
