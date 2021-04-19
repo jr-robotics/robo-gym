@@ -7,7 +7,7 @@ import pytest
 
 ur_models = [pytest.param('ur3', marks=pytest.mark.skip(reason='not implemented yet')), \
              pytest.param('ur3e', marks=pytest.mark.skip(reason='not implemented yet')), \
-            'ur5',\
+             pytest.param('ur5', marks=pytest.mark.commit), \
              pytest.param('ur5e', marks=pytest.mark.skip(reason='not implemented yet')), \
              pytest.param('ur10', marks=pytest.mark.nightly), \
              pytest.param('ur10e', marks=pytest.mark.skip(reason='not implemented yet')), \
