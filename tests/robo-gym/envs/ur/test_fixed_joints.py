@@ -13,13 +13,13 @@ test_ur_fixed_joints = [
     # ('EmptyEnvironmentURSim-v0', False, False, False, False, False, True, 'ur5'), # fixed wrist_3
     # ('EndEffectorPositioningURSim-v0', False, False, False, False, False, True, 'ur5'), # fixed wrist_3
     # ('MovingBoxTargetURSim-v0', False, False, False, False, False, True, 'ur5'), # fixed wrist_3
-    ('IrosEnv03URTrainingSim-v0', False, False, False, False, False, True, 'ur5'), # fixed wrist_3
+    # ('IrosEnv03URTrainingSim-v0', False, False, False, False, False, True, 'ur5'), # fixed wrist_3
     ('IrosEnv03URTestFixedSplinesSim-v0', False, False, False, False, False, True, 'ur5'), # fixed wrist_3
 
     # ('EmptyEnvironmentURSim-v0', True, False, True, False, False, False, 'ur5'), # fixed Base and Elbow
     # ('EndEffectorPositioningURSim-v0', True, False, True, False, False, False, 'ur5'), # fixed Base and Elbow
     # ('MovingBoxTargetURSim-v0', True, False, True, False, False, False, 'ur5'), # fixed Base and Elbow
-    ('IrosEnv03URTrainingSim-v0', True, False, True, False, False, False, 'ur5'), # fixed Base and Elbow
+    # ('IrosEnv03URTrainingSim-v0', True, False, True, False, False, False, 'ur5'), # fixed Base and Elbow
     ('IrosEnv03URTestFixedSplinesSim-v0', True, False, True, False, False, False, 'ur5'), # fixed Base and Elbow
 
     # ('EmptyEnvironmentURSim-v0', False, False, False, False, False, True, 'ur10'), # fixed wrist_3

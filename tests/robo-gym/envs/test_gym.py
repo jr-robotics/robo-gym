@@ -8,7 +8,7 @@ envs = [
     # ('EmptyEnvironmentURSim-v0', 'ur5'),
     # ('EndEffectorPositioningURSim-v0', 'ur5'),
     # ('MovingBoxTargetURSim-v0', 'ur5'),
-    ('IrosEnv03URTrainingSim-v0', 'ur5'),
+    # ('IrosEnv03URTrainingSim-v0', 'ur5'),
     ('IrosEnv03URTestFixedSplinesSim-v0', 'ur5')
 ]
 
