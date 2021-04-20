@@ -1,17 +1,36 @@
 import copy
 import numpy as np
 import gym
+from typing import Tuple
 from scipy.spatial.transform import Rotation as R
-
 from robo_gym.utils.exceptions import InvalidStateError, RobotServerError
-from robo_gym.envs.simulation_wrapper import Simulation
-from robo_gym.utils import utils, ur_utils
+from robo_gym.utils import utils
 from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
+from robo_gym.envs.simulation_wrapper import Simulation
 from robo_gym.envs.ur.ur_base_env import URBaseEnv
 
 JOINT_POSITIONS = [0.0, -2.5, 1.5, 0, -1.4, 0]
 RANDOM_JOINT_OFFSET = [0.65, 0.25, 0.5, 3.14, 0.4, 3.14]
 class EndEffectorPositioningUR(URBaseEnv):
+    """Universal Robots UR end effector positioning environment.
+
+    Args:
+        rs_address (str): Robot Server address. Formatted as 'ip:port'. Defaults to None.
+        fix_base (bool): Wether or not the base joint stays fixed or is moveable. Defaults to False.
+        fix_shoulder (bool): Wether or not the shoulder joint stays fixed or is moveable. Defaults to False.
+        fix_elbow (bool): Wether or not the elbow joint stays fixed or is moveable. Defaults to False.
+        fix_wrist_1 (bool): Wether or not the wrist 1 joint stays fixed or is moveable. Defaults to False.
+        fix_wrist_2 (bool): Wether or not the wrist 2 joint stays fixed or is moveable. Defaults to False.
+        fix_wrist_3 (bool): Wether or not the wrist 3 joint stays fixed or is moveable. Defaults to True.
+        ur_model (str): determines which ur model will be used in the environment. Default to 'ur5'.
+
+    Attributes:
+        ur (:obj:): Robot utilities object.
+        client (:obj:str): Robot Server client.
+        real_robot (bool): True if the environment is controlling a real robot.
+
+    """
+
     def _get_observation_space(self) -> gym.spaces.Box:
         """Get environment observation space.
 
@@ -35,7 +54,7 @@ class EndEffectorPositioningUR(URBaseEnv):
 
         return gym.spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
 
-    def _get_env_state_len(self):
+    def _get_env_state_len(self) -> int:
         """Get length of the environment state.
 
         Describes the composition of the environment state and returns
@@ -53,7 +72,7 @@ class EndEffectorPositioningUR(URBaseEnv):
 
         return len(env_state)
     
-    def _set_initial_robot_server_state(self, rs_state, ee_target_pose):
+    def _set_initial_robot_server_state(self, rs_state, ee_target_pose) -> robot_server_pb2.State:
         string_params = {"object_0_function": "fixed_position"}
         float_params = {"object_0_x": ee_target_pose[0], 
                         "object_0_y": ee_target_pose[1], 
@@ -62,7 +81,7 @@ class EndEffectorPositioningUR(URBaseEnv):
         state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
         return state_msg
 
-    def _robot_server_state_to_env_state(self, rs_state):
+    def _robot_server_state_to_env_state(self, rs_state) -> np.array:
         """Transform state from Robot Server to environment format.
 
         Args:
@@ -105,16 +124,13 @@ class EndEffectorPositioningUR(URBaseEnv):
 
         return state
 
-    def reset(self, joint_positions = None, ee_target_pose = None, randomize_start=False):
+    def reset(self, joint_positions = None, ee_target_pose = None, randomize_start=False) -> np.array:
         """Environment reset.
 
         Args:
             joint_positions (list[6] or np.array[6]): robot joint positions in radians.
             ee_target_pose (list[6] or np.array[6]): [x,y,z,r,p,y] target end effector pose.
-        
-        Returns:
-            np.array: Environment state.
-
+            randomize_start (bool): if True the starting position is randomized defined by the RANDOM_JOINT_OFFSET
         """
         self.elapsed_steps = 0
 
@@ -171,7 +187,7 @@ class EndEffectorPositioningUR(URBaseEnv):
             
         return self.state
 
-    def _reward(self, rs_state, action):
+    def _reward(self, rs_state, action) -> Tuple[float, bool, dict]:
         reward = 0
         done = False
         info = {}
