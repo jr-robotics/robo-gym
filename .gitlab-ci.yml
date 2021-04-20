@@ -4,8 +4,9 @@ stages:
   - deploy
 
 variables:
-  ROBOT_SERVERS_IMAGE: "$CI_REGISTRY/robo-gym/robot-servers/develop:latest"
   PYTHON_VER: "3.6"
+  ROBO_GYM_IMAGE: $CI_REGISTRY_IMAGE:$PYTHON_VER-$CI_COMMIT_SHA
+  ROBOT_SERVERS_IMAGE: "$CI_REGISTRY/robo-gym/robot-servers/develop:latest"  
 
 before_script:
   # docker login asks for the password to be passed through stdin for security
@@ -26,11 +27,11 @@ before_script:
       docker build
       --pull
       --cache-from $CI_REGISTRY_IMAGE:latest
-      --tag $CI_REGISTRY_IMAGE:$PYTHON_VER-$CI_COMMIT_SHA
+      --tag $ROBO_GYM_IMAGE
       --build-arg PYTHON_VER=$PYTHON_VER
       --build-arg CACHEBUST=$CI_COMMIT_SHA
       .
-    - docker push $CI_REGISTRY_IMAGE:$PYTHON_VER-$CI_COMMIT_SHA
+    - docker push $ROBO_GYM_IMAGE
 
 build_robo-gym_image:
   <<: *build_robo-gym_image_def
@@ -74,8 +75,8 @@ test_environments:
   script:
     - echo "Python Version:$PYTHON_VER Robot Servers image:$ROBOT_SERVERS_IMAGE"  
     - echo -n $CI_JOB_TOKEN | docker login -u gitlab-ci-token --password-stdin $CI_REGISTRY
-    - docker pull $CI_REGISTRY_IMAGE:$PYTHON_VER-$CI_COMMIT_SHA
-    - docker tag $CI_REGISTRY_IMAGE:$PYTHON_VER-$CI_COMMIT_SHA robo-gym
+    - docker pull $ROBO_GYM_IMAGE
+    - docker tag $ROBO_GYM_IMAGE robo-gym
     - docker pull $ROBOT_SERVERS_IMAGE
     - docker tag $ROBOT_SERVERS_IMAGE robot-servers
     - docker-compose -f docker-compose-test-melodic.yml up -d
@@ -94,8 +95,8 @@ test_environments:
   script:
     - echo "Python Version:$PYTHON_VER Robot Servers image:$ROBOT_SERVERS_IMAGE"  
     - echo -n $CI_JOB_TOKEN | docker login -u gitlab-ci-token --password-stdin $CI_REGISTRY
-    - docker pull $CI_REGISTRY_IMAGE:$PYTHON_VER-$CI_COMMIT_SHA
-    - docker tag $CI_REGISTRY_IMAGE:$PYTHON_VER-$CI_COMMIT_SHA robo-gym
+    - docker pull $ROBO_GYM_IMAGE
+    - docker tag $ROBO_GYM_IMAGE robo-gym
     - docker pull $ROBOT_SERVERS_IMAGE
     - docker tag $ROBOT_SERVERS_IMAGE robot-servers
     - docker-compose -f docker-compose-test-melodic.yml up -d
@@ -156,8 +157,8 @@ deploy_docker_image:
     GIT_STRATEGY: none
   script:
     - echo -n $CI_JOB_TOKEN | docker login -u gitlab-ci-token --password-stdin $CI_REGISTRY
-    - docker pull $CI_REGISTRY_IMAGE:$PYTHON_VER-$CI_COMMIT_SHA
-    - docker tag $CI_REGISTRY_IMAGE:$PYTHON_VER-$CI_COMMIT_SHA $CI_REGISTRY_IMAGE/$CI_COMMIT_BRANCH:latest
+    - docker pull $ROBO_GYM_IMAGE
+    - docker tag $ROBO_GYM_IMAGE $CI_REGISTRY_IMAGE/$CI_COMMIT_BRANCH:latest
     - docker push $CI_REGISTRY_IMAGE/$CI_COMMIT_BRANCH:latest
   only:
     - master 
