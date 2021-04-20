@@ -4,6 +4,7 @@ import numpy as np
 import gym
 from scipy.spatial.transform import Rotation as R
 from robo_gym.utils import utils
+from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
 from robo_gym.utils.exceptions import InvalidStateError, RobotServerError
 from robo_gym.envs.ur.ur_base_env import URBaseEnv
 
@@ -30,7 +31,23 @@ class URBaseAvoidanceEnv(URBaseEnv):
         self.include_polar_to_elbow = include_polar_to_elbow
         super().__init__(rs_address, fix_base, fix_shoulder, fix_elbow, fix_wrist_1, fix_wrist_2, fix_wrist_3, ur_model)
         
+    
+    def _set_initial_robot_server_state(self, rs_state, fixed_object_position):
+        string_params = {}
+        float_params = {}
 
+        # Set initial state of the Robot Server
+        if fixed_object_position:
+            # Object in a fixed position
+            string_params = {"object_0_function": "fixed_position"}
+            float_params = {"object_0_x": fixed_object_position[0], 
+                            "object_0_y": fixed_object_position[1], 
+                            "object_0_z": fixed_object_position[2]}
+            state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
+            return state_msg
+
+        state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
+        return state_msg
 
     def reset(self, joint_positions = None, fixed_object_position = None) -> np.array:
         """Environment reset.
@@ -259,6 +276,8 @@ class URBaseAvoidanceEnv(URBaseEnv):
         rs_state = target + ur_j_pos + ur_j_vel + ee_to_ref_frame_transform + ur_collision + forearm_to_ref_frame_transform
 
         return len(rs_state)      
+
+
 
 
 
