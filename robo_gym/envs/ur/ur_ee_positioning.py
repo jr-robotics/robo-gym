@@ -12,6 +12,24 @@ from robo_gym.envs.ur.ur_base_env import URBaseEnv
 JOINT_POSITIONS = [0.0, -2.5, 1.5, 0, -1.4, 0]
 RANDOM_JOINT_OFFSET = [0.65, 0.25, 0.5, 3.14, 0.4, 3.14]
 class EndEffectorPositioningUR(URBaseEnv):
+    """Universal Robots UR end effector positioning environment.
+
+    Args:
+        rs_address (str): Robot Server address. Formatted as 'ip:port'. Defaults to None.
+        fix_base (bool): Wether or not the base joint stays fixed or is moveable. Defaults to False.
+        fix_shoulder (bool): Wether or not the shoulder joint stays fixed or is moveable. Defaults to False.
+        fix_elbow (bool): Wether or not the elbow joint stays fixed or is moveable. Defaults to False.
+        fix_wrist_1 (bool): Wether or not the wrist 1 joint stays fixed or is moveable. Defaults to False.
+        fix_wrist_2 (bool): Wether or not the wrist 2 joint stays fixed or is moveable. Defaults to False.
+        fix_wrist_3 (bool): Wether or not the wrist 3 joint stays fixed or is moveable. Defaults to True.
+        ur_model (str): determines which ur model will be used in the environment. Default to 'ur5'.
+
+    Attributes:
+        ur (:obj:): Robot utilities object.
+        client (:obj:str): Robot Server client.
+        real_robot (bool): True if the environment is controlling a real robot.
+
+    """
 
     def _get_observation_space(self) -> gym.spaces.Box:
         """Get environment observation space.
