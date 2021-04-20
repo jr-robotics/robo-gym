@@ -3,30 +3,30 @@ import copy
 import numpy as np
 import gym
 from scipy.spatial.transform import Rotation as R
-
-from robo_gym.utils import utils, ur_utils
-from robo_gym.utils.exceptions import InvalidStateError, RobotServerError, InvalidActionError
-import robo_gym_server_modules.robot_server.client as rs_client
-from robo_gym.envs.simulation_wrapper import Simulation
+from robo_gym.utils import utils
 from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
-from typing import Tuple
+from robo_gym.utils.exceptions import InvalidStateError, RobotServerError
 from robo_gym.envs.ur.ur_base_env import URBaseEnv
 
 
 DEBUG = True
 JOINT_POSITIONS = [0.0, -2.5, 1.5, 0, -1.4, 0]
 class URBaseAvoidanceEnv(URBaseEnv):
-    """Universal Robots UR5 base environment.
+    """Universal Robots UR avoidance base environment.
 
     Args:
         rs_address (str): Robot Server address. Formatted as 'ip:port'. Defaults to None.
+        fix_base (bool): Wether or not the base joint stays fixed or is moveable. Defaults to False.
+        fix_shoulder (bool): Wether or not the shoulder joint stays fixed or is moveable. Defaults to False.
+        fix_elbow (bool): Wether or not the elbow joint stays fixed or is moveable. Defaults to False.
+        fix_wrist_1 (bool): Wether or not the wrist 1 joint stays fixed or is moveable. Defaults to False.
+        fix_wrist_2 (bool): Wether or not the wrist 2 joint stays fixed or is moveable. Defaults to False.
+        fix_wrist_3 (bool): Wether or not the wrist 3 joint stays fixed or is moveable. Defaults to True.
+        ur_model (str): determines which ur model will be used in the environment. Defaults to 'ur5'.
+        include_polar_to_elbow (bool): determines wether or not the polar coordinates to the elbow joint are included in the state. Defaults to False. 
 
     Attributes:
         ur (:obj:): Robot utilities object.
-        observation_space (:obj:): Environment observation space.
-        action_space (:obj:): Environment action space.
-        distance_threshold (float): Minimum distance (m) from target to consider it reached.
-        abs_joint_pos_range (np.array): Absolute value of joint positions range`.
         client (:obj:str): Robot Server client.
         real_robot (bool): True if the environment is controlling a real robot.
 
@@ -35,7 +35,22 @@ class URBaseAvoidanceEnv(URBaseEnv):
         self.include_polar_to_elbow = include_polar_to_elbow
         super().__init__(rs_address, fix_base, fix_shoulder, fix_elbow, fix_wrist_1, fix_wrist_2, fix_wrist_3, ur_model)
         
+    def _set_initial_robot_server_state(self, rs_state, fixed_object_position) -> robot_server_pb2.State:
+        string_params = {}
+        float_params = {}
 
+        # Set initial state of the Robot Server
+        if fixed_object_position:
+            # Object in a fixed position
+            string_params = {"object_0_function": "fixed_position"}
+            float_params = {"object_0_x": fixed_object_position[0], 
+                            "object_0_y": fixed_object_position[1], 
+                            "object_0_z": fixed_object_position[2]}
+            state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
+            return state_msg
+
+        state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
+        return state_msg
 
     def reset(self, joint_positions = None, fixed_object_position = None) -> np.array:
         """Environment reset.
@@ -167,7 +182,7 @@ class URBaseAvoidanceEnv(URBaseEnv):
 
         return state
 
-    def _get_env_state_len(self):
+    def _get_env_state_len(self) -> int:
         """Get length of the environment state.
 
         Describes the composition of the environment state and returns
@@ -213,7 +228,6 @@ class URBaseAvoidanceEnv(URBaseEnv):
 
 
         return gym.spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
-
 
     def add_fixed_joints(self, action) -> np.array:
         action = action.tolist()
@@ -264,6 +278,8 @@ class URBaseAvoidanceEnv(URBaseEnv):
         rs_state = target + ur_j_pos + ur_j_vel + ee_to_ref_frame_transform + ur_collision + forearm_to_ref_frame_transform
 
         return len(rs_state)      
+
+
 
 
 

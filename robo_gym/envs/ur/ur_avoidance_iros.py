@@ -11,20 +11,34 @@ This trajectory is sampled at a frequency of 20 Hz.
 import os, copy, json
 import numpy as np
 import gym
-from scipy.spatial.transform import Rotation as R
-
-from robo_gym.utils import utils, ur_utils
-from robo_gym.utils.exceptions import InvalidStateError, RobotServerError, InvalidActionError
-import robo_gym_server_modules.robot_server.client as rs_client
-from robo_gym.envs.simulation_wrapper import Simulation
-from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
 from typing import Tuple
+from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
+from robo_gym.envs.simulation_wrapper import Simulation
 from robo_gym.envs.ur.ur_base_avoidance_env import URBaseAvoidanceEnv
 
 DEBUG = True
 MINIMUM_DISTANCE = 0.45 # the distance [cm] the robot should keep to the obstacle
 
 class IrosEnv03URTraining(URBaseAvoidanceEnv):
+    """Universal Robots UR IROS environment. Obstacle avoidance while keeping a fixed trajectory.
+
+    Args:
+        rs_address (str): Robot Server address. Formatted as 'ip:port'. Defaults to None.
+        fix_base (bool): Wether or not the base joint stays fixed or is moveable. Defaults to False.
+        fix_shoulder (bool): Wether or not the shoulder joint stays fixed or is moveable. Defaults to False.
+        fix_elbow (bool): Wether or not the elbow joint stays fixed or is moveable. Defaults to False.
+        fix_wrist_1 (bool): Wether or not the wrist 1 joint stays fixed or is moveable. Defaults to False.
+        fix_wrist_2 (bool): Wether or not the wrist 2 joint stays fixed or is moveable. Defaults to False.
+        fix_wrist_3 (bool): Wether or not the wrist 3 joint stays fixed or is moveable. Defaults to True.
+        ur_model (str): determines which ur model will be used in the environment. Defaults to 'ur5'.
+        include_polar_to_elbow (bool): determines wether or not the polar coordinates to the elbow joint are included in the state. Defaults to False. 
+
+    Attributes:
+        ur (:obj:): Robot utilities object.
+        client (:obj:str): Robot Server client.
+        real_robot (bool): True if the environment is controlling a real robot.
+
+    """
     max_episode_steps = 1000
 
     def __init__(self, rs_address=None, fix_base=False, fix_shoulder=False, fix_elbow=False, fix_wrist_1=False, fix_wrist_2=False, fix_wrist_3=True, ur_model='ur5', include_polar_to_elbow=True, **kwargs) -> None:
@@ -35,23 +49,18 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
         with open(file_path) as json_file:
             self.trajectory = json.load(json_file)['trajectory']
 
-    # TODO: add typing to method head
-    def _set_initial_robot_server_state(self, rs_state, fixed_object_position = None):
+    def _set_initial_robot_server_state(self, rs_state, fixed_object_position = None) -> robot_server_pb2.State:
         if fixed_object_position:
-            # Object in a fixed position
-            string_params = {"object_0_function": "fixed_position"}
-            float_params = {"object_0_x": fixed_object_position[0], 
-                            "object_0_y": fixed_object_position[1], 
-                            "object_0_z": fixed_object_position[2]}
-        else:
-            n_sampling_points = int(np.random.default_rng().uniform(low=8000, high=12000))
-            
-            # TODO: generalize for all urs
-            string_params = {"object_0_function": "3d_spline_ur5_workspace"}
-            
-            float_params = {"object_0_x_min": -1.0, "object_0_x_max": 1.0, "object_0_y_min": -1.0, "object_0_y_max": 1.0, \
-                            "object_0_z_min": 0.1, "object_0_z_max": 1.0, "object_0_n_points": 10, \
-                            "n_sampling_points": n_sampling_points}
+            state_msg = super()._set_initial_robot_server_state(rs_state=rs_state, fixed_object_position=fixed_object_position)
+            return state_msg
+
+        n_sampling_points = int(np.random.default_rng().uniform(low=8000, high=12000))
+
+        string_params = {"object_0_function": "3d_spline_ur5_workspace"}
+        
+        float_params = {"object_0_x_min": -1.0, "object_0_x_max": 1.0, "object_0_y_min": -1.0, "object_0_y_max": 1.0, \
+                        "object_0_z_min": 0.1, "object_0_z_max": 1.0, "object_0_n_points": 10, \
+                        "n_sampling_points": n_sampling_points}
 
         state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
         return state_msg
@@ -61,9 +70,6 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
 
         Args:
             fixed_object_position (list[3]): x,y,z fixed position of object
-
-        Returns:
-            np.array: Environment state.
         """
         # Initialize state machine variables
         self.state_n = 0 
@@ -79,7 +85,6 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
             
         return self.state
 
-
     def step(self, action) -> Tuple[np.array, float, bool, dict]:
         self.elapsed_steps_in_current_state += 1
         
@@ -94,7 +99,6 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
             self.target_reached = 0
 
         return self.state, reward, done, info
-
 
     def _reward(self, rs_state, action) -> Tuple[float, bool, dict]:
         env_state = self._robot_server_state_to_env_state(rs_state)
@@ -180,28 +184,18 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
 
         Args:
             rs_state (list): State in Robot Server format.
-
-        Returns:
-            numpy.array: State in environment format.
-
         """
         state = super()._robot_server_state_to_env_state(rs_state)
 
-        desired_joints = self.ur.normalize_joint_values(self._get_joint_positions())
+        trajectory_joint_position = self.ur.normalize_joint_values(self._get_joint_positions())
         target_point_flag = copy.deepcopy(self.target_point_flag)
 
-        state = np.concatenate((state, desired_joints, [target_point_flag]))
+        state = np.concatenate((state, trajectory_joint_position, [target_point_flag]))
 
         return state
 
-    # observation space should be fine
     def _get_observation_space(self) -> gym.spaces.Box:
-        """Get environment observation space.
-
-        Returns:
-            gym.spaces: Gym observation space object.
-
-        """
+        """Get environment observation space."""
 
         # Joint position range tolerance
         pos_tolerance = np.full(6,0.1)
@@ -227,16 +221,13 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
 
         return gym.spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
 
-    def _get_env_state_len(self):
+    def _get_env_state_len(self) -> int:
         """Get length of the environment state.
 
         Describes the composition of the environment state and returns
         its length.
-
-        Returns:
-            int: Length of the environment state
-
         """
+
         object_polar_coords_ee = [0.0]*3
         ur_j_pos = [0.0]*6
         ur_j_delta = [0.0]*6
@@ -247,15 +238,9 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
 
         return len(env_state)
 
-
-
     def _get_joint_positions(self) -> np.array:
-        """Get desired robot joint positions.
+        """Get robot joint positions with standard indexing."""
 
-        Returns:
-            np.array: Joint positions with standard indexing.
-
-        """
         if self.elapsed_steps_in_current_state < len(self.trajectory[self.state_n]):
             joint_positions = copy.deepcopy(self.trajectory[self.state_n][self.elapsed_steps_in_current_state])
             self.target_point_flag = 0
@@ -266,8 +251,6 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
         
 
         return joint_positions
-
-
 
 class IrosEnv03URTrainingSim(IrosEnv03URTraining, Simulation):
     cmd = "roslaunch ur_robot_server ur_robot_server.launch \
@@ -307,14 +290,11 @@ class IrosEnv03URTestFixedSplines(IrosEnv03URTraining):
     # TODO: add typing to method head
     def _set_initial_robot_server_state(self, rs_state, fixed_object_position = None):
         if fixed_object_position:
-            # Object in a fixed position
-            string_params = {"object_0_function": "fixed_position"}
-            float_params = {"object_0_x": fixed_object_position[0], 
-                            "object_0_y": fixed_object_position[1], 
-                            "object_0_z": fixed_object_position[2]}
-        else:        
-            string_params = {"object_0_function": "fixed_trajectory"}
-            float_params = {"object_0_trajectory_id": self.ep_n%50}
+            state_msg = super()._set_initial_robot_server_state(rs_state=rs_state, fixed_object_position=fixed_object_position)
+            return state_msg
+        
+        string_params = {"object_0_function": "fixed_trajectory"}
+        float_params = {"object_0_trajectory_id": self.ep_n%50}
 
         state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
         return state_msg
