@@ -5,6 +5,7 @@ stages:
 
 variables:
   ROBOT_SERVERS_IMAGE: "robotics-git.joanneum.at:4567/robo-gym/robot-servers/develop:latest"
+  PYTHON_VER: "3.6"
 
 before_script:
   # docker login asks for the password to be passed through stdin for security
@@ -31,10 +32,15 @@ before_script:
       .
     - docker push $CI_REGISTRY_IMAGE:$PYTHON_VER-$CI_COMMIT_SHA
 
+build_robo-gym_image:
+  <<: *build_robo-gym_image_def
+  
 build_robo-gym_image_py36:
   <<: *build_robo-gym_image_def
   variables:
       PYTHON_VER: "3.6"
+  only:
+    - schedules
 
 build_robo-gym_image_py37:
   <<: *build_robo-gym_image_def
@@ -65,8 +71,6 @@ test_environments:
   tags:
     - docker-executor
   stage: test
-  variables:
-      PYTHON_VER: "3.6"
   script:
     - echo "Python Version:$PYTHON_VER Robot Servers image:$ROBOT_SERVERS_IMAGE"  
     - echo -n $CI_JOB_TOKEN | docker login -u gitlab-ci-token --password-stdin $CI_REGISTRY
