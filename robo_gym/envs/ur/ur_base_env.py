@@ -4,16 +4,12 @@
 import copy
 import numpy as np
 import gym
-from gym.utils import seeding
-from scipy.spatial.transform import Rotation as R
-
-from robo_gym.utils import utils, ur_utils
+from typing import Tuple
+from robo_gym.utils import ur_utils
 from robo_gym.utils.exceptions import InvalidStateError, RobotServerError, InvalidActionError
 import robo_gym_server_modules.robot_server.client as rs_client
-from robo_gym.envs.simulation_wrapper import Simulation
 from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
-from typing import Tuple
-
+from robo_gym.envs.simulation_wrapper import Simulation
 
 # TODO: remove env state len function is not used anywhere
 
@@ -63,7 +59,7 @@ class URBaseEnv(gym.Env):
             print("WARNING: Use this only to get environment shape")
 
     def seed(self, seed=None):
-        self.np_random, seed = seeding.np_random(seed)
+        self.np_random, seed = gym.utils.seeding.np_random(seed)
         return [seed]
 
     def _set_initial_robot_server_state(self, rs_state):
