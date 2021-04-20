@@ -20,7 +20,7 @@ DEBUG = True
 MINIMUM_DISTANCE = 0.45 # the distance [cm] the robot should keep to the obstacle
 
 class IrosEnv03URTraining(URBaseAvoidanceEnv):
-    """Universal Robots UR Iros environment. Obstacle avoidance while keeping a fixed trajectory.
+    """Universal Robots UR IROS environment. Obstacle avoidance while keeping a fixed trajectory.
 
     Args:
         rs_address (str): Robot Server address. Formatted as 'ip:port'. Defaults to None.
@@ -187,10 +187,10 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
         """
         state = super()._robot_server_state_to_env_state(rs_state)
 
-        desired_joints = self.ur.normalize_joint_values(self._get_joint_positions())
+        trajectory_joint_position = self.ur.normalize_joint_values(self._get_joint_positions())
         target_point_flag = copy.deepcopy(self.target_point_flag)
 
-        state = np.concatenate((state, desired_joints, [target_point_flag]))
+        state = np.concatenate((state, trajectory_joint_position, [target_point_flag]))
 
         return state
 
@@ -227,7 +227,7 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
         Describes the composition of the environment state and returns
         its length.
         """
-        
+
         object_polar_coords_ee = [0.0]*3
         ur_j_pos = [0.0]*6
         ur_j_delta = [0.0]*6
@@ -290,14 +290,11 @@ class IrosEnv03URTestFixedSplines(IrosEnv03URTraining):
     # TODO: add typing to method head
     def _set_initial_robot_server_state(self, rs_state, fixed_object_position = None):
         if fixed_object_position:
-            # Object in a fixed position
-            string_params = {"object_0_function": "fixed_position"}
-            float_params = {"object_0_x": fixed_object_position[0], 
-                            "object_0_y": fixed_object_position[1], 
-                            "object_0_z": fixed_object_position[2]}
-        else:        
-            string_params = {"object_0_function": "fixed_trajectory"}
-            float_params = {"object_0_trajectory_id": self.ep_n%50}
+            state_msg = super()._set_initial_robot_server_state(rs_state=rs_state, fixed_object_position=fixed_object_position)
+            return state_msg
+        
+        string_params = {"object_0_function": "fixed_trajectory"}
+        float_params = {"object_0_trajectory_id": self.ep_n%50}
 
         state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
         return state_msg
