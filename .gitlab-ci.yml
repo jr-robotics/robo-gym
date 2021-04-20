@@ -72,6 +72,8 @@ test_environments:
   tags:
     - docker-executor
   stage: test
+  variables:
+    GIT_STRATEGY: none
   script:
     - echo "Python Version:$PYTHON_VER Robot Servers image:$ROBOT_SERVERS_IMAGE"  
     - echo -n $CI_JOB_TOKEN | docker login -u gitlab-ci-token --password-stdin $CI_REGISTRY
@@ -92,6 +94,8 @@ test_environments:
   tags:
     - docker-executor
   stage: test
+  variables:
+    GIT_STRATEGY: none
   script:
     - echo "Python Version:$PYTHON_VER Robot Servers image:$ROBOT_SERVERS_IMAGE"  
     - echo -n $CI_JOB_TOKEN | docker login -u gitlab-ci-token --password-stdin $CI_REGISTRY
