@@ -18,6 +18,25 @@ MINIMUM_DISTANCE = 0.3 # the distance [cm] the robot should keep to the obstacle
 JOINT_POSITIONS = [-0.78,-1.31,-1.31,-2.18,1.57,0.0]
 
 class MovingBoxTargetUR(URBaseAvoidanceEnv):
+    """Universal Robots UR basic obstacle avoidance environment.
+
+    Args:
+        rs_address (str): Robot Server address. Formatted as 'ip:port'. Defaults to None.
+        fix_base (bool): Wether or not the base joint stays fixed or is moveable. Defaults to False.
+        fix_shoulder (bool): Wether or not the shoulder joint stays fixed or is moveable. Defaults to False.
+        fix_elbow (bool): Wether or not the elbow joint stays fixed or is moveable. Defaults to False.
+        fix_wrist_1 (bool): Wether or not the wrist 1 joint stays fixed or is moveable. Defaults to False.
+        fix_wrist_2 (bool): Wether or not the wrist 2 joint stays fixed or is moveable. Defaults to False.
+        fix_wrist_3 (bool): Wether or not the wrist 3 joint stays fixed or is moveable. Defaults to True.
+        ur_model (str): determines which ur model will be used in the environment. Defaults to 'ur5'.
+        include_polar_to_elbow (bool): determines wether or not the polar coordinates to the elbow joint are included in the state. Defaults to False. 
+
+    Attributes:
+        ur (:obj:): Robot utilities object.
+        client (:obj:str): Robot Server client.
+        real_robot (bool): True if the environment is controlling a real robot.
+
+    """
     
     max_episode_steps = 1000
             

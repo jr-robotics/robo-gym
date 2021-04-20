@@ -20,6 +20,25 @@ DEBUG = True
 MINIMUM_DISTANCE = 0.45 # the distance [cm] the robot should keep to the obstacle
 
 class IrosEnv03URTraining(URBaseAvoidanceEnv):
+    """Universal Robots UR Iros environment. Obstacle avoidance while keeping a fixed trajectory.
+
+    Args:
+        rs_address (str): Robot Server address. Formatted as 'ip:port'. Defaults to None.
+        fix_base (bool): Wether or not the base joint stays fixed or is moveable. Defaults to False.
+        fix_shoulder (bool): Wether or not the shoulder joint stays fixed or is moveable. Defaults to False.
+        fix_elbow (bool): Wether or not the elbow joint stays fixed or is moveable. Defaults to False.
+        fix_wrist_1 (bool): Wether or not the wrist 1 joint stays fixed or is moveable. Defaults to False.
+        fix_wrist_2 (bool): Wether or not the wrist 2 joint stays fixed or is moveable. Defaults to False.
+        fix_wrist_3 (bool): Wether or not the wrist 3 joint stays fixed or is moveable. Defaults to True.
+        ur_model (str): determines which ur model will be used in the environment. Defaults to 'ur5'.
+        include_polar_to_elbow (bool): determines wether or not the polar coordinates to the elbow joint are included in the state. Defaults to False. 
+
+    Attributes:
+        ur (:obj:): Robot utilities object.
+        client (:obj:str): Robot Server client.
+        real_robot (bool): True if the environment is controlling a real robot.
+
+    """
     max_episode_steps = 1000
 
     def __init__(self, rs_address=None, fix_base=False, fix_shoulder=False, fix_elbow=False, fix_wrist_1=False, fix_wrist_2=False, fix_wrist_3=True, ur_model='ur5', include_polar_to_elbow=True, **kwargs) -> None:
