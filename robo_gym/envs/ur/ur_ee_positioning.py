@@ -130,10 +130,7 @@ class EndEffectorPositioningUR(URBaseEnv):
         Args:
             joint_positions (list[6] or np.array[6]): robot joint positions in radians.
             ee_target_pose (list[6] or np.array[6]): [x,y,z,r,p,y] target end effector pose.
-        
-        Returns:
-            np.array: Environment state.
-
+            randomize_start (bool): if True the starting position is randomized defined by the RANDOM_JOINT_OFFSET
         """
         self.elapsed_steps = 0
 

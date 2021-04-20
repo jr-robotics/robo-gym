@@ -65,10 +65,6 @@ class MovingBoxTargetUR(URBaseAvoidanceEnv):
         Args:
             joint_positions (list[6] or np.array[6]): robot joint positions in radians.
             fixed_object_position (list[3]): x,y,z fixed position of object
-
-        Returns:
-            np.array: Environment state.
-
         """
         self.state = super().reset(joint_positions = joint_positions, fixed_object_position = fixed_object_position)   
 

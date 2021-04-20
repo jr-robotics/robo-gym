@@ -70,9 +70,6 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
 
         Args:
             fixed_object_position (list[3]): x,y,z fixed position of object
-
-        Returns:
-            np.array: Environment state.
         """
         # Initialize state machine variables
         self.state_n = 0 
@@ -187,10 +184,6 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
 
         Args:
             rs_state (list): State in Robot Server format.
-
-        Returns:
-            numpy.array: State in environment format.
-
         """
         state = super()._robot_server_state_to_env_state(rs_state)
 
@@ -202,12 +195,7 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
         return state
 
     def _get_observation_space(self) -> gym.spaces.Box:
-        """Get environment observation space.
-
-        Returns:
-            gym.spaces: Gym observation space object.
-
-        """
+        """Get environment observation space."""
 
         # Joint position range tolerance
         pos_tolerance = np.full(6,0.1)
@@ -238,11 +226,8 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
 
         Describes the composition of the environment state and returns
         its length.
-
-        Returns:
-            int: Length of the environment state
-
         """
+        
         object_polar_coords_ee = [0.0]*3
         ur_j_pos = [0.0]*6
         ur_j_delta = [0.0]*6
@@ -254,12 +239,8 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
         return len(env_state)
 
     def _get_joint_positions(self) -> np.array:
-        """Get desired robot joint positions.
+        """Get robot joint positions with standard indexing."""
 
-        Returns:
-            np.array: Joint positions with standard indexing.
-
-        """
         if self.elapsed_steps_in_current_state < len(self.trajectory[self.state_n]):
             joint_positions = copy.deepcopy(self.trajectory[self.state_n][self.elapsed_steps_in_current_state])
             self.target_point_flag = 0
