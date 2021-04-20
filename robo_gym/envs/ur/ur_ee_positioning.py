@@ -2,11 +2,10 @@ import copy
 import numpy as np
 import gym
 from scipy.spatial.transform import Rotation as R
-
 from robo_gym.utils.exceptions import InvalidStateError, RobotServerError
-from robo_gym.envs.simulation_wrapper import Simulation
-from robo_gym.utils import utils, ur_utils
+from robo_gym.utils import utils
 from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
+from robo_gym.envs.simulation_wrapper import Simulation
 from robo_gym.envs.ur.ur_base_env import URBaseEnv
 
 JOINT_POSITIONS = [0.0, -2.5, 1.5, 0, -1.4, 0]
