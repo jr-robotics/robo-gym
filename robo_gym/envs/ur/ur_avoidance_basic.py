@@ -23,7 +23,7 @@ class MovingBoxTargetUR(URBaseAvoidanceEnv):
             
     def _set_initial_robot_server_state(self, rs_state, fixed_object_position = None) -> robot_server_pb2.State:
         if fixed_object_position:
-            state_msg = super()._set_initial_robot_server_state(fixed_object_position=fixed_object_position)
+            state_msg = super()._set_initial_robot_server_state(rs_state=rs_state, fixed_object_position=fixed_object_position)
             return state_msg
 
         z_amplitude = np.random.default_rng().uniform(low=0.09, high=0.35)

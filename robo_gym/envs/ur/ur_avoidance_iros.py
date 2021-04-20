@@ -32,7 +32,7 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
 
     def _set_initial_robot_server_state(self, rs_state, fixed_object_position = None) -> robot_server_pb2.State:
         if fixed_object_position:
-            state_msg = super()._set_initial_robot_server_state(fixed_object_position=fixed_object_position)
+            state_msg = super()._set_initial_robot_server_state(rs_state=rs_state, fixed_object_position=fixed_object_position)
             return state_msg
 
         n_sampling_points = int(np.random.default_rng().uniform(low=8000, high=12000))
