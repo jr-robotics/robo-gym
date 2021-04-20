@@ -6,17 +6,10 @@ The goal is for the robot to stay within a predefined minimum distance to the mo
 When feasible the robot should continue to the original configuration, 
 otherwise wait for the obstacle to move away before proceeding
 """
-import math
-import gym
 import numpy as np
-from scipy.spatial.transform import Rotation as R
-
-from robo_gym.utils import utils, ur_utils
-from robo_gym.utils.exceptions import InvalidStateError, RobotServerError, InvalidActionError
-import robo_gym_server_modules.robot_server.client as rs_client
-from robo_gym.envs.simulation_wrapper import Simulation
-from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
 from typing import Tuple
+from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
+from robo_gym.envs.simulation_wrapper import Simulation
 from robo_gym.envs.ur.ur_base_avoidance_env import URBaseAvoidanceEnv
 
 
