@@ -62,14 +62,14 @@ class URBaseEnv(gym.Env):
         self.np_random, seed = gym.utils.seeding.np_random(seed)
         return [seed]
 
-    def _set_initial_robot_server_state(self, rs_state):
+    def _set_initial_robot_server_state(self, rs_state) -> robot_server_pb2.State:
         string_params = {}
         float_params = {}
 
         state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
         return state_msg
 
-    def reset(self, joint_positions = None):
+    def reset(self, joint_positions = None) -> np.array:
         """Environment reset.
 
         Args:
@@ -123,7 +123,7 @@ class URBaseEnv(gym.Env):
             
         return self.state
 
-    def _reward(self, rs_state, action):
+    def _reward(self, rs_state, action) -> Tuple[float, bool, dict]:
         done = False
         info = {}
 
@@ -199,7 +199,7 @@ class URBaseEnv(gym.Env):
     def render():
         pass
 
-    def _get_robot_server_state_len(self):
+    def _get_robot_server_state_len(self) -> int:
         """Get length of the Robot Server state.
 
         Describes the composition of the Robot Server state and returns
@@ -219,7 +219,7 @@ class URBaseEnv(gym.Env):
 
         return len(rs_state)
 
-    def _get_env_state_len(self):
+    def _get_env_state_len(self) -> int:
         """Get length of the environment state.
 
         Describes the composition of the environment state and returns
@@ -239,12 +239,12 @@ class URBaseEnv(gym.Env):
         """Set desired robot joint positions with standard indexing."""
         assert len(joint_positions) == 6
         self.joint_positions = copy.deepcopy(joint_positions)
+
     def _get_joint_positions(self) -> np.array:
         """Get robot joint positions with standard indexing."""
         return np.array(self.joint_positions)
 
-    # ? move to ee env
-    def _get_target_pose(self):
+    def _get_target_pose(self) -> np.array:
         """Generate target End Effector pose.
 
         Returns:
@@ -253,7 +253,7 @@ class URBaseEnv(gym.Env):
         """
         return self.ur.get_random_workspace_pose()
 
-    def _robot_server_state_to_env_state(self, rs_state):
+    def _robot_server_state_to_env_state(self, rs_state) -> np.array:
         """Transform state from Robot Server to environment format.
 
         Args:

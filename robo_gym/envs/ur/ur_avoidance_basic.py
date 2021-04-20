@@ -21,12 +21,11 @@ class MovingBoxTargetUR(URBaseAvoidanceEnv):
     
     max_episode_steps = 1000
             
-    # TODO: add typing to method head
-    def _set_initial_robot_server_state(self, rs_state, fixed_object_position = None):
+    def _set_initial_robot_server_state(self, rs_state, fixed_object_position = None) -> robot_server_pb2.State:
         if fixed_object_position:
             state_msg = super()._set_initial_robot_server_state(fixed_object_position=fixed_object_position)
             return state_msg
-            
+
         z_amplitude = np.random.default_rng().uniform(low=0.09, high=0.35)
         z_frequency = 0.125
         z_offset = np.random.default_rng().uniform(low=0.2, high=0.6)
@@ -93,7 +92,8 @@ class MovingBoxTargetUR(URBaseAvoidanceEnv):
         # Negative reward if the obstacle is close than the predefined minimum distance
         if distance_to_target < MINIMUM_DISTANCE:
             reward += close_distance_weight * (1/self.max_episode_steps) 
-
+        
+        # Check if there is a collision
         collision = True if rs_state[25] == 1 else False
         if collision:
             done = True
@@ -110,7 +110,6 @@ class MovingBoxTargetUR(URBaseAvoidanceEnv):
 
         return reward, done, info
 
-    # TODO: once normalization is gone this method can be merged with URBaseEnv
     def step(self, action) -> Tuple[np.array, float, bool, dict]:
         
         self.state, reward, done, info = super().step(action)

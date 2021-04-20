@@ -31,8 +31,7 @@ class URBaseAvoidanceEnv(URBaseEnv):
         self.include_polar_to_elbow = include_polar_to_elbow
         super().__init__(rs_address, fix_base, fix_shoulder, fix_elbow, fix_wrist_1, fix_wrist_2, fix_wrist_3, ur_model)
         
-    
-    def _set_initial_robot_server_state(self, rs_state, fixed_object_position):
+    def _set_initial_robot_server_state(self, rs_state, fixed_object_position) -> robot_server_pb2.State:
         string_params = {}
         float_params = {}
 
@@ -179,7 +178,7 @@ class URBaseAvoidanceEnv(URBaseEnv):
 
         return state
 
-    def _get_env_state_len(self):
+    def _get_env_state_len(self) -> int:
         """Get length of the environment state.
 
         Describes the composition of the environment state and returns
@@ -225,7 +224,6 @@ class URBaseAvoidanceEnv(URBaseEnv):
 
 
         return gym.spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
-
 
     def add_fixed_joints(self, action) -> np.array:
         action = action.tolist()

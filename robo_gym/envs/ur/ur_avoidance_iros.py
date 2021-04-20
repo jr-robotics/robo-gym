@@ -30,14 +30,13 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
         with open(file_path) as json_file:
             self.trajectory = json.load(json_file)['trajectory']
 
-    # TODO: add typing to method head
-    def _set_initial_robot_server_state(self, rs_state, fixed_object_position = None):
+    def _set_initial_robot_server_state(self, rs_state, fixed_object_position = None) -> robot_server_pb2.State:
         if fixed_object_position:
             state_msg = super()._set_initial_robot_server_state(fixed_object_position=fixed_object_position)
             return state_msg
 
         n_sampling_points = int(np.random.default_rng().uniform(low=8000, high=12000))
-        # TODO: generalize for all urs
+
         string_params = {"object_0_function": "3d_spline_ur5_workspace"}
         
         float_params = {"object_0_x_min": -1.0, "object_0_x_max": 1.0, "object_0_y_min": -1.0, "object_0_y_max": 1.0, \
@@ -70,7 +69,6 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
             
         return self.state
 
-
     def step(self, action) -> Tuple[np.array, float, bool, dict]:
         self.elapsed_steps_in_current_state += 1
         
@@ -85,7 +83,6 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
             self.target_reached = 0
 
         return self.state, reward, done, info
-
 
     def _reward(self, rs_state, action) -> Tuple[float, bool, dict]:
         env_state = self._robot_server_state_to_env_state(rs_state)
@@ -185,7 +182,6 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
 
         return state
 
-    # observation space should be fine
     def _get_observation_space(self) -> gym.spaces.Box:
         """Get environment observation space.
 
@@ -218,7 +214,7 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
 
         return gym.spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
 
-    def _get_env_state_len(self):
+    def _get_env_state_len(self) -> int:
         """Get length of the environment state.
 
         Describes the composition of the environment state and returns
@@ -238,8 +234,6 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
 
         return len(env_state)
 
-
-
     def _get_joint_positions(self) -> np.array:
         """Get desired robot joint positions.
 
@@ -257,8 +251,6 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
         
 
         return joint_positions
-
-
 
 class IrosEnv03URTrainingSim(IrosEnv03URTraining, Simulation):
     cmd = "roslaunch ur_robot_server ur_robot_server.launch \
