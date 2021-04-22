@@ -76,8 +76,13 @@ def test_reset_joint_positions(env):
 
 
 test_ur_fixed_joints = [
+    ('EmptyEnvironmentURSim-v0', True, False, False, False, False, False, 'ur3'), # fixed shoulder_pan
+    ('EmptyEnvironmentURSim-v0', False, True, False, False, False, False, 'ur3e'), # fixed shoulder_lift
     ('EmptyEnvironmentURSim-v0', False, False, False, False, False, True, 'ur5'), # fixed wrist_3
-    ('EmptyEnvironmentURSim-v0', True, False, True, False, False, False, 'ur5'), # fixed Base and Elbow
+    ('EmptyEnvironmentURSim-v0', True, False, True, False, False, False, 'ur5e'), # fixed Base and Elbow
+    ('EmptyEnvironmentURSim-v0', False, False, True, False, False, False, 'ur10'), # fixed elbow
+    ('EmptyEnvironmentURSim-v0', False, False, False, True, False, False, 'ur10e'), # fixed wrist_1
+    ('EmptyEnvironmentURSim-v0', False, False, False, False, True, False, 'ur16e'), # fixed wrist_2
 ]
 
 @pytest.mark.nightly
@@ -87,23 +92,12 @@ def test_fixed_joints(env_name, fix_base, fix_shoulder, fix_elbow, fix_wrist_1, 
     env = gym.make(env_name, ip='robot-servers', fix_base=fix_base, fix_shoulder=fix_shoulder, fix_elbow=fix_elbow, 
                                                 fix_wrist_1=fix_wrist_1, fix_wrist_2=fix_wrist_2, fix_wrist_3=fix_wrist_3, ur_model=ur_model)
     state = env.reset()
-    
-    initial_joint_positions = [0.0]*6
-    if env_name == 'EmptyEnvironmentURSim-v0':
-        initial_joint_positions = state[0:6]
-    else:
-        initial_joint_positions = state[3:9]
-    
+    initial_joint_positions = state[0:6]
     # Take 20 actions
     action = env.action_space.sample()
     for _ in range(20):
         state, _, _, _ = env.step(action)
-    
-    joint_positions = [0.0]*6
-    if env_name == 'EmptyEnvironmentURSim-v0':
-        joint_positions = state[0:6]
-    else:
-        joint_positions = state[3:9]
+    joint_positions = state[0:6]
 
     if fix_base:
         assert math.isclose(initial_joint_positions[0], joint_positions[0], abs_tol=0.05)
