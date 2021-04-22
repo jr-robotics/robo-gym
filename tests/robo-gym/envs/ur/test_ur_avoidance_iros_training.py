@@ -106,16 +106,11 @@ def test_fixed_joints(env_name, fix_base, fix_shoulder, fix_elbow, fix_wrist_1, 
     env = gym.make(env_name, ip='robot-servers', fix_base=fix_base, fix_shoulder=fix_shoulder, fix_elbow=fix_elbow, 
                                                 fix_wrist_1=fix_wrist_1, fix_wrist_2=fix_wrist_2, fix_wrist_3=fix_wrist_3, ur_model=ur_model)
     state = env.reset()
-    
-    initial_joint_positions = [0.0]*6
     initial_joint_positions = state[3:9]
-    
     # Take 20 actions
     action = env.action_space.sample()
     for _ in range(20):
         state, _, _, _ = env.step(action)
-    
-    joint_positions = [0.0]*6
     joint_positions = state[3:9]
 
     if fix_base:
