@@ -9,6 +9,9 @@ from robo_gym.utils.exceptions import InvalidStateError, RobotServerError
 from robo_gym.envs.ur.ur_base_env import URBaseEnv
 
 
+
+
+
 DEBUG = True
 JOINT_POSITIONS = [0.0, -2.5, 1.5, 0, -1.4, 0]
 class URBaseAvoidanceEnv(URBaseEnv):

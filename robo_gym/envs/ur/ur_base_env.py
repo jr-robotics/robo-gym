@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-
-
 import copy
 import numpy as np
 import gym
@@ -11,7 +9,86 @@ import robo_gym_server_modules.robot_server.client as rs_client
 from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
 from robo_gym.envs.simulation_wrapper import Simulation
 
+
+# TODO: test live share
+# TODO: claudia email
 # TODO: remove env state len function is not used anywhere
+# TODO: fix composition in the base env. How do i control what i will receive?
+# TODO: fix names for a flat dictionary representing the rs state
+# TODO: remove the function "get_env_state_len"
+# TODO: this grpc thing can only handle float types right?
+
+# TODO: insert check of all necessary keys are present on submit
+
+# TODO: common name for target and obstacle or different name for them?
+
+rs_state_keys = dict.fromkeys([
+    'target_x',
+    'target_y',
+    'target_z',
+    !'target_y',
+    !'target_y',
+    !'target_y',
+    'base_joint_position',
+    'shoulder_joint_position',
+    'elbow_joint_position',
+    'wrist_1_joint_position',
+    'wrist_2_joint_position',
+    'wrist_3_joint_position',
+    'base_joint_velocity',
+    'shoulder_joint_velocity',
+    'elbow_joint_velocity',
+    'wrist_1_joint_velocity',
+    'wrist_2_joint_velocity',
+    'wrist_3_joint_velocity',
+    !'ee_frame_x',
+    !'ee_frame_x',
+    !'ee_frame_x',
+    !'ee_frame_x',
+    !'ee_frame_x',
+    !'ee_frame_x',
+    !'ee_frame_x',
+    !'ee_frame_x',
+    'in_collision'
+])
+
+rs_state = {
+    'target_x': 0.0,
+    'target_y': 0.0,
+    'target_z': 0.0,
+    !'target_y': 0.0,
+    !'target_y': 0.0,
+    !'target_y': 0.0,
+    'base_joint_position': 0.0,
+    'shoulder_joint_position': 0.0,
+    'elbow_joint_position': 0.0,
+    'wrist_1_joint_position': 0.0,
+    'wrist_2_joint_position': 0.0,
+    'wrist_3_joint_position': 0.0,
+    'base_joint_velocity': 0.0,
+    'shoulder_joint_velocity': 0.0,
+    'elbow_joint_velocity': 0.0,
+    'wrist_1_joint_velocity': 0.0,
+    'wrist_2_joint_velocity': 0.0,
+    'wrist_3_joint_velocity': 0.0,
+    !'ee_frame_x': 0.0,
+    !'ee_frame_x': 0.0,
+    !'ee_frame_x': 0.0,
+    !'ee_frame_x': 0.0,
+    !'ee_frame_x': 0.0,
+    !'ee_frame_x': 0.0,
+    !'ee_frame_x': 0.0,
+    !'ee_frame_x': 0.0,
+    'in_collision': 0.0
+}
+target = [0.0]*6
+ur_j_pos = [0.0]*6
+ur_j_vel = [0.0]*6
+ee_to_ref_frame_transform = [0.0]*7
+ur_collision = [0.0]
+rs_state = target + ur_j_pos + ur_j_vel + ee_to_ref_frame_transform + ur_collision
+
+
 
 JOINT_POSITIONS = [0.0, -2.5, 1.5, 0, -1.4, 0]
 class URBaseEnv(gym.Env):
