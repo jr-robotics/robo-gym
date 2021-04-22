@@ -6,13 +6,13 @@ import numpy as np
 
 import pytest
 
-ur_models = [pytest.param('ur3', marks=pytest.mark.skip(reason='not implemented yet')), \
-             pytest.param('ur3e', marks=pytest.mark.skip(reason='not implemented yet')), \
+ur_models = [pytest.param('ur3', marks=pytest.mark.nightly), \
+             pytest.param('ur3e', marks=pytest.mark.nightly), \
              pytest.param('ur5', marks=pytest.mark.commit), \
-             pytest.param('ur5e', marks=pytest.mark.skip(reason='not implemented yet')), \
+             pytest.param('ur5e', marks=pytest.mark.nightly), \
              pytest.param('ur10', marks=pytest.mark.nightly), \
-             pytest.param('ur10e', marks=pytest.mark.skip(reason='not implemented yet')), \
-             pytest.param('ur16e', marks=pytest.mark.skip(reason='not implemented yet')), \
+             pytest.param('ur10e', marks=pytest.mark.nightly), \
+             pytest.param('ur16e', marks=pytest.mark.nightly), \
 ]
 
 @pytest.fixture(autouse=True, scope='module', params=ur_models)
@@ -36,8 +36,13 @@ def test_initialization(env):
 @pytest.mark.commit 
 @pytest.mark.flaky(reruns=3)
 def test_self_collision(env):
-    collision_joint_config = {'ur5': [0.0, -1.26, -3.14, 0.0, 0.0], \
-                              'ur10': [0.0, -1.5, 3.14, 0.0, 0.0]}
+    collision_joint_config = {'ur3': [0.0, 0.0, -3.14, -1.77, 1.0], \
+                              'ur3e': [0.0, -1.88, 2.8, -0.75, -1.88], \
+                              'ur5': [0.0, -1.26, -3.14, 0.0, 0.0], \
+                              'ur5e': [0.0, -0.50, -4.8, 3.14, 0.0], \
+                              'ur10': [0.0, -1.5, 3.14, 0.0, 0.0], \
+                              'ur10e': [0.0, -0.15, -2.83, -2.51, 1.63], \
+                              'ur16e': [0.0, -1.15, 2.9, -0.19, 0.42]}
     env.reset()
     action = env.ur.normalize_joint_values(collision_joint_config[env.ur.model])
     done = False
@@ -48,8 +53,13 @@ def test_self_collision(env):
 @pytest.mark.commit 
 @pytest.mark.flaky(reruns=3)
 def test_collision_with_ground(env):
-    collision_joint_config = {'ur5': [0.0, 1.0, 1.8, 0.0, 0.0], \
-                              'ur10': [0.0, 1.0, 1.15, 0.0, 0.0]}
+    collision_joint_config = {'ur3': [0.0, 2.64, -1.95, -2.98, 0.41], \
+                              'ur3e': [1.13, 1.88, -2.19, -3.43, 2.43], \
+                              'ur5': [0.0, 1.0, 1.8, 0.0, 0.0], \
+                              'ur5e': [0.0, 3.52, -2.58, 0.0, 0.0], \
+                              'ur10': [0.0, 1.0, 1.15, 0.0, 0.0], \
+                              'ur10e': [-2.14, -0.13, 0.63, -1.13, 1.63], \
+                              'ur16e': [0.0, -0.15, 1.32, 0.0, 1.63]}
     env.reset()
     action = env.ur.normalize_joint_values(collision_joint_config[env.ur.model])
     done = False
