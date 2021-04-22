@@ -9,7 +9,47 @@ from robo_gym.utils.exceptions import InvalidStateError, RobotServerError
 from robo_gym.envs.ur.ur_base_env import URBaseEnv
 
 
+rs_state_keys = dict.fromkeys([
+    'object_0_position_x', 
+    'object_0_position_y',
+    'object_0_position_z',
+    'object_0_orientation_x',
+    'object_0_orientation_y',
+    'object_0_orientation_z',
+    'object_0_orientation_w',
 
+    'base_joint_position',
+    'shoulder_joint_position',
+    'elbow_joint_position',
+    'wrist_1_joint_position',
+    'wrist_2_joint_position',
+    'wrist_3_joint_position',
+
+    'base_joint_velocity',
+    'shoulder_joint_velocity',
+    'elbow_joint_velocity',
+    'wrist_1_joint_velocity',
+    'wrist_2_joint_velocity',
+    'wrist_3_joint_velocity',
+
+    'ee_to_ref_translation_x',
+    'ee_to_ref_translation_y',
+    'ee_to_ref_translation_z',
+    'ee_to_ref_rotation_x',
+    'ee_to_ref_rotation_y',
+    'ee_to_ref_rotation_z',
+    'ee_to_ref_rotation_w',
+
+    'forearm_to_ref_translation_x',
+    'forearm_to_ref_translation_y',
+    'forearm_to_ref_translation_z',
+    'forearm_to_ref_rotation_x',
+    'forearm_to_ref_rotation_y',
+    'forearm_to_ref_rotation_z',
+    'forearm_to_ref_rotation_w',
+
+    'in_collision'
+])
 
 
 DEBUG = True
@@ -148,6 +188,7 @@ class URBaseAvoidanceEnv(URBaseEnv):
         # Normalize joint position values
         ur_j_pos_norm = self.ur.normalize_joint_values(joints=ur_j_pos)
 
+        # TODO: rename desired to trajectory
         # desired joint positions
         desired_joints = self.ur.normalize_joint_values(self._get_joint_positions())
         delta_joints = ur_j_pos_norm - desired_joints
