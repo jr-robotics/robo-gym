@@ -61,8 +61,10 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
         float_params = {"object_0_x_min": -1.0, "object_0_x_max": 1.0, "object_0_y_min": -1.0, "object_0_y_max": 1.0, \
                         "object_0_z_min": 0.1, "object_0_z_max": 1.0, "object_0_n_points": 10, \
                         "n_sampling_points": n_sampling_points}
+        state = {}
 
-        state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
+        state_msg = robot_server_pb2.State(state = state, float_params = float_params, 
+                                            string_params = string_params, state_dict = rs_state)
         return state_msg
 
     def reset(self, fixed_object_position = None) -> np.array:
@@ -105,13 +107,21 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
 
         # TODO: move back to step function?
         # Check if the robot is at the target position
+        # Joint positions 
+        joint_positions = []
+        joint_positions_keys = ['base_joint_position', 'shoulder_joint_position', 'elbow_joint_position',
+                            'wrist_1_joint_position', 'wrist_2_joint_position', 'wrist_3_joint_position']
+        for position in joint_positions_keys:
+            joint_positions.append(rs_state[position])
+        joint_positions = np.array(joint_positions)
+        
         if self.target_point_flag:
-            if np.isclose(self._get_joint_positions(), self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12]), atol = 0.1).all():
+            if np.isclose(self._get_joint_positions(), joint_positions, atol = 0.1).all():
                 self.target_reached = 1
 
         # TODO: remove as soon as rs state is a dictonary
         # Save obstacle position
-        self.obstacle_coords.append(rs_state[0:3])
+        self.obstacle_coords.append(np.array([rs_state['object_0_position_x'], rs_state['object_0_position_y'], rs_state['object_0_position_z']]))
 
         reward = 0
         done = False
@@ -126,11 +136,11 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
         target_reached_weight = 0.05
 
         # Calculate distance to the target
-        target_coord = rs_state[0:3]
-        ee_coord = rs_state[18:21]
-        elbow_coord = rs_state[26:29]
+        target_coord = np.array([rs_state['object_0_position_x'], rs_state['object_0_position_y'], rs_state['object_0_position_z']])
+        ee_coord = np.array([rs_state['ee_to_ref_translation_x'], rs_state['ee_to_ref_translation_y'], rs_state['ee_to_ref_translation_z']])
+        forearm_coord = np.array([rs_state['forearm_to_ref_translation_x'], rs_state['forearm_to_ref_translation_y'], rs_state['forearm_to_ref_translation_z']])
         distance_to_ee = np.linalg.norm(np.array(target_coord)-np.array(ee_coord))
-        distance_to_elbow = np.linalg.norm(np.array(target_coord)-np.array(elbow_coord))
+        distance_to_elbow = np.linalg.norm(np.array(target_coord)-np.array(forearm_coord))
             
         # Reward staying close to the predefined joint position
         delta_joint_pos = env_state[9:15]
@@ -158,7 +168,7 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
             reward += target_reached_weight
 
         # Check if robot is in collision
-        collision = True if rs_state[25] == 1 else False
+        collision = True if rs_state['in_collision'] == 1 else False
         if collision:
             # Negative reward for a collision with the robot itself, the obstacle or the scene
             reward = collision_weight
@@ -172,10 +182,6 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
         if done:
             info['targets_reached'] = self.target_reached_counter
             info['obstacle_coords'] = self.obstacle_coords
-
-        # if DEBUG: 
-        #     self.print_state_action_info(rs_state, action)
-        #     print('Distance 1: {:.2f} Distance 2: {:.2f}'.format(distance_to_ee, distance_to_elbow))
 
         return reward, done, info
 
@@ -221,22 +227,6 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
 
         return gym.spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
 
-    def _get_env_state_len(self) -> int:
-        """Get length of the environment state.
-
-        Describes the composition of the environment state and returns
-        its length.
-        """
-
-        object_polar_coords_ee = [0.0]*3
-        ur_j_pos = [0.0]*6
-        ur_j_delta = [0.0]*6
-        object_polar_coords_elbow = [0.0]*3
-        trajectory_j_pos = [0.0] * 6
-        target_flag = [0.0]*1
-        env_state = object_polar_coords_ee + ur_j_pos + ur_j_delta + object_polar_coords_elbow + trajectory_j_pos + target_flag
-
-        return len(env_state)
 
     def _get_joint_positions(self) -> np.array:
         """Get robot joint positions with standard indexing."""
@@ -249,7 +239,6 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
             joint_positions = copy.deepcopy(self.trajectory[self.state_n][-1])
             self.target_point_flag = 1
         
-
         return joint_positions
 
 class IrosEnv03URTrainingSim(IrosEnv03URTraining, Simulation):
@@ -295,8 +284,10 @@ class IrosEnv03URTestFixedSplines(IrosEnv03URTraining):
         
         string_params = {"object_0_function": "fixed_trajectory"}
         float_params = {"object_0_trajectory_id": self.ep_n%50}
+        state = {}
 
-        state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
+        state_msg = robot_server_pb2.State(state = state, float_params = float_params, 
+                                string_params = string_params, state_dict = rs_state)
         return state_msg
 
     def reset(self):
