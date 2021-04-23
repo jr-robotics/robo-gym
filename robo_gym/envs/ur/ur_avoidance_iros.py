@@ -6,8 +6,6 @@ The goal of the robot is to avoid dynamic obstacles while following pre-planned 
 which was programmed with the UR’s teach pendant. 
 This trajectory is sampled at a frequency of 20 Hz.
 """
-# TODO: add sentence that this is the environment used in the submission to iros 2021 
-
 import os, copy, json
 import numpy as np
 import gym
@@ -79,7 +77,6 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
         self.target_reached = 0
         self.target_reached_counter = 0
 
-        self.obstacle_coords = []
         self.prev_action = np.zeros(6)
 
         joint_positions = self._get_joint_positions()
@@ -92,6 +89,18 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
         self.elapsed_steps_in_current_state += 1
         
         state, reward, done, info = super().step(action)
+
+        # Check if waypoint was reached
+        joint_positions = []
+        joint_positions_keys = ['base_joint_position', 'shoulder_joint_position', 'elbow_joint_position',
+                            'wrist_1_joint_position', 'wrist_2_joint_position', 'wrist_3_joint_position']
+        for position in joint_positions_keys:
+            joint_positions.append(self.rs_state[position])
+        joint_positions = np.array(joint_positions)
+        
+        if self.target_point_flag:
+            if np.isclose(self._get_joint_positions(), joint_positions, atol = 0.1).all():
+                self.target_reached = 1
 
         if self.target_reached:
             self.state_n +=1
@@ -107,24 +116,6 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
 
     def _reward(self, rs_state, action) -> Tuple[float, bool, dict]:
         env_state = self._robot_server_state_to_env_state(rs_state)
-
-        # TODO: move back to step function?
-        # Check if the robot is at the target position
-        # Joint positions 
-        joint_positions = []
-        joint_positions_keys = ['base_joint_position', 'shoulder_joint_position', 'elbow_joint_position',
-                            'wrist_1_joint_position', 'wrist_2_joint_position', 'wrist_3_joint_position']
-        for position in joint_positions_keys:
-            joint_positions.append(rs_state[position])
-        joint_positions = np.array(joint_positions)
-        
-        if self.target_point_flag:
-            if np.isclose(self._get_joint_positions(), joint_positions, atol = 0.1).all():
-                self.target_reached = 1
-
-        # TODO: remove as soon as rs state is a dictonary
-        # Save obstacle position
-        self.obstacle_coords.append(np.array([rs_state['object_0_position_x'], rs_state['object_0_position_y'], rs_state['object_0_position_z']]))
 
         reward = 0
         done = False
@@ -184,7 +175,6 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
         
         if done:
             info['targets_reached'] = self.target_reached_counter
-            info['obstacle_coords'] = self.obstacle_coords
 
         return reward, done, info
 
@@ -278,8 +268,6 @@ class IrosEnv03URTrainingSim(IrosEnv03URTraining, Simulation):
 class IrosEnv03URTrainingRob(IrosEnv03URTraining):
     real_robot = True
 
-# TODO: check if this roslaunch is correct
-# TODO: add roslaunch for the realsense skeleton tracker
 # roslaunch ur_robot_server ur_robot_server.launch ur_model:=ur5 real_robot:=true rviz_gui:=true gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=1moving2points n_objects:=1.0 object_0_frame:=target
 
 
@@ -291,8 +279,7 @@ In contrast to the training environment the obstacle trajectories are fixed inst
 class IrosEnv03URTestFixedSplines(IrosEnv03URTraining):
     ep_n = 0 
 
-    # TODO: add typing to method head
-    def _set_initial_robot_server_state(self, rs_state, fixed_object_position = None):
+    def _set_initial_robot_server_state(self, rs_state, fixed_object_position = None) -> robot_server_pb2.State:
         if fixed_object_position:
             state_msg = super()._set_initial_robot_server_state(rs_state=rs_state, fixed_object_position=fixed_object_position)
             return state_msg

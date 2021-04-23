@@ -185,9 +185,7 @@ class URBaseEnv(gym.Env):
             raise InvalidActionError()
 
         # Add missing joints which were fixed at initialization
-        print('before fix', action)
         action = self.add_fixed_joints(action)
-        print('after fix', action)
 
         # Convert environment action to robot server action
         rs_action = self.env_action_to_rs_action(action)
@@ -291,15 +289,7 @@ class URBaseEnv(gym.Env):
         joint_positions.append(self.joint_positions['wrist_3_joint_position'])
         return np.array(joint_positions)
 
-    # TODO: remove from ur base env
-    def _get_target_pose(self) -> np.array:
-        """Generate target End Effector pose.
 
-        Returns:
-            np.array: [x,y,z,alpha,theta,gamma] pose.
-
-        """
-        return self.ur.get_random_workspace_pose()
 
     def get_joint_name_order(self) -> list:
         return ['base', 'shoulder', 'elbow', 'wrist_1', 'wrist_2', 'wrist_3']
@@ -374,7 +364,6 @@ class URBaseEnv(gym.Env):
         return gym.spaces.Box(low=np.full((num_control_joints), -1.0), high=np.full((num_control_joints), 1.0), dtype=np.float32)
 
 
-# TODO: remove object target
 class EmptyEnvironmentURSim(URBaseEnv, Simulation):
     cmd = "roslaunch ur_robot_server ur_robot_server.launch \
         world_name:=tabletop_sphere50.world \

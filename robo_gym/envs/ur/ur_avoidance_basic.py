@@ -141,7 +141,6 @@ class MovingBoxTargetUR(URBaseAvoidanceEnv):
 
         return state, reward, done, info
     
-# TODO: yaw is different from the iros env -> check 
 class MovingBoxTargetURSim(MovingBoxTargetUR, Simulation):
     cmd = "roslaunch ur_robot_server ur_robot_server.launch \
         world_name:=tabletop_sphere50.world \

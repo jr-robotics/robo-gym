@@ -284,6 +284,15 @@ class EndEffectorPositioningUR(URBaseEnv):
             info['target_coord'] = target_coord
 
         return reward, done, info
+
+    def _get_target_pose(self) -> np.array:
+        """Generate target End Effector pose.
+
+        Returns:
+            np.array: [x,y,z,alpha,theta,gamma] pose.
+
+        """
+        return self.ur.get_random_workspace_pose()
         
 class EndEffectorPositioningURSim(EndEffectorPositioningUR, Simulation):
     cmd = "roslaunch ur_robot_server ur_robot_server.launch \
