@@ -84,16 +84,16 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
 
         joint_positions = self._get_joint_positions()
 
-        self.state = super().reset(joint_positions = joint_positions, fixed_object_position = fixed_object_position)
+        state = super().reset(joint_positions = joint_positions, fixed_object_position = fixed_object_position)
             
-        return self.state
+        return state
 
     def step(self, action) -> Tuple[np.array, float, bool, dict]:
         self.elapsed_steps_in_current_state += 1
         if self.prev_action == None:
             self.prev_action = action
         
-        self.state, reward, done, info = super().step(action)
+        state, reward, done, info = super().step(action)
 
         if self.target_reached:
             self.state_n +=1
@@ -105,7 +105,7 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
 
         self.prev_action = action
 
-        return self.state, reward, done, info
+        return state, reward, done, info
 
     def _reward(self, rs_state, action) -> Tuple[float, bool, dict]:
         env_state = self._robot_server_state_to_env_state(rs_state)
@@ -308,11 +308,11 @@ class IrosEnv03URTestFixedSplines(IrosEnv03URTraining):
         return state_msg
 
     def reset(self):
-        self.state = super().reset()
+        state = super().reset()
         
         self.ep_n +=1
 
-        return self.state
+        return state
 
 class IrosEnv03URTestFixedSplinesSim(IrosEnv03URTestFixedSplines, Simulation):
     cmd = "roslaunch ur_robot_server ur_robot_server.launch \

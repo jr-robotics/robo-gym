@@ -185,7 +185,7 @@ class EndEffectorPositioningUR(URBaseEnv):
 
         # Initialize environment state
         state_len = self.observation_space.shape[0]
-        self.state = np.zeros(state_len)
+        state = np.zeros(state_len)
         rs_state = self._get_robot_server_composition()
 
         # Set initial robot joint positions
@@ -220,10 +220,10 @@ class EndEffectorPositioningUR(URBaseEnv):
             raise InvalidStateError("Robot Server state received has wrong length")
 
         # Convert the initial state from Robot Server format to environment format
-        self.state = self._robot_server_state_to_env_state(rs_state)
+        state = self._robot_server_state_to_env_state(rs_state)
 
         # Check if the environment state is contained in the observation space
-        if not self.observation_space.contains(self.state):
+        if not self.observation_space.contains(state):
             raise InvalidStateError()
         
         # Check if current position is in the range of the initial joint positions
@@ -231,7 +231,7 @@ class EndEffectorPositioningUR(URBaseEnv):
             if not np.isclose(self.joint_positions[joint], rs_state[joint], atol=0.05):
                 raise InvalidStateError('Reset joint positions are not within defined range')
             
-        return self.state
+        return state
 
     def _reward(self, rs_state, action) -> Tuple[float, bool, dict]:
         reward = 0

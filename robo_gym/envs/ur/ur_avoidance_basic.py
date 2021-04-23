@@ -71,9 +71,9 @@ class MovingBoxTargetUR(URBaseAvoidanceEnv):
         """
         self.prev_action = None
 
-        self.state = super().reset(joint_positions = joint_positions, fixed_object_position = fixed_object_position)   
+        state = super().reset(joint_positions = joint_positions, fixed_object_position = fixed_object_position)   
 
-        return self.state
+        return state
 
     def _reward(self, rs_state, action) -> Tuple[float, bool, dict]:
         env_state = self._robot_server_state_to_env_state(rs_state)
@@ -137,11 +137,11 @@ class MovingBoxTargetUR(URBaseAvoidanceEnv):
         if self.prev_action == None:
             self.prev_action = action
         
-        self.state, reward, done, info = super().step(action)
+        state, reward, done, info = super().step(action)
 
         self.prev_action = action
 
-        return self.state, reward, done, info
+        return state, reward, done, info
     
 # TODO: yaw is different from the iros env -> check 
 class MovingBoxTargetURSim(MovingBoxTargetUR, Simulation):
