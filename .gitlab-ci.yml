@@ -63,7 +63,7 @@ build_robo-gym_image_py39:
   only:
     - schedules
 
-test_environments:
+.short_test_environments: &short_test_environments_def
   image: docker:18.09
   before_script:
   - apk add docker-compose
@@ -72,8 +72,6 @@ test_environments:
   tags:
     - docker-executor
   stage: test
-  variables:
-    GIT_STRATEGY: none
   script:
     - echo "Python Version:$PYTHON_VER Robot Servers image:$ROBOT_SERVERS_IMAGE"  
     - echo -n $CI_JOB_TOKEN | docker login -u gitlab-ci-token --password-stdin $CI_REGISTRY
@@ -85,6 +83,15 @@ test_environments:
     - docker exec robo-gym pytest -m "not nightly"
     - docker-compose -f docker-compose-test-melodic.yml down
 
+short_test_environments:
+  <<: *short_test_environments_def
+
+short_test_environments_with_rs_manual_deploy:
+  <<: *short_test_environments_def
+  variables:
+      ROBOT_SERVERS_IMAGE: "$CI_REGISTRY/robo-gym/robot-servers/manual_deploy:latest"
+  when: manual
+
 .full_test_environments: &full_test_environments_def
   image: docker:18.09
   before_script:
@@ -94,8 +101,6 @@ test_environments:
   tags:
     - docker-executor
   stage: test
-  variables:
-    GIT_STRATEGY: none
   script:
     - echo "Python Version:$PYTHON_VER Robot Servers image:$ROBOT_SERVERS_IMAGE"  
     - echo -n $CI_JOB_TOKEN | docker login -u gitlab-ci-token --password-stdin $CI_REGISTRY
