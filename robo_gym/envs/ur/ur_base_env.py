@@ -34,7 +34,6 @@ JOINT_POSITIONS = {
     'wrist_3_joint_position': 0.0
 }
 
-
 class URBaseEnv(gym.Env):
     """Universal Robots UR base environment.
 
@@ -90,32 +89,34 @@ class URBaseEnv(gym.Env):
         state_msg = robot_server_pb2.State(state = state, float_params = float_params, string_params = string_params, state_dict = rs_state)
         return state_msg
 
-    def reset(self, base_joint_position = None, shoulder_joint_position = None, elbow_joint_position = None,
-                    wrist_1_joint_position = None, wrist_2_joint_position = None, wrist_3_joint_position = None) -> np.array:
+    def reset(self, joint_positions = None) -> np.array:
         """Environment reset.
 
         Args:
-            joint_positions (list[6] or np.array[6]): robot joint positions in radians.
+            joint_positions (list[6] or np.array[6]): robot joint positions in radians. Order is defined by 
         
         Returns:
             np.array: Environment state.
 
         """
+        if joint_positions: assert len(joint_positions) == 6
+
         self.elapsed_steps = 0
 
         # Initialize environment state
-        self.state = np.zeros(self._get_env_state_len())
+        state_len = self.observation_space.shape[0]
+        self.state = np.zeros(state_len)
         rs_state = self._get_robot_server_composition()
 
         # Set initial robot joint positions
         self.joint_positions = {}
-        if base_joint_position and shoulder_joint_position and elbow_joint_position and wrist_1_joint_position and wrist_2_joint_position and wrist_3_joint_position:
-            self.joint_positions['base_joint_position'] = base_joint_position
-            self.joint_positions['shoulder_joint_position'] = shoulder_joint_position
-            self.joint_positions['elbow_joint_position'] = elbow_joint_position
-            self.joint_positions['wrist_1_joint_position'] = wrist_1_joint_position
-            self.joint_positions['wrist_2_joint_position'] = wrist_2_joint_position
-            self.joint_positions['wrist_3_joint_position'] = wrist_3_joint_position
+        if joint_positions:
+            self.joint_positions['base_joint_position'] = joint_positions[0]
+            self.joint_positions['shoulder_joint_position'] = joint_positions[1]
+            self.joint_positions['elbow_joint_position'] = joint_positions[2]
+            self.joint_positions['wrist_1_joint_position'] = joint_positions[3]
+            self.joint_positions['wrist_2_joint_position'] = joint_positions[4]
+            self.joint_positions['wrist_3_joint_position'] = joint_positions[5]
         else:
             self._set_joint_positions(JOINT_POSITIONS)
 
@@ -140,12 +141,12 @@ class URBaseEnv(gym.Env):
         # Check if the environment state is contained in the observation space
         if not self.observation_space.contains(self.state):
             raise InvalidStateError()
-        
+
         # Check if current position is in the range of the initial joint positions
         for joint in self.joint_positions.keys():
-            if np.isclose(self.joint_positions[joint], rs_state[joint]):
+            if not np.isclose(self.joint_positions[joint], rs_state[joint], atol=0.05):
                 raise InvalidStateError('Reset joint positions are not within defined range')
-            
+
         return self.state
 
     def _reward(self, rs_state, action) -> Tuple[float, bool, dict]:
@@ -173,7 +174,7 @@ class URBaseEnv(gym.Env):
         joint_pos_names = ['base_joint_position', 'shoulder_joint_position', 'elbow_joint_position',
                             'wrist_1_joint_position', 'wrist_2_joint_position', 'wrist_3_joint_position']
         joint_positions_dict = self._get_joint_positions()
-        print(joint_positions_dict)
+        
         joint_positions = np.array([joint_positions_dict.get(joint_pos) for joint_pos in joint_pos_names])
 
 
@@ -278,22 +279,6 @@ class URBaseEnv(gym.Env):
         """
         return len(self._get_robot_server_composition())
 
-    # TODO: remove
-    def _get_env_state_len(self) -> int:
-        """Get length of the environment state.
-
-        Describes the composition of the environment state and returns
-        its length.
-
-        Returns:
-            int: Length of the environment state
-
-        """
-        ur_j_pos = [0.0]*6
-        ur_j_vel = [0.0]*6
-        env_state = ur_j_pos + ur_j_vel
-
-        return len(env_state)
 
     def _set_joint_positions(self, joint_positions) -> None:
         """Set desired robot joint positions with standard indexing."""
@@ -313,7 +298,7 @@ class URBaseEnv(gym.Env):
         """
         return self.ur.get_random_workspace_pose()
 
-    def _get_joint_name_order(self) -> list:
+    def get_joint_name_order(self) -> list:
         return ['base', 'shoulder', 'elbow', 'wrist_1', 'wrist_2', 'wrist_3']
 
     def _robot_server_state_to_env_state(self, rs_state) -> np.array:
@@ -328,24 +313,17 @@ class URBaseEnv(gym.Env):
         """
         state = []
 
-        print(rs_state)
-        print(rs_state['base_joint_position'])
-
         # Joint positions 
-        state.append(rs_state['base_joint_position'])
-        state.append(rs_state['shoulder_joint_position'])
-        state.append(rs_state['elbow_joint_position'])
-        state.append(rs_state['wrist_1_joint_position'])
-        state.append(rs_state['wrist_2_joint_position'])
-        state.append(rs_state['wrist_3_joint_position'])
-
-        # Joint Velocities
-        state.append(rs_state['base_joint_velocity'])
-        state.append(rs_state['shoulder_joint_velocity'])
-        state.append(rs_state['elbow_joint_velocity'])
-        state.append(rs_state['wrist_1_joint_velocity'])
-        state.append(rs_state['wrist_2_joint_velocity'])
-        state.append(rs_state['wrist_3_joint_velocity'])
+        joint_positions = ['base_joint_position', 'shoulder_joint_position', 'elbow_joint_position',
+                            'wrist_1_joint_position', 'wrist_2_joint_position', 'wrist_3_joint_position']
+        for position in joint_positions:
+            state.append(rs_state[position])
+        
+        # Joint Velocities 
+        joint_velocities = ['base_joint_velocity', 'shoulder_joint_velocity', 'elbow_joint_velocity',
+                            'wrist_1_joint_velocity', 'wrist_2_joint_velocity', 'wrist_3_joint_velocity']
+        for velocity in joint_velocities:
+            state.append(rs_state[velocity])
 
         state = np.array(state)
         
@@ -353,6 +331,7 @@ class URBaseEnv(gym.Env):
         state[0:6] = self.ur.normalize_joint_values(joints=state[0:6])
 
         return state
+
 
     def _get_observation_space(self) -> gym.spaces.Box:
         """Get environment observation space.
