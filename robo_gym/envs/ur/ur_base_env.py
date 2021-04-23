@@ -10,20 +10,6 @@ from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_p
 from robo_gym.envs.simulation_wrapper import Simulation
 
 
-
-# TODO: remove env state len function is not used anywhere
-# TODO: fix composition in the base env. How do i control what i will receive?
-# TODO: fix names for a flat dictionary representing the rs state
-# TODO: remove the function "get_env_state_len"
-# TODO: this grpc thing can only handle float types right?
-
-# TODO: insert check of all necessary keys are present on submit
-# TODO: why does self.state exist?
-
-# TODO: remove last_action from base_env
-
-
-# TODO: do we really want to have 5 arguments for the reset?
 # base, shoulder, elbow, wrist_1, wrist_2, wrist_3
 JOINT_POSITIONS = [0.0, -2.5, 1.5, 0.0, -1.4, 0.0]
 
@@ -286,14 +272,15 @@ class URBaseEnv(gym.Env):
 
     def _get_joint_positions_as_array(self) -> np.array:
         """Get robot joint positions with standard indexing."""
-        joint_positions = []
-        joint_positions.append(self.joint_positions['base_joint_position'])
-        joint_positions.append(self.joint_positions['shoulder_joint_position'])
-        joint_positions.append(self.joint_positions['elbow_joint_position'])
-        joint_positions.append(self.joint_positions['wrist_1_joint_position'])
-        joint_positions.append(self.joint_positions['wrist_2_joint_position'])
-        joint_positions.append(self.joint_positions['wrist_3_joint_position'])
-        return np.array(joint_positions)
+        joint_positions = self._get_joint_positions()
+        temp = []
+        temp.append(joint_positions['base_joint_position'])
+        temp.append(joint_positions['shoulder_joint_position'])
+        temp.append(joint_positions['elbow_joint_position'])
+        temp.append(joint_positions['wrist_1_joint_position'])
+        temp.append(joint_positions['wrist_2_joint_position'])
+        temp.append(joint_positions['wrist_3_joint_position'])
+        return np.array(temp)
 
     # TODO: remove from ur base env
     def _get_target_pose(self) -> np.array:
