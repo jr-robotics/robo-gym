@@ -9,7 +9,6 @@ import robo_gym_server_modules.robot_server.client as rs_client
 from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
 from robo_gym.envs.simulation_wrapper import Simulation
 
-
 # base, shoulder, elbow, wrist_1, wrist_2, wrist_3
 JOINT_POSITIONS = [0.0, -2.5, 1.5, 0.0, -1.4, 0.0]
 
@@ -272,15 +271,14 @@ class URBaseEnv(gym.Env):
 
     def _get_joint_positions_as_array(self) -> np.array:
         """Get robot joint positions with standard indexing."""
-        joint_positions = self._get_joint_positions()
-        temp = []
-        temp.append(joint_positions['base_joint_position'])
-        temp.append(joint_positions['shoulder_joint_position'])
-        temp.append(joint_positions['elbow_joint_position'])
-        temp.append(joint_positions['wrist_1_joint_position'])
-        temp.append(joint_positions['wrist_2_joint_position'])
-        temp.append(joint_positions['wrist_3_joint_position'])
-        return np.array(temp)
+        joint_positions = []
+        joint_positions.append(self.joint_positions['base_joint_position'])
+        joint_positions.append(self.joint_positions['shoulder_joint_position'])
+        joint_positions.append(self.joint_positions['elbow_joint_position'])
+        joint_positions.append(self.joint_positions['wrist_1_joint_position'])
+        joint_positions.append(self.joint_positions['wrist_2_joint_position'])
+        joint_positions.append(self.joint_positions['wrist_3_joint_position'])
+        return np.array(joint_positions)
 
     # TODO: remove from ur base env
     def _get_target_pose(self) -> np.array:

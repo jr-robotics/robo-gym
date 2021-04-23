@@ -198,6 +198,19 @@ class URBaseAvoidanceEnv(URBaseEnv):
             state = np.concatenate((object_polar, joint_positions, delta_joints, np.zeros(3)))
 
         return state
+    
+
+    def _get_joint_positions_as_array(self) -> np.array:
+        """Get robot joint positions with standard indexing."""
+        joint_positions = self._get_joint_positions()
+        temp = []
+        temp.append(joint_positions[0])
+        temp.append(joint_positions[1])
+        temp.append(joint_positions[2])
+        temp.append(joint_positions[3])
+        temp.append(joint_positions[4])
+        temp.append(joint_positions[5])
+        return np.array(temp)
 
 
     def _get_observation_space(self) -> gym.spaces.Box:
