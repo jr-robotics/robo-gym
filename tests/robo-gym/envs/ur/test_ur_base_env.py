@@ -61,12 +61,7 @@ def test_collision_with_ground(env):
 def test_reset_joint_positions(env):
    joint_positions =  [0.2, -2.5, 1.1, -2.0, -1.2, 1.2]
 
-   state = env.reset(base_joint_position = joint_positions[0], 
-                    shoulder_joint_position = joint_positions[1],
-                    elbow_joint_position = joint_positions[2],
-                    wrist_1_joint_position = joint_positions[3], 
-                    wrist_2_joint_position = joint_positions[4], 
-                    wrist_3_joint_position = joint_positions[5])
+   state = env.reset(joint_positions = joint_positions)
    assert np.isclose(env.ur.normalize_joint_values(joint_positions), state[0:6], atol=0.1).all()
 
 
