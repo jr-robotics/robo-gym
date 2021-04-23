@@ -241,6 +241,18 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
         
         return joint_positions
 
+    def _get_joint_positions_as_array(self) -> np.array:
+        """Get robot joint positions with standard indexing."""
+        joint_positions = self._get_joint_positions()
+        temp = []
+        temp.append(joint_positions[0])
+        temp.append(joint_positions[1])
+        temp.append(joint_positions[2])
+        temp.append(joint_positions[3])
+        temp.append(joint_positions[4])
+        temp.append(joint_positions[5])
+        return np.array(temp)
+
 class IrosEnv03URTrainingSim(IrosEnv03URTraining, Simulation):
     cmd = "roslaunch ur_robot_server ur_robot_server.launch \
         world_name:=tabletop_sphere50.world \
