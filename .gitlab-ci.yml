@@ -35,15 +35,8 @@ before_script:
       .
     - docker push $ROBO_GYM_IMAGE
 
-build_robo-gym_image:
-  <<: *build_robo-gym_image_def
-  
 build_robo-gym_image_py36:
-  <<: *build_robo-gym_image_def
-  variables:
-      PYTHON_VER: "3.6"
-  only:
-    - schedules
+  <<: *build_robo-gym_image_def  
 
 build_robo-gym_image_py37:
   <<: *build_robo-gym_image_def
@@ -84,6 +77,8 @@ build_robo-gym_image_py39:
     - docker-compose -f docker-compose-test-melodic.yml up -d
     - docker exec robo-gym pytest -m "not nightly"
     - docker-compose -f docker-compose-test-melodic.yml down
+  except:
+    - schedules
 
 short_test_environments:
   <<: *short_test_environments_def
@@ -116,10 +111,9 @@ short_test_environments_with_rs_manual_deploy:
 
 full_test_environments_py36:
   <<: *full_test_environments_def
-  variables:
-      PYTHON_VER: "3.6"
   only:
     - schedules
+  needs: ["build_robo-gym_image_py36"]
 
 full_test_environments_py37:
   <<: *full_test_environments_def
@@ -127,6 +121,7 @@ full_test_environments_py37:
       PYTHON_VER: "3.7"
   only:
     - schedules
+  needs: ["build_robo-gym_image_py37"]
 
 full_test_environments_py38:
   <<: *full_test_environments_def
@@ -134,6 +129,7 @@ full_test_environments_py38:
       PYTHON_VER: "3.8"
   only:
     - schedules
+  needs: ["build_robo-gym_image_py38"]
 
 full_test_environments_py39:
   <<: *full_test_environments_def
@@ -141,6 +137,7 @@ full_test_environments_py39:
       PYTHON_VER: "3.9"
   only:
     - schedules
+  needs: ["build_robo-gym_image_py39"]
 
 full_test_environments_py36_with_rs_master:
   <<: *full_test_environments_def
