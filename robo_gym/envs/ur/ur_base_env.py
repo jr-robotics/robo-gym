@@ -24,15 +24,8 @@ from robo_gym.envs.simulation_wrapper import Simulation
 
 
 # TODO: do we really want to have 5 arguments for the reset?
-
-JOINT_POSITIONS = {
-    'base_joint_position': 0.0,
-    'shoulder_joint_position': -2.5,
-    'elbow_joint_position': 1.5,
-    'wrist_1_joint_position': 0.0,
-    'wrist_2_joint_position': -1.4,
-    'wrist_3_joint_position': 0.0
-}
+# base, shoulder, elbow, wrist_1, wrist_2, wrist_3
+JOINT_POSITIONS = [0.0, -2.5, 1.5, 0.0, -1.4, 0.0]
 
 class URBaseEnv(gym.Env):
     """Universal Robots UR base environment.
@@ -99,7 +92,10 @@ class URBaseEnv(gym.Env):
             np.array: Environment state.
 
         """
-        if joint_positions: assert len(joint_positions) == 6
+        if joint_positions: 
+            assert len(joint_positions) == 6
+        else:
+            joint_positions = JOINT_POSITIONS
 
         self.elapsed_steps = 0
 
@@ -110,15 +106,13 @@ class URBaseEnv(gym.Env):
 
         # Set initial robot joint positions
         self.joint_positions = {}
-        if joint_positions:
-            self.joint_positions['base_joint_position'] = joint_positions[0]
-            self.joint_positions['shoulder_joint_position'] = joint_positions[1]
-            self.joint_positions['elbow_joint_position'] = joint_positions[2]
-            self.joint_positions['wrist_1_joint_position'] = joint_positions[3]
-            self.joint_positions['wrist_2_joint_position'] = joint_positions[4]
-            self.joint_positions['wrist_3_joint_position'] = joint_positions[5]
-        else:
-            self._set_joint_positions(JOINT_POSITIONS)
+        self.joint_positions['base_joint_position'] = joint_positions[0]
+        self.joint_positions['shoulder_joint_position'] = joint_positions[1]
+        self.joint_positions['elbow_joint_position'] = joint_positions[2]
+        self.joint_positions['wrist_1_joint_position'] = joint_positions[3]
+        self.joint_positions['wrist_2_joint_position'] = joint_positions[4]
+        self.joint_positions['wrist_3_joint_position'] = joint_positions[5]
+
 
         rs_state.update(self.joint_positions)
 
@@ -311,24 +305,28 @@ class URBaseEnv(gym.Env):
             numpy.array: State in environment format.
 
         """
-        state = []
-
         # Joint positions 
-        joint_positions = ['base_joint_position', 'shoulder_joint_position', 'elbow_joint_position',
+        joint_positions = []
+        joint_positions_keys = ['base_joint_position', 'shoulder_joint_position', 'elbow_joint_position',
                             'wrist_1_joint_position', 'wrist_2_joint_position', 'wrist_3_joint_position']
-        for position in joint_positions:
-            state.append(rs_state[position])
-        
-        # Joint Velocities 
-        joint_velocities = ['base_joint_velocity', 'shoulder_joint_velocity', 'elbow_joint_velocity',
-                            'wrist_1_joint_velocity', 'wrist_2_joint_velocity', 'wrist_3_joint_velocity']
-        for velocity in joint_velocities:
-            state.append(rs_state[velocity])
+        for position in joint_positions_keys:
+            joint_positions.append(rs_state[position])
+        joint_positions = np.array(joint_positions)
 
-        state = np.array(state)
-        
-         # Normalize joint position values
-        state[0:6] = self.ur.normalize_joint_values(joints=state[0:6])
+        # Joint Velocities
+        joint_velocities = [] 
+        joint_velocities_keys = ['base_joint_velocity', 'shoulder_joint_velocity', 'elbow_joint_velocity',
+                            'wrist_1_joint_velocity', 'wrist_2_joint_velocity', 'wrist_3_joint_velocity']
+        for velocity in joint_velocities_keys:
+            joint_velocities.append(rs_state[velocity])
+        joint_velocities = np.array(joint_velocities)
+
+
+        # Normalize joint position values
+        joint_positions = self.ur.normalize_joint_values(joints=joint_positions)
+
+        # Compose environment state
+        state = np.concatenate((joint_positions, joint_velocities))
 
         return state
 
