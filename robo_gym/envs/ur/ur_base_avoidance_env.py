@@ -108,6 +108,8 @@ class URBaseAvoidanceEnv(URBaseEnv):
             if not np.isclose(self.joint_positions[joint], rs_state[joint], atol=0.05):
                 raise InvalidStateError('Reset joint positions are not within defined range')
 
+        self.rs_state = rs_state
+
         return state
 
     def _robot_server_state_to_env_state(self, rs_state) -> np.array:

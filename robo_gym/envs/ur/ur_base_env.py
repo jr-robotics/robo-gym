@@ -49,6 +49,8 @@ class URBaseEnv(gym.Env):
         self.action_space = self._get_action_space()
         self.distance_threshold = 0.1
         self.abs_joint_pos_range = self.ur.get_max_joint_positions()
+
+        self.rs_state = None
         
         # Connect to Robot Server
         if rs_address:
@@ -119,6 +121,8 @@ class URBaseEnv(gym.Env):
         for joint in self.joint_positions.keys():
             if not np.isclose(self.joint_positions[joint], rs_state[joint], atol=0.05):
                 raise InvalidStateError('Reset joint positions are not within defined range')
+
+        self.rs_state = rs_state
 
         return state
 
@@ -195,12 +199,17 @@ class URBaseEnv(gym.Env):
         if not self.observation_space.contains(state):
             raise InvalidStateError()
 
+        self.rs_state = rs_state
+
         # Assign reward
         reward = 0
         done = False
         reward, done, info = self._reward(rs_state=rs_state, action=action)
 
         return state, reward, done, info
+
+    def get_rs_state(self):
+        return self.rs_state
 
     def render():
         pass
