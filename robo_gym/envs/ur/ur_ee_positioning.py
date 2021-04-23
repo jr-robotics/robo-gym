@@ -114,6 +114,8 @@ class EndEffectorPositioningUR(URBaseEnv):
         for position in joint_positions_keys:
             joint_positions.append(rs_state[position])
         joint_positions = np.array(joint_positions)
+        # Normalize joint position values
+        joint_positions = self.ur.normalize_joint_values(joints=joint_positions)
 
         # Joint Velocities
         joint_velocities = [] 
@@ -123,8 +125,7 @@ class EndEffectorPositioningUR(URBaseEnv):
             joint_velocities.append(rs_state[velocity])
         joint_velocities = np.array(joint_velocities)
 
-        # Normalize joint position values
-        joint_positions = self.ur.normalize_joint_values(joints=joint_positions)
+
 
         # Compose environment state
         state = np.concatenate((target_polar, joint_positions, joint_velocities))
@@ -188,13 +189,7 @@ class EndEffectorPositioningUR(URBaseEnv):
         rs_state = self._get_robot_server_composition()
 
         # Set initial robot joint positions
-        self.joint_positions = {}
-        self.joint_positions['base_joint_position'] = joint_positions[0]
-        self.joint_positions['shoulder_joint_position'] = joint_positions[1]
-        self.joint_positions['elbow_joint_position'] = joint_positions[2]
-        self.joint_positions['wrist_1_joint_position'] = joint_positions[3]
-        self.joint_positions['wrist_2_joint_position'] = joint_positions[4]
-        self.joint_positions['wrist_3_joint_position'] = joint_positions[5]
+        self._set_joint_positions(joint_positions)
 
         # Randomize initial robot joint positions
         if randomize_start:
@@ -202,6 +197,7 @@ class EndEffectorPositioningUR(URBaseEnv):
             joint_positions_high = np.array(self.joint_positions) + np.array(RANDOM_JOINT_OFFSET)
             self.joint_positions = np.random.default_rng().uniform(low=joint_positions_low, high=joint_positions_high)
 
+        # Update joint positions in rs_state
         rs_state.update(self.joint_positions)
 
         # Set target End Effector pose

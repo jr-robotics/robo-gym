@@ -79,7 +79,8 @@ class URBaseEnv(gym.Env):
         float_params = {}
         state = {}
 
-        state_msg = robot_server_pb2.State(state = state, float_params = float_params, string_params = string_params, state_dict = rs_state)
+        state_msg = robot_server_pb2.State(state = state, float_params = float_params, 
+                                            string_params = string_params, state_dict = rs_state)
         return state_msg
 
     def reset(self, joint_positions = None) -> np.array:
@@ -105,15 +106,9 @@ class URBaseEnv(gym.Env):
         rs_state = self._get_robot_server_composition()
 
         # Set initial robot joint positions
-        self.joint_positions = {}
-        self.joint_positions['base_joint_position'] = joint_positions[0]
-        self.joint_positions['shoulder_joint_position'] = joint_positions[1]
-        self.joint_positions['elbow_joint_position'] = joint_positions[2]
-        self.joint_positions['wrist_1_joint_position'] = joint_positions[3]
-        self.joint_positions['wrist_2_joint_position'] = joint_positions[4]
-        self.joint_positions['wrist_3_joint_position'] = joint_positions[5]
+        self._set_joint_positions(joint_positions)
 
-
+        # Update joint positions in rs_state
         rs_state.update(self.joint_positions)
 
         # Set initial state of the Robot Server
@@ -276,11 +271,29 @@ class URBaseEnv(gym.Env):
 
     def _set_joint_positions(self, joint_positions) -> None:
         """Set desired robot joint positions with standard indexing."""
-        self.joint_positions = copy.deepcopy(joint_positions)
+        # Set initial robot joint positions
+        self.joint_positions = {}
+        self.joint_positions['base_joint_position'] = joint_positions[0]
+        self.joint_positions['shoulder_joint_position'] = joint_positions[1]
+        self.joint_positions['elbow_joint_position'] = joint_positions[2]
+        self.joint_positions['wrist_1_joint_position'] = joint_positions[3]
+        self.joint_positions['wrist_2_joint_position'] = joint_positions[4]
+        self.joint_positions['wrist_3_joint_position'] = joint_positions[5]
 
     def _get_joint_positions(self) -> dict:
         """Get robot joint positions with standard indexing."""
         return self.joint_positions
+
+    def _get_joint_positions_as_array(self) -> np.array:
+        """Get robot joint positions with standard indexing."""
+        joint_positions = []
+        joint_positions.append(self.joint_positions['base_joint_position'])
+        joint_positions.append(self.joint_positions['shoulder_joint_position'])
+        joint_positions.append(self.joint_positions['elbow_joint_position'])
+        joint_positions.append(self.joint_positions['wrist_1_joint_position'])
+        joint_positions.append(self.joint_positions['wrist_2_joint_position'])
+        joint_positions.append(self.joint_positions['wrist_3_joint_position'])
+        return np.array(joint_positions)
 
     # TODO: remove from ur base env
     def _get_target_pose(self) -> np.array:
@@ -312,6 +325,8 @@ class URBaseEnv(gym.Env):
         for position in joint_positions_keys:
             joint_positions.append(rs_state[position])
         joint_positions = np.array(joint_positions)
+        # Normalize joint position values
+        joint_positions = self.ur.normalize_joint_values(joints=joint_positions)
 
         # Joint Velocities
         joint_velocities = [] 
@@ -320,10 +335,6 @@ class URBaseEnv(gym.Env):
         for velocity in joint_velocities_keys:
             joint_velocities.append(rs_state[velocity])
         joint_velocities = np.array(joint_velocities)
-
-
-        # Normalize joint position values
-        joint_positions = self.ur.normalize_joint_values(joints=joint_positions)
 
         # Compose environment state
         state = np.concatenate((joint_positions, joint_velocities))
