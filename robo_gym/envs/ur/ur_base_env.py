@@ -47,7 +47,6 @@ class URBaseEnv(gym.Env):
 
         self.observation_space = self._get_observation_space()
         self.action_space = self._get_action_space()
-        self.distance_threshold = 0.1
         self.abs_joint_pos_range = self.ur.get_max_joint_positions()
 
         self.rs_state = None

@@ -12,6 +12,8 @@ from robo_gym.envs.ur.ur_base_env import URBaseEnv
 # base, shoulder, elbow, wrist_1, wrist_2, wrist_3
 JOINT_POSITIONS = [0.0, -2.5, 1.5, 0.0, -1.4, 0.0]
 RANDOM_JOINT_OFFSET = [0.65, 0.25, 0.5, 3.14, 0.4, 3.14]
+# distance to target that need to be reached
+DISTANCE_THRESHOLD = 0.1
 class EndEffectorPositioningUR(URBaseEnv):
     """Universal Robots UR end effector positioning environment.
 
@@ -258,7 +260,7 @@ class EndEffectorPositioningUR(URBaseEnv):
         delta = np.abs(np.subtract(joint_positions_normalized, action))
         reward = reward - (0.05 * np.sum(delta))
 
-        if euclidean_dist_3d <= self.distance_threshold:
+        if euclidean_dist_3d <= DISTANCE_THRESHOLD:
             reward = 100
             done = True
             info['final_status'] = 'success'
