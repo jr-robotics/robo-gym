@@ -20,6 +20,10 @@ from robo_gym.envs.simulation_wrapper import Simulation
 # TODO: insert check of all necessary keys are present on submit
 # TODO: why does self.state exist?
 
+# TODO: remove last_action from base_env
+
+
+# TODO: do we really want to have 5 arguments for the reset?
 
 JOINT_POSITIONS = {
     'base_joint_position': 0.0,
@@ -149,7 +153,7 @@ class URBaseEnv(gym.Env):
         info = {}
 
         # Check if robot is in collision
-        collision = True if rs_state[25] == 1 else False
+        collision = True if rs_state['in_collision'] == 1 else False
         if collision:
             done = True
             info['final_status'] = 'collision'

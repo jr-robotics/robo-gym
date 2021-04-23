@@ -17,7 +17,7 @@ ur_models = [pytest.param('ur3', marks=pytest.mark.skip(reason='not implemented 
 
 @pytest.fixture(autouse=True, scope='module', params=ur_models)
 def env(request):
-    env = gym.make('EmptyEnvironmentURSim-v0', ip='robot-servers', ur_model=request.param)
+    env = gym.make('EmptyEnvironmentURSim-v0', ip='robot-servers', ur_model=request.param, fix_wrist_3=True)
     yield env
     env.kill_sim()
     env.close()
@@ -61,7 +61,12 @@ def test_collision_with_ground(env):
 def test_reset_joint_positions(env):
    joint_positions =  [0.2, -2.5, 1.1, -2.0, -1.2, 1.2]
 
-   state = env.reset(joint_positions=joint_positions)
+   state = env.reset(base_joint_position = joint_positions[0], 
+                    shoulder_joint_position = joint_positions[1],
+                    elbow_joint_position = joint_positions[2],
+                    wrist_1_joint_position = joint_positions[3], 
+                    wrist_2_joint_position = joint_positions[4], 
+                    wrist_3_joint_position = joint_positions[5])
    assert np.isclose(env.ur.normalize_joint_values(joint_positions), state[0:6], atol=0.1).all()
 
 
@@ -78,22 +83,15 @@ def test_fixed_joints(env_name, fix_base, fix_shoulder, fix_elbow, fix_wrist_1, 
                                                 fix_wrist_1=fix_wrist_1, fix_wrist_2=fix_wrist_2, fix_wrist_3=fix_wrist_3, ur_model=ur_model)
     state = env.reset()
     
-    initial_joint_positions = [0.0]*6
-    if env_name == 'EmptyEnvironmentURSim-v0':
-        initial_joint_positions = state[0:6]
-    else:
-        initial_joint_positions = state[3:9]
+    initial_joint_positions = state[0:6]
+
     
     # Take 20 actions
     action = env.action_space.sample()
     for _ in range(20):
         state, _, _, _ = env.step(action)
     
-    joint_positions = [0.0]*6
-    if env_name == 'EmptyEnvironmentURSim-v0':
-        joint_positions = state[0:6]
-    else:
-        joint_positions = state[3:9]
+    joint_positions = state[0:6]
 
     if fix_base:
         assert math.isclose(initial_joint_positions[0], joint_positions[0], abs_tol=0.05)
