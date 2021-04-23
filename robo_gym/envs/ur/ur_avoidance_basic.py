@@ -69,7 +69,7 @@ class MovingBoxTargetUR(URBaseAvoidanceEnv):
             joint_positions (list[6] or np.array[6]): robot joint positions in radians.
             fixed_object_position (list[3]): x,y,z fixed position of object
         """
-        self.prev_action = None
+        self.prev_action = np.zeros(6)
 
         state = super().reset(joint_positions = joint_positions, fixed_object_position = fixed_object_position)   
 
@@ -134,12 +134,10 @@ class MovingBoxTargetUR(URBaseAvoidanceEnv):
         return reward, done, info
 
     def step(self, action) -> Tuple[np.array, float, bool, dict]:
-        if self.prev_action == None:
-            self.prev_action = action
         
         state, reward, done, info = super().step(action)
 
-        self.prev_action = action
+        self.prev_action = self.add_fixed_joints(action)
 
         return state, reward, done, info
     

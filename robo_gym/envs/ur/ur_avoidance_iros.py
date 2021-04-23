@@ -80,7 +80,7 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
         self.target_reached_counter = 0
 
         self.obstacle_coords = []
-        self.prev_action = None
+        self.prev_action = np.zeros(6)
 
         joint_positions = self._get_joint_positions()
 
@@ -90,8 +90,6 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
 
     def step(self, action) -> Tuple[np.array, float, bool, dict]:
         self.elapsed_steps_in_current_state += 1
-        if self.prev_action == None:
-            self.prev_action = action
         
         state, reward, done, info = super().step(action)
 
@@ -103,7 +101,7 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
             self.target_reached_counter += 1
             self.target_reached = 0
 
-        self.prev_action = action
+        self.prev_action = self.add_fixed_joints(action)
 
         return state, reward, done, info
 

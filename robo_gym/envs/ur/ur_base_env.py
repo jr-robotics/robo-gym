@@ -166,7 +166,6 @@ class URBaseEnv(gym.Env):
 
     def env_action_to_rs_action(self, action) -> np.array:
         """Convert environment action to Robot Server action"""
-        action = self.add_fixed_joints(action)
         rs_action = copy.deepcopy(action)
 
         # Scale action
@@ -174,7 +173,7 @@ class URBaseEnv(gym.Env):
         # Convert action indexing from ur to ros
         rs_action = self.ur._ur_joint_list_to_ros_joint_list(rs_action)
 
-        return action, rs_action        
+        return rs_action        
 
     def step(self, action) -> Tuple[np.array, float, bool, dict]:
         if type(action) == list: action = np.array(action)
@@ -185,8 +184,13 @@ class URBaseEnv(gym.Env):
         if not self.action_space.contains(action):
             raise InvalidActionError()
 
+        # Add missing joints which were fixed at initialization
+        print('before fix', action)
+        action = self.add_fixed_joints(action)
+        print('after fix', action)
+
         # Convert environment action to robot server action
-        action, rs_action = self.env_action_to_rs_action(action)
+        rs_action = self.env_action_to_rs_action(action)
 
         # Send action to Robot Server and get state
         rs_state = self.client.send_action_get_state(rs_action.tolist()).state_dict

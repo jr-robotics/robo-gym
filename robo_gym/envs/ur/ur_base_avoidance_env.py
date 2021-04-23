@@ -244,15 +244,13 @@ class URBaseAvoidanceEnv(URBaseEnv):
 
     def env_action_to_rs_action(self, action) -> np.array:
         """Convert environment action to Robot Server action"""
-        action = self.add_fixed_joints(action)
-
         rs_action = copy.deepcopy(action)
 
         joint_positions = self._get_joint_positions_as_array() + action
 
         rs_action = self.ur._ur_joint_list_to_ros_joint_list(joint_positions)
 
-        return action, rs_action   
+        return rs_action   
 
     def _get_robot_server_state_len(self) -> int:
 
