@@ -49,7 +49,6 @@ class URBaseEnv(gym.Env):
         self.action_space = self._get_action_space()
         self.distance_threshold = 0.1
         self.abs_joint_pos_range = self.ur.get_max_joint_positions()
-        self.last_action = None
         
         # Connect to Robot Server
         if rs_address:

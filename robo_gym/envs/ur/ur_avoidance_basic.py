@@ -69,6 +69,8 @@ class MovingBoxTargetUR(URBaseAvoidanceEnv):
             joint_positions (list[6] or np.array[6]): robot joint positions in radians.
             fixed_object_position (list[3]): x,y,z fixed position of object
         """
+        self.prev_action = None
+
         self.state = super().reset(joint_positions = joint_positions, fixed_object_position = fixed_object_position)   
 
         return self.state
@@ -107,7 +109,7 @@ class MovingBoxTargetUR(URBaseAvoidanceEnv):
 
         # Negative reward if actions change to rapidly between steps
         for i in range(len(action)):
-            if abs(action[i] - self.last_action[i]) > 0.5:
+            if abs(action[i] - self.prev_action[i]) > 0.5:
                 reward += rapid_action_weight * (1/1000)
             
         # Negative reward if the obstacle is close than the predefined minimum distance
@@ -132,8 +134,12 @@ class MovingBoxTargetUR(URBaseAvoidanceEnv):
         return reward, done, info
 
     def step(self, action) -> Tuple[np.array, float, bool, dict]:
+        if self.prev_action == None:
+            self.prev_action = action
         
         self.state, reward, done, info = super().step(action)
+
+        self.prev_action = action
 
         return self.state, reward, done, info
     

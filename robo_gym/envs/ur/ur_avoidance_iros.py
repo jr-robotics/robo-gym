@@ -80,6 +80,7 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
         self.target_reached_counter = 0
 
         self.obstacle_coords = []
+        self.prev_action = None
 
         joint_positions = self._get_joint_positions()
 
@@ -89,6 +90,8 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
 
     def step(self, action) -> Tuple[np.array, float, bool, dict]:
         self.elapsed_steps_in_current_state += 1
+        if self.prev_action == None:
+            self.prev_action = action
         
         self.state, reward, done, info = super().step(action)
 
@@ -99,6 +102,8 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
             self.elapsed_steps_in_current_state = 0
             self.target_reached_counter += 1
             self.target_reached = 0
+
+        self.prev_action = action
 
         return self.state, reward, done, info
 
@@ -156,7 +161,7 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
 
         # Negative reward if actions change to rapidly between steps
         for i in range(len(action)):
-            if abs(action[i] - self.last_action[i]) > 0.4:
+            if abs(action[i] - self.prev_action[i]) > 0.4:
                 reward += rapid_action_weight * (1/1000)
 
         # Negative reward if the obstacle is closer than the predefined minimum distance

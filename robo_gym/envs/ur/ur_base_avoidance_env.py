@@ -63,9 +63,7 @@ class URBaseAvoidanceEnv(URBaseEnv):
         Returns:
             np.array: Environment state.
 
-        """
-        self.last_action = None
-        
+        """        
         self.elapsed_steps = 0
 
         # Initialize environment state
@@ -245,10 +243,6 @@ class URBaseAvoidanceEnv(URBaseEnv):
     def env_action_to_rs_action(self, action) -> np.array:
         """Convert environment action to Robot Server action"""
         action = self.add_fixed_joints(action)
-        
-        # TODO remove from here later
-        if self.last_action is None:
-            self.last_action = action
 
         rs_action = copy.deepcopy(action)
 
