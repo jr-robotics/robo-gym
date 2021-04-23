@@ -128,7 +128,7 @@ class URBaseEnv(gym.Env):
             raise RobotServerError("set_state")
 
         # Get Robot Server state
-        rs_state = copy.deepcopy(np.nan_to_num(np.array(self.client.get_state_msg().state_dict)))
+        rs_state = self.client.get_state_msg().state_dict
 
         # Check if the length of the Robot Server state received is correct
         if not len(rs_state)== self._get_robot_server_state_len():
@@ -143,7 +143,7 @@ class URBaseEnv(gym.Env):
         
         # Check if current position is in the range of the initial joint positions
         for joint in self.joint_positions.keys():
-            if np.isclose(self.joint_position[joint], rs_state[joint]):
+            if np.isclose(self.joint_positions[joint], rs_state[joint]):
                 raise InvalidStateError('Reset joint positions are not within defined range')
             
         return self.state
@@ -170,7 +170,14 @@ class URBaseEnv(gym.Env):
         fixed_joints = np.array([self.fix_base, self.fix_shoulder, self.fix_elbow, self.fix_wrist_1, self.fix_wrist_2, self.fix_wrist_3])
         fixed_joint_indices = np.where(fixed_joints)[0]
 
-        joints_position_norm = self.ur.normalize_joint_values(joints=self._get_joint_positions())
+        joint_pos_names = ['base_joint_position', 'shoulder_joint_position', 'elbow_joint_position',
+                            'wrist_1_joint_position', 'wrist_2_joint_position', 'wrist_3_joint_position']
+        joint_positions_dict = self._get_joint_positions()
+        print(joint_positions_dict)
+        joint_positions = np.array([joint_positions_dict.get(joint_pos) for joint_pos in joint_pos_names])
+
+
+        joints_position_norm = self.ur.normalize_joint_values(joints=joint_positions)
 
         temp = []
         for joint in range(len(fixed_joints)):
@@ -205,8 +212,8 @@ class URBaseEnv(gym.Env):
         action, rs_action = self.env_action_to_rs_action(action)
 
         # Send action to Robot Server and get state
-        rs_state = self.client.send_action_get_state(rs_action.tolist()).state
-        
+        rs_state = self.client.send_action_get_state(rs_action.tolist()).state_dict
+
         # Convert the state from Robot Server format to environment format
         self.state = self._robot_server_state_to_env_state(rs_state)
 
@@ -258,7 +265,7 @@ class URBaseEnv(gym.Env):
             'ee_to_ref_rotation_w',
 
             'in_collision'
-        ])
+        ], 0.0)
         return rs_state_keys
 
 
@@ -292,9 +299,9 @@ class URBaseEnv(gym.Env):
         """Set desired robot joint positions with standard indexing."""
         self.joint_positions = copy.deepcopy(joint_positions)
 
-    def _get_joint_positions(self) -> np.array:
+    def _get_joint_positions(self) -> dict:
         """Get robot joint positions with standard indexing."""
-        return np.array(self.joint_positions)
+        return self.joint_positions
 
     # TODO: remove from ur base env
     def _get_target_pose(self) -> np.array:
@@ -305,6 +312,9 @@ class URBaseEnv(gym.Env):
 
         """
         return self.ur.get_random_workspace_pose()
+
+    def _get_joint_name_order(self) -> list:
+        return ['base', 'shoulder', 'elbow', 'wrist_1', 'wrist_2', 'wrist_3']
 
     def _robot_server_state_to_env_state(self, rs_state) -> np.array:
         """Transform state from Robot Server to environment format.
@@ -317,6 +327,9 @@ class URBaseEnv(gym.Env):
 
         """
         state = []
+
+        print(rs_state)
+        print(rs_state['base_joint_position'])
 
         # Joint positions 
         state.append(rs_state['base_joint_position'])
@@ -334,8 +347,9 @@ class URBaseEnv(gym.Env):
         state.append(rs_state['wrist_2_joint_velocity'])
         state.append(rs_state['wrist_3_joint_velocity'])
 
-
-        # Normalize joint position values
+        state = np.array(state)
+        
+         # Normalize joint position values
         state[0:6] = self.ur.normalize_joint_values(joints=state[0:6])
 
         return state
@@ -361,6 +375,7 @@ class URBaseEnv(gym.Env):
         min_obs = np.concatenate((min_joint_positions, min_joint_velocities))
 
         return gym.spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
+
     
     def _get_action_space(self)-> gym.spaces.Box:
         """Get environment action space.
