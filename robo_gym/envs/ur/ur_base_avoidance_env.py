@@ -10,6 +10,7 @@ from robo_gym.envs.ur.ur_base_env import URBaseEnv
 
 
 DEBUG = True
+# base, shoulder, elbow, wrist_1, wrist_2, wrist_3
 JOINT_POSITIONS = [0.0, -2.5, 1.5, 0, -1.4, 0]
 class URBaseAvoidanceEnv(URBaseEnv):
     """Universal Robots UR avoidance base environment.
@@ -38,6 +39,7 @@ class URBaseAvoidanceEnv(URBaseEnv):
     def _set_initial_robot_server_state(self, rs_state, fixed_object_position) -> robot_server_pb2.State:
         string_params = {}
         float_params = {}
+        state = {}
 
         # Set initial state of the Robot Server
         if fixed_object_position:
@@ -46,10 +48,9 @@ class URBaseAvoidanceEnv(URBaseEnv):
             float_params = {"object_0_x": fixed_object_position[0], 
                             "object_0_y": fixed_object_position[1], 
                             "object_0_z": fixed_object_position[2]}
-            state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
-            return state_msg
 
-        state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
+        state_msg = robot_server_pb2.State(state = state, float_params = float_params, 
+                                            string_params = string_params, state_dict = rs_state)
         return state_msg
 
     def reset(self, joint_positions = None, fixed_object_position = None) -> np.array:
@@ -62,23 +63,25 @@ class URBaseAvoidanceEnv(URBaseEnv):
         Returns:
             np.array: Environment state.
 
-        """
+        """        
         self.elapsed_steps = 0
 
-        self.last_action = None
-        
         # Initialize environment state
-        self.state = np.zeros(self._get_env_state_len())
-        rs_state = np.zeros(self._get_robot_server_state_len())
+        state_len = self.observation_space.shape[0]
+        state = np.zeros(state_len)
+        rs_state = self._get_robot_server_composition()
 
         # Initialize desired joint positions
-        if joint_positions:
+        if joint_positions: 
             assert len(joint_positions) == 6
-            self.joint_positions = joint_positions
         else:
-            self._set_joint_positions(JOINT_POSITIONS)
+            joint_positions = JOINT_POSITIONS
 
-        rs_state[6:12] = self.ur._ur_joint_list_to_ros_joint_list(self._get_joint_positions())
+        # Set initial robot joint positions
+        self._set_joint_positions(joint_positions)
+
+        # Update joint positions in rs_state
+        rs_state.update(self.joint_positions)
 
         # Set initial state of the Robot Server
         state_msg = self._set_initial_robot_server_state(rs_state, fixed_object_position)
@@ -87,25 +90,27 @@ class URBaseAvoidanceEnv(URBaseEnv):
             raise RobotServerError("set_state")
 
         # Get Robot Server state
-        rs_state = copy.deepcopy(np.nan_to_num(np.array(self.client.get_state_msg().state)))
+        rs_state = self.client.get_state_msg().state_dict
 
         # Check if the length of the Robot Server state received is correct
         if not len(rs_state)== self._get_robot_server_state_len():
             raise InvalidStateError("Robot Server state received has wrong length")
 
         # Convert the initial state from Robot Server format to environment format
-        self.state = self._robot_server_state_to_env_state(rs_state)
+        state = self._robot_server_state_to_env_state(rs_state)
 
         # Check if the environment state is contained in the observation space
-        if not self.observation_space.contains(self.state):
+        if not self.observation_space.contains(state):
             raise InvalidStateError()
 
-        # Check if current position is in the range of the desired joint positions
-        joint_positions = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
-        if not np.isclose(joint_positions, self.joint_positions, atol=0.1).all():
-            raise InvalidStateError('Reset joint positions are not within defined range')        
+        # Check if current position is in the range of the initial joint positions
+        for joint in self.joint_positions.keys():
+            if not np.isclose(self.joint_positions[joint], rs_state[joint], atol=0.05):
+                raise InvalidStateError('Reset joint positions are not within defined range')
 
-        return self.state
+        self.rs_state = rs_state
+
+        return state
 
     def _robot_server_state_to_env_state(self, rs_state) -> np.array:
         """Transform state from Robot Server to environment format.
@@ -117,15 +122,25 @@ class URBaseAvoidanceEnv(URBaseEnv):
             numpy.array: State in environment format.
 
         """
-        # Convert to numpy array and remove NaN values
-        rs_state = np.nan_to_num(np.array(rs_state))
-
-        # Transform cartesian coordinates of target to polar coordinates 
+        # Object polar coordinates
+        # Transform cartesian coordinates of object to polar coordinates 
         # with respect to the end effector frame
-        target_coord = rs_state[0:3]
-        
-        ee_to_ref_frame_translation = np.array(rs_state[18:21])
-        ee_to_ref_frame_quaternion = np.array(rs_state[21:25])
+        object_coord = np.array([
+            rs_state['object_0_position_x'], 
+            rs_state['object_0_position_y'],
+            rs_state['object_0_position_z']])
+
+        ee_to_ref_frame_translation = np.array([
+            rs_state['ee_to_ref_translation_x'], 
+            rs_state['ee_to_ref_translation_y'],
+            rs_state['ee_to_ref_translation_z']])
+
+        ee_to_ref_frame_quaternion = np.array([
+            rs_state['ee_to_ref_rotation_x'], 
+            rs_state['ee_to_ref_rotation_y'],
+            rs_state['ee_to_ref_rotation_z'],
+            rs_state['ee_to_ref_rotation_w']])
+
         ee_to_ref_frame_rotation = R.from_quat(ee_to_ref_frame_quaternion)
         ref_frame_to_ee_rotation = ee_to_ref_frame_rotation.inv()
         # to invert the homogeneous transformation
@@ -134,27 +149,37 @@ class URBaseAvoidanceEnv(URBaseEnv):
         # t' = - R^-1 * t
         ref_frame_to_ee_translation = -ref_frame_to_ee_rotation.apply(ee_to_ref_frame_translation)
 
-        target_coord_ee_frame = utils.change_reference_frame(target_coord,ref_frame_to_ee_translation,ref_frame_to_ee_quaternion)
-        target_polar = utils.cartesian_to_polar_3d(target_coord_ee_frame)
+        object_coord_ee_frame = utils.change_reference_frame(object_coord,ref_frame_to_ee_translation,ref_frame_to_ee_quaternion)
+        object_polar = utils.cartesian_to_polar_3d(object_coord_ee_frame)
 
-        # Transform joint positions and joint velocities from ROS indexing to
-        # standard indexing
-        ur_j_pos = self.ur._ros_joint_list_to_ur_joint_list(rs_state[6:12])
-        #ur_j_vel = self.ur._ros_joint_list_to_ur_joint_list(rs_state[12:18])
 
+        # Joint positions 
+        joint_positions = []
+        joint_positions_keys = ['base_joint_position', 'shoulder_joint_position', 'elbow_joint_position',
+                            'wrist_1_joint_position', 'wrist_2_joint_position', 'wrist_3_joint_position']
+        for position in joint_positions_keys:
+            joint_positions.append(rs_state[position])
+        joint_positions = np.array(joint_positions)
         # Normalize joint position values
-        ur_j_pos_norm = self.ur.normalize_joint_values(joints=ur_j_pos)
+        joint_positions = self.ur.normalize_joint_values(joints=joint_positions)
 
-        # desired joint positions
-        desired_joints = self.ur.normalize_joint_values(self._get_joint_positions())
-        delta_joints = ur_j_pos_norm - desired_joints
+        # joint positions at start
+        starting_joints = self.ur.normalize_joint_values(self._get_joint_positions_as_array())
+        # difference in position from start to current
+        delta_joints = joint_positions - starting_joints
         
-
-        # Transform cartesian coordinates of target to polar coordinates 
+        # Transform cartesian coordinates of object to polar coordinates 
         # with respect to the forearm
+        forearm_to_ref_frame_translation = np.array([
+            rs_state['forearm_to_ref_translation_x'], 
+            rs_state['forearm_to_ref_translation_y'],
+            rs_state['forearm_to_ref_translation_z']])
 
-        forearm_to_ref_frame_translation = rs_state[26:29]
-        forearm_to_ref_frame_quaternion = rs_state[29:33]
+        forearm_to_ref_frame_quaternion = np.array([
+            rs_state['forearm_to_ref_rotation_x'], 
+            rs_state['forearm_to_ref_rotation_y'],
+            rs_state['forearm_to_ref_rotation_z'],
+            rs_state['forearm_to_ref_rotation_w']])
         forearm_to_ref_frame_rotation = R.from_quat(forearm_to_ref_frame_quaternion)
         ref_frame_to_forearm_rotation = forearm_to_ref_frame_rotation.inv()
         # to invert the homogeneous transformation
@@ -163,42 +188,17 @@ class URBaseAvoidanceEnv(URBaseEnv):
         # t' = - R^-1 * t
         ref_frame_to_forearm_translation = -ref_frame_to_forearm_rotation.apply(forearm_to_ref_frame_translation)
 
-        target_coord_forearm_frame = utils.change_reference_frame(target_coord,ref_frame_to_forearm_translation,ref_frame_to_forearm_quaternion)
-        target_polar_forearm = utils.cartesian_to_polar_3d(target_coord_forearm_frame)
+        object_coord_forearm_frame = utils.change_reference_frame(object_coord,ref_frame_to_forearm_translation,ref_frame_to_forearm_quaternion)
+        object_polar_forearm = utils.cartesian_to_polar_3d(object_coord_forearm_frame)
 
-        if DEBUG:
-            print('Object coords in ref frame', target_coord)
-            print('Object coords in ee frame', target_coord_ee_frame)
-            print('Object polar coords in ee frame', target_polar)
-            print('Object coords in forearm frame', target_coord_forearm_frame)
-            print('Object polar coords in forearm frame', target_polar_forearm)
-
-        # TODO: reorder as soon as rs state is a dict
         # Compose environment state
         if self.include_polar_to_elbow:
-            state = np.concatenate((target_polar, ur_j_pos_norm, delta_joints, target_polar_forearm))
+            state = np.concatenate((object_polar, joint_positions, delta_joints, object_polar_forearm))
         else:
-            state = np.concatenate((target_polar, ur_j_pos_norm, delta_joints, np.zeros(3)))
+            state = np.concatenate((object_polar, joint_positions, delta_joints, np.zeros(3)))
 
         return state
-
-    def _get_env_state_len(self) -> int:
-        """Get length of the environment state.
-
-        Describes the composition of the environment state and returns
-        its length.
-
-        Returns:
-            int: Length of the environment state
-
-        """
-        object_polar_coords_ee = [0.0]*3
-        ur_j_pos = [0.0]*6
-        ur_j_delta = [0.0]*6
-        object_polar_coords_elbow = [0.0]*3
-        env_state = object_polar_coords_ee + ur_j_pos + ur_j_delta + object_polar_coords_elbow
-
-        return len(env_state)
+    
 
     def _get_observation_space(self) -> gym.spaces.Box:
         """Get environment observation space.
@@ -244,19 +244,13 @@ class URBaseAvoidanceEnv(URBaseEnv):
 
     def env_action_to_rs_action(self, action) -> np.array:
         """Convert environment action to Robot Server action"""
-        action = self.add_fixed_joints(action)
-        
-        # TODO remove from here later
-        if self.last_action is None:
-            self.last_action = action
-
         rs_action = copy.deepcopy(action)
 
-        joint_positions = self._get_joint_positions() + action
+        joint_positions = self._get_joint_positions_as_array() + action
 
         rs_action = self.ur._ur_joint_list_to_ros_joint_list(joint_positions)
 
-        return action, rs_action   
+        return rs_action   
 
     def _get_robot_server_state_len(self) -> int:
 
@@ -269,16 +263,50 @@ class URBaseAvoidanceEnv(URBaseEnv):
             int: Length of the Robot Server state.
 
         """
-        target = [0.0]*6
-        ur_j_pos = [0.0]*6
-        ur_j_vel = [0.0]*6
-        ee_to_ref_frame_transform = [0.0]*7
-        ur_collision = [0.0]
-        forearm_to_ref_frame_transform = [0.0]*7
-        rs_state = target + ur_j_pos + ur_j_vel + ee_to_ref_frame_transform + ur_collision + forearm_to_ref_frame_transform
+        return len(self._get_robot_server_composition())  
+    
+    def _get_robot_server_composition(self) -> dict:
+        rs_state_keys = dict.fromkeys([
+            'object_0_position_x', 
+            'object_0_position_y',
+            'object_0_position_z',
+            'object_0_orientation_x',
+            'object_0_orientation_y',
+            'object_0_orientation_z',
+            'object_0_orientation_w',
 
-        return len(rs_state)      
+            'base_joint_position',
+            'shoulder_joint_position',
+            'elbow_joint_position',
+            'wrist_1_joint_position',
+            'wrist_2_joint_position',
+            'wrist_3_joint_position',
 
+            'base_joint_velocity',
+            'shoulder_joint_velocity',
+            'elbow_joint_velocity',
+            'wrist_1_joint_velocity',
+            'wrist_2_joint_velocity',
+            'wrist_3_joint_velocity',
+
+            'ee_to_ref_translation_x',
+            'ee_to_ref_translation_y',
+            'ee_to_ref_translation_z',
+            'ee_to_ref_rotation_x',
+            'ee_to_ref_rotation_y',
+            'ee_to_ref_rotation_z',
+            'ee_to_ref_rotation_w',
+
+            'forearm_to_ref_translation_x',
+            'forearm_to_ref_translation_y',
+            'forearm_to_ref_translation_z',
+            'forearm_to_ref_rotation_x',
+            'forearm_to_ref_rotation_y',
+            'forearm_to_ref_rotation_z',
+            'forearm_to_ref_rotation_w',
+
+            'in_collision'], 0.0)
+        return rs_state_keys
 
 
 

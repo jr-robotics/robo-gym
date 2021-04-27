@@ -12,10 +12,11 @@ from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_p
 from robo_gym.envs.simulation_wrapper import Simulation
 from robo_gym.envs.ur.ur_base_avoidance_env import URBaseAvoidanceEnv
 
-
+# base, shoulder, elbow, wrist_1, wrist_2, wrist_3
+JOINT_POSITIONS = [-0.78, -1.31, -1.31, -2.18, 1.57, 0.0]
 DEBUG = True
 MINIMUM_DISTANCE = 0.3 # the distance [cm] the robot should keep to the obstacle
-JOINT_POSITIONS = [-0.78,-1.31,-1.31,-2.18,1.57,0.0]
+
 
 class MovingBoxTargetUR(URBaseAvoidanceEnv):
     """Universal Robots UR basic obstacle avoidance environment.
@@ -44,7 +45,7 @@ class MovingBoxTargetUR(URBaseAvoidanceEnv):
         if fixed_object_position:
             state_msg = super()._set_initial_robot_server_state(rs_state=rs_state, fixed_object_position=fixed_object_position)
             return state_msg
-
+    
         z_amplitude = np.random.default_rng().uniform(low=0.09, high=0.35)
         z_frequency = 0.125
         z_offset = np.random.default_rng().uniform(low=0.2, high=0.6)
@@ -55,8 +56,10 @@ class MovingBoxTargetUR(URBaseAvoidanceEnv):
                         "object_0_z_amplitude": z_amplitude,
                         "object_0_z_frequency": z_frequency, 
                         "object_0_z_offset": z_offset}
+        state = {}
 
-        state_msg = robot_server_pb2.State(state = rs_state.tolist(), float_params = float_params, string_params = string_params)
+        state_msg = robot_server_pb2.State(state = state, float_params = float_params, 
+                                            string_params = string_params, state_dict = rs_state)
         return state_msg
 
     def reset(self, joint_positions = None, fixed_object_position = None) -> np.array:
@@ -66,9 +69,11 @@ class MovingBoxTargetUR(URBaseAvoidanceEnv):
             joint_positions (list[6] or np.array[6]): robot joint positions in radians.
             fixed_object_position (list[3]): x,y,z fixed position of object
         """
-        self.state = super().reset(joint_positions = joint_positions, fixed_object_position = fixed_object_position)   
+        self.prev_action = np.zeros(6)
 
-        return self.state
+        state = super().reset(joint_positions = joint_positions, fixed_object_position = fixed_object_position)   
+
+        return state
 
     def _reward(self, rs_state, action) -> Tuple[float, bool, dict]:
         env_state = self._robot_server_state_to_env_state(rs_state)
@@ -86,10 +91,13 @@ class MovingBoxTargetUR(URBaseAvoidanceEnv):
         # Difference in joint position current vs. starting position
         delta_joint_pos = env_state[9:15]
 
-        # Calculate distance to the target
-        target_coord = np.array(rs_state[0:3])
-        ee_coord = np.array(rs_state[18:21])
-        distance_to_target = np.linalg.norm(target_coord - ee_coord)   
+        # Calculate distance to the obstacle
+        obstacle_coord = np.array([rs_state['object_0_position_x'], rs_state['object_0_position_y'], rs_state['object_0_position_z']])
+        ee_coord = np.array([rs_state['ee_to_ref_translation_x'], rs_state['ee_to_ref_translation_y'], rs_state['ee_to_ref_translation_z']])
+        forearm_coord = np.array([rs_state['forearm_to_ref_translation_x'], rs_state['forearm_to_ref_translation_y'], rs_state['forearm_to_ref_translation_z']])
+        distance_to_ee = np.linalg.norm(obstacle_coord - ee_coord) 
+        distance_to_forearm = np.linalg.norm(obstacle_coord - forearm_coord) 
+        distance_to_target = np.min([distance_to_ee, distance_to_forearm])
                 
         # Reward staying close to the predefined joint position
         if abs(env_state[-6:]).sum() < 0.1 * action.size:
@@ -101,7 +109,7 @@ class MovingBoxTargetUR(URBaseAvoidanceEnv):
 
         # Negative reward if actions change to rapidly between steps
         for i in range(len(action)):
-            if abs(action[i] - self.last_action[i]) > 0.5:
+            if abs(action[i] - self.prev_action[i]) > 0.5:
                 reward += rapid_action_weight * (1/1000)
             
         # Negative reward if the obstacle is close than the predefined minimum distance
@@ -109,17 +117,17 @@ class MovingBoxTargetUR(URBaseAvoidanceEnv):
             reward += close_distance_weight * (1/self.max_episode_steps) 
         
         # Check if there is a collision
-        collision = True if rs_state[25] == 1 else False
+        collision = True if rs_state['in_collision'] == 1 else False
         if collision:
             done = True
             info['final_status'] = 'collision'
-            info['target_coord'] = target_coord
+            info['target_coord'] = obstacle_coord
             self.last_position_on_success = []
 
         if self.elapsed_steps >= self.max_episode_steps:
             done = True
             info['final_status'] = 'success'
-            info['target_coord'] = target_coord
+            info['target_coord'] = obstacle_coord
             self.last_position_on_success = []
 
 
@@ -127,11 +135,12 @@ class MovingBoxTargetUR(URBaseAvoidanceEnv):
 
     def step(self, action) -> Tuple[np.array, float, bool, dict]:
         
-        self.state, reward, done, info = super().step(action)
+        state, reward, done, info = super().step(action)
 
-        return self.state, reward, done, info
+        self.prev_action = self.add_fixed_joints(action)
+
+        return state, reward, done, info
     
-# TODO: yaw is different from the iros env -> check 
 class MovingBoxTargetURSim(MovingBoxTargetUR, Simulation):
     cmd = "roslaunch ur_robot_server ur_robot_server.launch \
         world_name:=tabletop_sphere50.world \

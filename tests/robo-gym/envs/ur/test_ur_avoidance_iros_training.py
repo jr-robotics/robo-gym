@@ -81,7 +81,7 @@ def test_robot_trajectory(env):
         state, _, _, _ = env.step(action)
         ur_j_pos_norm = state[3:9]
         delta_joints = state[9:15]
-        desired_joints = state [18:24]
+        desired_joints = state[18:24]
         # check if robot follows the trajectory in all steps of trajectory segment 0
         assert np.isclose(env.ur.normalize_joint_values(traj_joint_positions), ur_j_pos_norm, atol=0.1).all()
         # check if calculation of delta joints is correct
