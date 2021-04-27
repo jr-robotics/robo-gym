@@ -144,7 +144,6 @@ class MovingBoxTargetUR(URBaseAvoidanceEnv):
 class MovingBoxTargetURSim(MovingBoxTargetUR, Simulation):
     cmd = "roslaunch ur_robot_server ur_robot_server.launch \
         world_name:=tabletop_sphere50.world \
-        yaw:=3.14\
         reference_frame:=base_link \
         max_velocity_scale_factor:=0.2 \
         action_cycle_rate:=20 \
