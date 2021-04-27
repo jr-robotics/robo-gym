@@ -296,7 +296,7 @@ class EndEffectorPositioningUR(URBaseEnv):
         
 class EndEffectorPositioningURSim(EndEffectorPositioningUR, Simulation):
     cmd = "roslaunch ur_robot_server ur_robot_server.launch \
-        world_name:=tabletop_sphere50.world \
+        world_name:=tabletop_sphere50_no_collision.world \
         reference_frame:=base_link \
         max_velocity_scale_factor:=0.2 \
         action_cycle_rate:=20 \
