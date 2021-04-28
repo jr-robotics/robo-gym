@@ -17,7 +17,7 @@ ur_models = [pytest.param('ur3', marks=pytest.mark.nightly), \
 
 @pytest.fixture(autouse=True, scope='module', params=ur_models)
 def env(request):
-    env = gym.make('EmptyEnvironmentURSim-v0', ip='robot-servers', ur_model=request.param)
+    env = gym.make('EmptyEnvironmentURSim-v0', ip='robot-servers', ur_model=request.param, fix_wrist_3=True)
     yield env
     env.kill_sim()
     env.close()
@@ -71,7 +71,7 @@ def test_collision_with_ground(env):
 def test_reset_joint_positions(env):
    joint_positions =  [0.2, -2.5, 1.1, -2.0, -1.2, 1.2]
 
-   state = env.reset(joint_positions=joint_positions)
+   state = env.reset(joint_positions = joint_positions)
    assert np.isclose(env.ur.normalize_joint_values(joint_positions), state[0:6], atol=0.1).all()
 
 
