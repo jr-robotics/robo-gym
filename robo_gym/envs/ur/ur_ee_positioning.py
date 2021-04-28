@@ -305,7 +305,7 @@ class EndEffectorPositioningURSim(EndEffectorPositioningUR, Simulation):
         objects_controller:=true \
         target_mode:=1object \
         n_objects:=1.0 \
-        object_0_model_name:=sphere50 \
+        object_0_model_name:=sphere50_no_collision \
         object_0_frame:=target"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, ur_model='ur5', **kwargs):
         self.cmd = self.cmd + ' ' + 'ur_model:=' + ur_model
