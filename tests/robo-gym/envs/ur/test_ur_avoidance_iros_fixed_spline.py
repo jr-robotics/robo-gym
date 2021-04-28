@@ -23,12 +23,14 @@ ur_models = [pytest.param('ur3', marks=pytest.mark.skip(reason='not implemented 
 @pytest.fixture(autouse=True, scope='module', params=ur_models)
 def env(request):
     env = gym.make('IrosEnv03URTestFixedSplinesSim-v0', ip='robot-servers', ur_model=request.param)
+    env.request_param = request.param
     yield env
     env.kill_sim()
     env.close()
 
 @pytest.mark.commit 
 def test_initialization(env):
+    assert env.ur.model == env.request_param
     env.reset()
     done = False
     for _ in range(10):
