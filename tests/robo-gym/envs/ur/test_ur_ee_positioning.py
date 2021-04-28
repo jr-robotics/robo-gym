@@ -91,7 +91,6 @@ def test_object_coordinates(env):
    'ur16e': {'joint_positions':[0.0, -1.57, 0.0, -1.57, 0.0, 0.0], 'object_coords':[0.0, (0.291 +0.2), (1.139 + 0.3), 0.0, 0.0, 0.0], 'polar_coords':{'r': 0.360, 'theta': 0.983, 'phi': -1.571}}
    }
 
-   print('param req' + request.param)
    state = env.reset(joint_positions=params[env.ur.model]['joint_positions'], ee_target_pose=params[env.ur.model]['object_coords'])
    assert np.isclose([params[env.ur.model]['polar_coords']['r'], params[env.ur.model]['polar_coords']['phi'], params[env.ur.model]['polar_coords']['theta']], state[0:3], atol=0.1).all()
    
