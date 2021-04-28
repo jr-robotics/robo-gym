@@ -106,7 +106,7 @@ short_test_environments_with_rs_manual_deploy:
     - docker pull $ROBOT_SERVERS_IMAGE
     - docker tag $ROBOT_SERVERS_IMAGE robot-servers
     - docker-compose -f docker-compose-test-melodic.yml up -d
-    - docker exec robo-gym pytest 
+    - docker exec robo-gym pytest
     - docker-compose -f docker-compose-test-melodic.yml down
 
 manual_full_test_environments_py36:

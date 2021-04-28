@@ -6,24 +6,26 @@ import numpy as np
 
 import pytest
 
-ur_models = [pytest.param('ur3', marks=pytest.mark.skip(reason='not implemented yet')), \
-             pytest.param('ur3e', marks=pytest.mark.skip(reason='not implemented yet')), \
+ur_models = [pytest.param('ur3', marks=pytest.mark.nightly), \
+             pytest.param('ur3e', marks=pytest.mark.nightly), \
              pytest.param('ur5', marks=pytest.mark.commit), \
-             pytest.param('ur5e', marks=pytest.mark.skip(reason='not implemented yet')), \
-             pytest.param('ur10', marks=pytest.mark.skip(reason='not implemented yet')), \
-             pytest.param('ur10e', marks=pytest.mark.skip(reason='not implemented yet')), \
-             pytest.param('ur16e', marks=pytest.mark.skip(reason='not implemented yet')), \
+             pytest.param('ur5e', marks=pytest.mark.nightly), \
+             pytest.param('ur10', marks=pytest.mark.nightly), \
+             pytest.param('ur10e', marks=pytest.mark.nightly), \
+             pytest.param('ur16e', marks=pytest.mark.nightly), \
 ]
 
 @pytest.fixture(autouse=True, scope='module', params=ur_models)
 def env(request):
     env = gym.make('MovingBoxTargetURSim-v0', ip='robot-servers', ur_model=request.param)
+    env.request_param = request.param
     yield env
     env.kill_sim()
     env.close()
 
 @pytest.mark.commit 
 def test_initialization(env):
+    assert env.ur.model == env.request_param
     env.reset()
     done = False
     for _ in range(10):
@@ -62,13 +64,13 @@ def test_object_coordinates(env):
    #? robot up-right, target_coord_in_ee_frame 0.0, -0.3, 0.2, coordinates of target calculated using official dimensions from DH parameters. 
    #? first value is d4+d6
    #? second value is: d1+a2+a3+d5
-   'ur5': {'joint_positions':[0.0, -1.57, 0.0, -1.57, 0.0, 0.0], 'object_coords':[0.0, (0.191 +0.2), (1.001 + 0.3), 0.0, 0.0, 0.0], 'polar_coords':{'r': 0.360, 'theta': 0.983, 'phi': -1.571}}  
-   # ('EndEffectorPositioningUR10Sim-v0', [0.0, -1.57, 0.0, -1.57, 0.0, 0.0], [0.0, (0.256 +0.2), (1.428 + 0.3), 0.0, 0.0, 0.0], {'r': 0.360, 'theta': 0.983, 'phi': -1.571},'ur10')
-   # ('ur3_env', [0.0, -1.57, 0.0, -1.57, 0.0, 0.0], [0.0, (0.194 +0.2), (0.692 + 0.3), 0.0, 0.0, 0.0], {'r': 0.360, 'theta': 0.983, 'phi': -1.571},'ur3')
-   # ('ur3e_env', [0.0, -1.57, 0.0, -1.57, 0.0, 0.0], [0.0, (0.223 +0.2), (0.694 + 0.3), 0.0, 0.0, 0.0], {'r': 0.360, 'theta': 0.983, 'phi': -1.571},'ur3e')
-   # ('ur5e_env', [0.0, -1.57, 0.0, -1.57, 0.0, 0.0], [0.0, (0.233 +0.2), (1.079 + 0.3), 0.0, 0.0, 0.0], {'r': 0.360, 'theta': 0.983, 'phi': -1.571},'ur5e')
-   # ('ur10e_env', [0.0, -1.57, 0.0, -1.57, 0.0, 0.0], [0.0, (0.291 +0.2), (1.485 + 0.3), 0.0, 0.0, 0.0], {'r': 0.360, 'theta': 0.983, 'phi': -1.571},'ur10e')
-   # ('ur16e_env', [0.0, -1.57, 0.0, -1.57, 0.0, 0.0], [0.0, (0.291 +0.2), (1.139 + 0.3), 0.0, 0.0, 0.0], {'r': 0.360, 'theta': 0.983, 'phi': -1.571},'ur16e')
+   'ur3': {'joint_positions':[0.0, -1.57, 0.0, -1.57, 0.0, 0.0], 'object_coords':[0.0, (0.194 +0.2), (0.692 + 0.3), 0.0, 0.0, 0.0], 'polar_coords':{'r': 0.360, 'theta': 0.983, 'phi': -1.571}},
+   'ur3e': {'joint_positions':[0.0, -1.57, 0.0, -1.57, 0.0, 0.0], 'object_coords':[0.0, (0.223 +0.2), (0.694 + 0.3), 0.0, 0.0, 0.0], 'polar_coords':{'r': 0.360, 'theta': 0.983, 'phi': -1.571}},
+   'ur5': {'joint_positions':[0.0, -1.57, 0.0, -1.57, 0.0, 0.0], 'object_coords':[0.0, (0.191 +0.2), (1.001 + 0.3), 0.0, 0.0, 0.0], 'polar_coords':{'r': 0.360, 'theta': 0.983, 'phi': -1.571}},   
+   'ur5e': {'joint_positions':[0.0, -1.57, 0.0, -1.57, 0.0, 0.0], 'object_coords':[0.0, (0.233 +0.2), (1.079 + 0.3), 0.0, 0.0, 0.0], 'polar_coords':{'r': 0.360, 'theta': 0.983, 'phi': -1.571}}, 
+   'ur10': {'joint_positions':[0.0, -1.57, 0.0, -1.57, 0.0, 0.0], 'object_coords':[0.0, (0.256 +0.2), (1.428 + 0.3), 0.0, 0.0, 0.0], 'polar_coords':{'r': 0.360, 'theta': 0.983, 'phi': -1.571}}, 
+   'ur10e': {'joint_positions':[0.0, -1.57, 0.0, -1.57, 0.0, 0.0], 'object_coords':[0.0, (0.291 +0.2), (1.485 + 0.3), 0.0, 0.0, 0.0], 'polar_coords':{'r': 0.360, 'theta': 0.983, 'phi': -1.571}},  
+   'ur16e': {'joint_positions':[0.0, -1.57, 0.0, -1.57, 0.0, 0.0], 'object_coords':[0.0, (0.291 +0.2), (1.139 + 0.3), 0.0, 0.0, 0.0], 'polar_coords':{'r': 0.360, 'theta': 0.983, 'phi': -1.571}}
    }
 
    state = env.reset(joint_positions=params[env.ur.model]['joint_positions'], fixed_object_position=params[env.ur.model]['object_coords'])
@@ -76,10 +78,13 @@ def test_object_coordinates(env):
    
 
 test_ur_fixed_joints = [
+    ('MovingBoxTargetURSim-v0', True, False, False, False, False, False, 'ur3'), # fixed shoulder_pan
+    ('MovingBoxTargetURSim-v0', False, True, False, False, False, False, 'ur3e'), # fixed shoulder_lift
     ('MovingBoxTargetURSim-v0', False, False, False, False, False, True, 'ur5'), # fixed wrist_3
-    ('MovingBoxTargetURSim-v0', True, False, True, False, False, False, 'ur5'), # fixed Base and Elbow
-    ('MovingBoxTargetURSim-v0', False, False, False, False, False, True, 'ur10'), # fixed wrist_3
-    ('MovingBoxTargetURSim-v0', True, False, True, False, False, False, 'ur10'), # fixed Base and Elbow
+    ('MovingBoxTargetURSim-v0', True, False, True, False, False, False, 'ur5e'), # fixed Base and Elbow
+    ('MovingBoxTargetURSim-v0', False, False, True, False, False, False, 'ur10'), # fixed elbow
+    ('MovingBoxTargetURSim-v0', False, False, False, True, False, False, 'ur10e'), # fixed wrist_1
+    ('MovingBoxTargetURSim-v0', False, False, False, False, True, False, 'ur16e'), # fixed wrist_2
 ]
 
 @pytest.mark.nightly
@@ -89,16 +94,11 @@ def test_fixed_joints(env_name, fix_base, fix_shoulder, fix_elbow, fix_wrist_1, 
     env = gym.make(env_name, ip='robot-servers', fix_base=fix_base, fix_shoulder=fix_shoulder, fix_elbow=fix_elbow, 
                                                 fix_wrist_1=fix_wrist_1, fix_wrist_2=fix_wrist_2, fix_wrist_3=fix_wrist_3, ur_model=ur_model)
     state = env.reset()
-    
-    initial_joint_positions = [0.0]*6
     initial_joint_positions = state[3:9]
-    
     # Take 20 actions
     action = env.action_space.sample()
     for _ in range(20):
         state, _, _, _ = env.step(action)
-    
-    joint_positions = [0.0]*6
     joint_positions = state[3:9]
 
     if fix_base:

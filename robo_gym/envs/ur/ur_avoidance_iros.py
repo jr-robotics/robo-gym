@@ -262,7 +262,7 @@ class IrosEnv03URTrainingSim(IrosEnv03URTraining, Simulation):
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, ur_model='ur5', **kwargs):
         self.cmd = self.cmd + ' ' + 'ur_model:=' + ur_model
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
-        IrosEnv03URTraining.__init__(self, rs_address=self.robot_server_ip, **kwargs)
+        IrosEnv03URTraining.__init__(self, rs_address=self.robot_server_ip, ur_model=ur_model, **kwargs)
 
 class IrosEnv03URTrainingRob(IrosEnv03URTraining):
     real_robot = True
@@ -315,7 +315,7 @@ class IrosEnv03URTestFixedSplinesSim(IrosEnv03URTestFixedSplines, Simulation):
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, ur_model='ur5', **kwargs):
         self.cmd = self.cmd + ' ' + 'ur_model:=' + ur_model
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
-        IrosEnv03URTestFixedSplines.__init__(self, rs_address=self.robot_server_ip, **kwargs)
+        IrosEnv03URTestFixedSplines.__init__(self, rs_address=self.robot_server_ip, ur_model=ur_model, **kwargs)
 
 class IrosEnv03URTestFixedSplinesRob(IrosEnv03URTestFixedSplines):
     real_robot = True

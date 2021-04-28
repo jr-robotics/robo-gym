@@ -23,12 +23,14 @@ ur_models = [pytest.param('ur3', marks=pytest.mark.skip(reason='not implemented 
 @pytest.fixture(autouse=True, scope='module', params=ur_models)
 def env(request):
     env = gym.make('IrosEnv03URTestFixedSplinesSim-v0', ip='robot-servers', ur_model=request.param)
+    env.request_param = request.param
     yield env
     env.kill_sim()
     env.close()
 
 @pytest.mark.commit 
 def test_initialization(env):
+    assert env.ur.model == env.request_param
     env.reset()
     done = False
     for _ in range(10):
@@ -96,16 +98,11 @@ def test_fixed_joints(env_name, fix_base, fix_shoulder, fix_elbow, fix_wrist_1, 
     env = gym.make(env_name, ip='robot-servers', fix_base=fix_base, fix_shoulder=fix_shoulder, fix_elbow=fix_elbow, 
                                                 fix_wrist_1=fix_wrist_1, fix_wrist_2=fix_wrist_2, fix_wrist_3=fix_wrist_3, ur_model=ur_model)
     state = env.reset()
-    
-    initial_joint_positions = [0.0]*6
-    initial_joint_positions = state[3:9]
-    
+    initial_joint_positions = state[3:9] 
     # Take 20 actions
     action = env.action_space.sample()
     for _ in range(20):
         state, _, _, _ = env.step(action)
-    
-    joint_positions = [0.0]*6
     joint_positions = state[3:9]
 
     if fix_base:
