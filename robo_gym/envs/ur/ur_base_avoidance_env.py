@@ -126,9 +126,9 @@ class URBaseAvoidanceEnv(URBaseEnv):
         # Transform cartesian coordinates of object to polar coordinates 
         # with respect to the end effector frame
         object_coord = np.array([
-            rs_state['object_0_position_x'], 
-            rs_state['object_0_position_y'],
-            rs_state['object_0_position_z']])
+            rs_state['object_0_to_ref_translation_x'], 
+            rs_state['object_0_to_ref_translation_y'],
+            rs_state['object_0_to_ref_translation_z']])
 
         ee_to_ref_frame_translation = np.array([
             rs_state['ee_to_ref_translation_x'], 
@@ -267,13 +267,13 @@ class URBaseAvoidanceEnv(URBaseEnv):
     
     def _get_robot_server_composition(self) -> dict:
         rs_state_keys = dict.fromkeys([
-            'object_0_position_x', 
-            'object_0_position_y',
-            'object_0_position_z',
-            'object_0_orientation_x',
-            'object_0_orientation_y',
-            'object_0_orientation_z',
-            'object_0_orientation_w',
+            'object_0_to_ref_translation_x', 
+            'object_0_to_ref_translation_y',
+            'object_0_to_ref_translation_z',
+            'object_0_to_ref_rotation_x',
+            'object_0_to_ref_rotation_y',
+            'object_0_to_ref_rotation_z',
+            'object_0_to_ref_rotation_w',
 
             'base_joint_position',
             'shoulder_joint_position',

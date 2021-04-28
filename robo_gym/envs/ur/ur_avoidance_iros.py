@@ -130,7 +130,7 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
         target_reached_weight = 0.05
 
         # Calculate distance to the target
-        target_coord = np.array([rs_state['object_0_position_x'], rs_state['object_0_position_y'], rs_state['object_0_position_z']])
+        target_coord = np.array([rs_state['object_0_to_ref_translation_x'], rs_state['object_0_to_ref_translation_y'], rs_state['object_0_to_ref_translation_z']])
         ee_coord = np.array([rs_state['ee_to_ref_translation_x'], rs_state['ee_to_ref_translation_y'], rs_state['ee_to_ref_translation_z']])
         forearm_coord = np.array([rs_state['forearm_to_ref_translation_x'], rs_state['forearm_to_ref_translation_y'], rs_state['forearm_to_ref_translation_z']])
         distance_to_ee = np.linalg.norm(np.array(target_coord)-np.array(ee_coord))

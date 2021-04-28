@@ -92,7 +92,7 @@ class MovingBoxTargetUR(URBaseAvoidanceEnv):
         delta_joint_pos = env_state[9:15]
 
         # Calculate distance to the obstacle
-        obstacle_coord = np.array([rs_state['object_0_position_x'], rs_state['object_0_position_y'], rs_state['object_0_position_z']])
+        obstacle_coord = np.array([rs_state['object_0_to_ref_translation_x'], rs_state['object_0_to_ref_translation_y'], rs_state['object_0_to_ref_translation_z']])
         ee_coord = np.array([rs_state['ee_to_ref_translation_x'], rs_state['ee_to_ref_translation_y'], rs_state['ee_to_ref_translation_z']])
         forearm_coord = np.array([rs_state['forearm_to_ref_translation_x'], rs_state['forearm_to_ref_translation_y'], rs_state['forearm_to_ref_translation_z']])
         distance_to_ee = np.linalg.norm(obstacle_coord - ee_coord) 
