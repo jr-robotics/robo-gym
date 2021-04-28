@@ -310,7 +310,7 @@ class EndEffectorPositioningURSim(EndEffectorPositioningUR, Simulation):
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, ur_model='ur5', **kwargs):
         self.cmd = self.cmd + ' ' + 'ur_model:=' + ur_model
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
-        EndEffectorPositioningUR.__init__(self, rs_address=self.robot_server_ip, **kwargs)
+        EndEffectorPositioningUR.__init__(self, rs_address=self.robot_server_ip, ur_model=ur_model, **kwargs)
 
 class EndEffectorPositioningURRob(EndEffectorPositioningUR):
     real_robot = True
