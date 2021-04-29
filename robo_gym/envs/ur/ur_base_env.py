@@ -377,4 +377,4 @@ class EmptyEnvironmentURSim(URBaseEnv, Simulation):
 class EmptyEnvironmentURRob(URBaseEnv):
     real_robot = True
 
-# roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=moving
+# roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 rs_mode:=moving

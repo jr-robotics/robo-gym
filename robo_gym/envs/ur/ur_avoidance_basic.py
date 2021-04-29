@@ -150,7 +150,7 @@ class MovingBoxTargetURSim(MovingBoxTargetUR, Simulation):
         rviz_gui:=false \
         gazebo_gui:=true \
         objects_controller:=true \
-        target_mode:=1moving2points \
+        rs_mode:=1moving2points \
         n_objects:=1.0 \
         object_0_model_name:=sphere50 \
         object_0_frame:=target"
@@ -162,4 +162,4 @@ class MovingBoxTargetURSim(MovingBoxTargetUR, Simulation):
 class MovingBoxTargetURRob(MovingBoxTargetUR):
     real_robot = True 
 
-# roslaunch ur_robot_server ur_robot_server.launch ur_model:=ur5 real_robot:=true rviz_gui:=true gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=moving
+# roslaunch ur_robot_server ur_robot_server.launch ur_model:=ur5 real_robot:=true rviz_gui:=true gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 rs_mode:=moving

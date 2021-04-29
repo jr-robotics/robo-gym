@@ -255,7 +255,7 @@ class IrosEnv03URTrainingSim(IrosEnv03URTraining, Simulation):
         rviz_gui:=true \
         gazebo_gui:=true \
         objects_controller:=true \
-        target_mode:=1moving2points \
+        rs_mode:=1moving2points \
         n_objects:=1.0 \
         object_0_model_name:=sphere50 \
         object_0_frame:=target"
@@ -267,7 +267,7 @@ class IrosEnv03URTrainingSim(IrosEnv03URTraining, Simulation):
 class IrosEnv03URTrainingRob(IrosEnv03URTraining):
     real_robot = True
 
-# roslaunch ur_robot_server ur_robot_server.launch ur_model:=ur5 real_robot:=true rviz_gui:=true gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=1moving2points n_objects:=1.0 object_0_frame:=target
+# roslaunch ur_robot_server ur_robot_server.launch ur_model:=ur5 real_robot:=true rviz_gui:=true gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 rs_mode:=1moving2points n_objects:=1.0 object_0_frame:=target
 
 
 
@@ -307,7 +307,7 @@ class IrosEnv03URTestFixedSplinesSim(IrosEnv03URTestFixedSplines, Simulation):
         rviz_gui:=false \
         gazebo_gui:=true \
         objects_controller:=true \
-        target_mode:=1moving2points \
+        rs_mode:=1moving2points \
         n_objects:=1.0 \
         object_trajectory_file_name:=splines_ur5 \
         object_0_model_name:=sphere50 \
@@ -320,4 +320,4 @@ class IrosEnv03URTestFixedSplinesSim(IrosEnv03URTestFixedSplines, Simulation):
 class IrosEnv03URTestFixedSplinesRob(IrosEnv03URTestFixedSplines):
     real_robot = True
 
-# roslaunch ur_robot_server ur_robot_server.launch ur_model:=ur5 real_robot:=true rviz_gui:=true gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=1moving2points n_objects:=1.0 object_0_frame:=target
+# roslaunch ur_robot_server ur_robot_server.launch ur_model:=ur5 real_robot:=true rviz_gui:=true gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 rs_mode:=1moving2points n_objects:=1.0 object_0_frame:=target
