@@ -218,14 +218,6 @@ class URBaseEnv(gym.Env):
 
     def _get_robot_server_composition(self) -> dict:
         rs_state_keys = dict.fromkeys([
-            'object_0_to_ref_translation_x', 
-            'object_0_to_ref_translation_y',
-            'object_0_to_ref_translation_z',
-            'object_0_to_ref_rotation_x',
-            'object_0_to_ref_rotation_y',
-            'object_0_to_ref_rotation_z',
-            'object_0_to_ref_rotation_w',
-
             'base_joint_position',
             'shoulder_joint_position',
             'elbow_joint_position',
@@ -373,7 +365,7 @@ class EmptyEnvironmentURSim(URBaseEnv, Simulation):
         rviz_gui:=false \
         gazebo_gui:=true \
         objects_controller:=true \
-        target_mode:=1object \
+        rs_mode:=only_robot \
         n_objects:=1.0 \
         object_0_model_name:=sphere50 \
         object_0_frame:=target"
