@@ -358,17 +358,13 @@ class URBaseEnv(gym.Env):
 
 class EmptyEnvironmentURSim(URBaseEnv, Simulation):
     cmd = "roslaunch ur_robot_server ur_robot_server.launch \
-        world_name:=tabletop_sphere50.world \
+        world_name:=empty.world \
         reference_frame:=base_link \
         max_velocity_scale_factor:=0.2 \
         action_cycle_rate:=20 \
         rviz_gui:=false \
         gazebo_gui:=true \
-        objects_controller:=true \
-        rs_mode:=only_robot \
-        n_objects:=1.0 \
-        object_0_model_name:=sphere50 \
-        object_0_frame:=target"
+        rs_mode:=only_robot"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, ur_model='ur5', **kwargs):
         self.cmd = self.cmd + ' ' + 'ur_model:=' + ur_model
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
