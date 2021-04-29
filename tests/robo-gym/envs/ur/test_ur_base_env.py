@@ -15,7 +15,7 @@ ur_models = [pytest.param('ur3', marks=pytest.mark.nightly), \
              pytest.param('ur16e', marks=pytest.mark.nightly), \
 ]
 
-@pytest.fixture(autouse=True, scope='module', params=ur_models)
+@pytest.fixture(scope='module', params=ur_models)
 def env(request):
     env = gym.make('EmptyEnvironmentURSim-v0', ip='robot-servers', ur_model=request.param, fix_wrist_3=True)
     env.request_param = request.param

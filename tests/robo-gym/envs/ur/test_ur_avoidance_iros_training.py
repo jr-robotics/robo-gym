@@ -20,7 +20,7 @@ ur_models = [pytest.param('ur3', marks=pytest.mark.skip(reason='not implemented 
              pytest.param('ur16e', marks=pytest.mark.skip(reason='not implemented yet')), \
 ]
 
-@pytest.fixture(autouse=True, scope='module', params=ur_models)
+@pytest.fixture(scope='module', params=ur_models)
 def env(request):
     env = gym.make('IrosEnv03URTrainingSim-v0', ip='robot-servers', ur_model=request.param)
     env.request_param = request.param
