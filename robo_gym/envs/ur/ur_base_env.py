@@ -218,14 +218,6 @@ class URBaseEnv(gym.Env):
 
     def _get_robot_server_composition(self) -> dict:
         rs_state_keys = dict.fromkeys([
-            'object_0_to_ref_translation_x', 
-            'object_0_to_ref_translation_y',
-            'object_0_to_ref_translation_z',
-            'object_0_to_ref_rotation_x',
-            'object_0_to_ref_rotation_y',
-            'object_0_to_ref_rotation_z',
-            'object_0_to_ref_rotation_w',
-
             'base_joint_position',
             'shoulder_joint_position',
             'elbow_joint_position',
@@ -366,17 +358,13 @@ class URBaseEnv(gym.Env):
 
 class EmptyEnvironmentURSim(URBaseEnv, Simulation):
     cmd = "roslaunch ur_robot_server ur_robot_server.launch \
-        world_name:=tabletop_sphere50.world \
+        world_name:=empty.world \
         reference_frame:=base_link \
         max_velocity_scale_factor:=0.2 \
         action_cycle_rate:=20 \
         rviz_gui:=false \
         gazebo_gui:=true \
-        objects_controller:=true \
-        target_mode:=1object \
-        n_objects:=1.0 \
-        object_0_model_name:=sphere50 \
-        object_0_frame:=target"
+        rs_mode:=only_robot"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, ur_model='ur5', **kwargs):
         self.cmd = self.cmd + ' ' + 'ur_model:=' + ur_model
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
@@ -385,4 +373,4 @@ class EmptyEnvironmentURSim(URBaseEnv, Simulation):
 class EmptyEnvironmentURRob(URBaseEnv):
     real_robot = True
 
-# roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 target_mode:=moving
+# roslaunch ur_robot_server ur5_real_robot_server.launch  gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 rs_mode:=moving
