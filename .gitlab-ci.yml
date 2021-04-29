@@ -24,16 +24,18 @@ before_script:
     max: 2
   script:
     # fetch the latest image (not failing if image is not found)
-    - docker pull $CI_REGISTRY_IMAGE:latest || true
+    - docker pull $CI_REGISTRY_IMAGE:$PYTHON_VER-latest || true
     - >
       docker build
       --pull
-      --cache-from $CI_REGISTRY_IMAGE:latest
+      --cache-from $CI_REGISTRY_IMAGE:$PYTHON_VER-latest
       --tag $ROBO_GYM_IMAGE
       --build-arg PYTHON_VER=$PYTHON_VER
       --build-arg CACHEBUST=$CI_COMMIT_SHA
       .
     - docker push $ROBO_GYM_IMAGE
+    - docker tag $ROBO_GYM_IMAGE $CI_REGISTRY_IMAGE:$PYTHON_VER-latest
+    - docker push $CI_REGISTRY_IMAGE:$PYTHON_VER-latest
 
 build_robo-gym_image_py36:
   <<: *build_robo-gym_image_def  
