@@ -372,8 +372,7 @@ env = gym.make('EndEffectorPositioningURRob-v0', ur_model='ur10', rs_address='<r
 
 The goal in this environment is for the robotic arm to reach a target position with its end effector.
 
-The target end effector positions are uniformly distributed across a semi-sphere of radius 1200 mm,
-which is close to the full working area of the UR10.
+The target end effector positions are uniformly distributed across a semi-sphere of the size close to the full working area of the robot.
 Potential target points generated within the singularity areas of the working space are discarded.
 The starting position is a random robot configuration.
 
