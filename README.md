@@ -47,8 +47,8 @@ IROS 2020 is live! This year the event is on-demand and accessible for free to e
   - [Mobile Robots](#mobile-robots)
     - [Mobile Industrial Robots Mir100](#mobile-industrial-robots-mir100)
   - [Robot Arms](#robot-arms)
-    - [Universal Robots UR10](#universal-robots-ur10)
-    - [Universal Robots UR5](#universal-robots-ur5)
+    - [Universal Robots](#universal-robots)
+      - [End Effector Positioning](#end-effector-positioning)
   - [Create your own Environments](#create-your-own-environments)
 - [Examples](#examples)
   - [Random Agent MiR100 Simulation Environment](#random-agent-mir100-simulation-environment)
@@ -352,9 +352,21 @@ and a large negative reward in case of collision.
 
 ### Robot Arms
 [back to top](#robo-gym)
-#### Universal Robots UR10
 
-``'EndEffectorPositioningUR10Sim-v0'``, ``'EndEffectorPositioningUR10Rob-v0'``
+#### Universal Robots 
+
+Available UR models: UR3, UR3e, UR5, UR5e, UR10, UR10e, UR16
+
+To select the robot model use: `ur_model='<ur3, ur3e, ur5, ur5e, ur10, ur10e, ur16e>'`
+##### End Effector Positioning
+
+```python
+# simulated robot environment
+env = gym.make('EndEffectorPositioningURSim-v0', ur_model='ur10', ip='<server_manager_address>')
+# real robot environment
+env = gym.make('EndEffectorPositioningURRob-v0', ur_model='ur10', rs_address='<robot_server_address>')
+
+```
 
 ![](https://user-images.githubusercontent.com/36470989/79962368-3ce0b700-8488-11ea-83ac-c9e8995c2957.gif)
 
@@ -378,21 +390,6 @@ negative reward is collected for moving away.
 Both self collisions and collisions with the ground are taken into account and
 punished with a negative reward and termination of the episode.
 
-``'EndEffectorPositioningUR10DoF5Sim-v0'``, ``'EndEffectorPositioningUR10DoF5Rob-v0'``
-
- Same as ``'EndEffectorPositioningUR10Sim-v0'`` and ``'EndEffectorPositioningUR10Rob-v0'`` but with wrist_3 joint fixed (5DoF).
-
- ! When resetting the Real Robot environment the robot could go in self collision, please be cautious. We are working on a solution to fix this.
-
-#### Universal Robots UR5
-
-``'EndEffectorPositioningUR5Sim-v0'``, ``'EndEffectorPositioningUR5Rob-v0'``
-
-Same as ``'EndEffectorPositioningUR10Sim-v0'`` and ``'EndEffectorPositioningUR10Rob-v0'`` with the UR5 robot. 
-
-``'EndEffectorPositioningUR5DoF5Sim-v0'``, ``'EndEffectorPositioningUR5DoF5Rob-v0'``
-
- Same as ``'EndEffectorPositioningUR5Sim-v0'`` and ``'EndEffectorPositioningUR5Rob-v0'`` but with wrist_3 joint fixed (5DoF).
 
  ! When resetting the Real Robot environment the robot could go in self collision, please be cautious. We are working on a solution to fix this.
 
