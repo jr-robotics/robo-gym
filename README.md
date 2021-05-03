@@ -1,4 +1,4 @@
-<img align="left" width="60" height="60" src="https://user-images.githubusercontent.com/36470989/81711567-15bc4a80-9474-11ea-8499-7adcd6ec96a7.png" alt="robo-gym logo">
+<img align="left" width="60" height="60" src="https://user-images.githubusercontent.com/36470989/116858354-8668f380-abfe-11eb-81dc-629d9e8a9d4e.png" alt="robo-gym logo">
 
 <!-- omit in toc -->
 # robo-gym 
