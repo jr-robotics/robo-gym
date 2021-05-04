@@ -76,6 +76,7 @@ def test_reset_joint_positions(env):
    state = env.reset(joint_positions=joint_positions)
    assert np.isclose(env.ur.normalize_joint_values(joint_positions), state[3:9], atol=0.1).all()
 
+@pytest.mark.commit 
 def test_object_coordinates(env):
 
    params = {
