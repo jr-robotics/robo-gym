@@ -62,8 +62,8 @@ def test_object_coordinates(env):
    }
 
    state = env.reset(fixed_object_position=params[env.ur.model]['object_coords'])
-   assert np.isclose([params[env.ur.model]['polar_coords_ee']['r'], params[env.ur.model]['polar_coords_ee']['theta']], params[env.ur.model]['polar_coords_ee']['phi'], state[0:3], atol=0.1).all()
-   assert np.isclose([params[env.ur.model]['polar_coords_forearm']['r'], params[env.ur.model]['polar_coords_forearm']['theta']], params[env.ur.model]['polar_coords_forearm']['phi'], state[15:18], atol=0.1).all()
+   assert np.isclose([params[env.ur.model]['polar_coords_ee']['r'], params[env.ur.model]['polar_coords_ee']['theta'], params[env.ur.model]['polar_coords_ee']['phi']], state[0:3], atol=0.1).all()
+   assert np.isclose([params[env.ur.model]['polar_coords_forearm']['r'], params[env.ur.model]['polar_coords_forearm']['theta'], params[env.ur.model]['polar_coords_forearm']['phi']], state[15:18], atol=0.1).all()
 
 @pytest.mark.commit    
 def test_robot_trajectory(env):

@@ -93,7 +93,7 @@ def test_object_coordinates(env):
    }
 
    state = env.reset(joint_positions=params[env.ur.model]['joint_positions'], ee_target_pose=params[env.ur.model]['object_coords'])
-   assert np.isclose([params[env.ur.model]['polar_coords']['r'], params[env.ur.model]['polar_coords']['theta']], params[env.ur.model]['polar_coords']['phi'], state[0:3], atol=0.1).all()
+   assert np.isclose([params[env.ur.model]['polar_coords']['r'], params[env.ur.model]['polar_coords']['theta'], params[env.ur.model]['polar_coords']['phi']], state[0:3], atol=0.1).all()
    
 
 test_ur_fixed_joints = [
