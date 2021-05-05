@@ -79,13 +79,13 @@ build_robo-gym_image_py39:
     - docker-compose -f docker-compose-test-melodic.yml up -d
     - docker exec robo-gym pytest -m "not nightly"
     - docker-compose -f docker-compose-test-melodic.yml down
-  except:
-    - schedules
 
 short_test_environments_py36:
   <<: *short_test_environments_def
+  except:
+    - schedules
   needs: ["build_robo-gym_image_py36"]
-
+  
 short_test_environments_py37:
   <<: *short_test_environments_def
   variables:
