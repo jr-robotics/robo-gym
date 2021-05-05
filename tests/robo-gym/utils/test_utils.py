@@ -87,7 +87,7 @@ def test_cartesian_to_polar_2d_equal_points(p1, p2, expected_r, expected_theta):
 def test_cartesian_to_polar_3d():
     cartesian_coordinates = [9, 4, 5]
 
-    r, phi, theta = utils.cartesian_to_polar_3d(cartesian_coordinates=cartesian_coordinates)
+    r, theta, phi = utils.cartesian_to_polar_3d(cartesian_coordinates=cartesian_coordinates)
     
     assert abs(r - 11.045361017187) < 0.01
     assert abs(phi - 0.41822432957) < 0.01
