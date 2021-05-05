@@ -82,8 +82,33 @@ build_robo-gym_image_py39:
   except:
     - schedules
 
-short_test_environments:
+short_test_environments_py36:
   <<: *short_test_environments_def
+  needs: ["build_robo-gym_image_py36"]
+
+short_test_environments_py37:
+  <<: *short_test_environments_def
+  variables:
+      PYTHON_VER: "3.7"
+  only:
+    - schedules
+  needs: ["build_robo-gym_image_py37"]
+
+short_test_environments_py38:
+  <<: *short_test_environments_def
+  variables:
+      PYTHON_VER: "3.7"
+  only:
+    - schedules
+  needs: ["build_robo-gym_image_py38"]
+
+short_test_environments_py39:
+  <<: *short_test_environments_def
+  variables:
+      PYTHON_VER: "3.7"
+  only:
+    - schedules
+  needs: ["build_robo-gym_image_py39"]
 
 short_test_environments_with_rs_manual_deploy:
   <<: *short_test_environments_def
@@ -128,6 +153,7 @@ full_test_environments_py37:
       PYTHON_VER: "3.7"
   only:
     - schedules
+  when: manual
   needs: ["build_robo-gym_image_py37"]
 
 full_test_environments_py38:
@@ -136,6 +162,7 @@ full_test_environments_py38:
       PYTHON_VER: "3.8"
   only:
     - schedules
+  when: manual
   needs: ["build_robo-gym_image_py38"]
 
 full_test_environments_py39:
@@ -144,6 +171,7 @@ full_test_environments_py39:
       PYTHON_VER: "3.9"
   only:
     - schedules
+  when: manual
   needs: ["build_robo-gym_image_py39"]
 
 full_test_environments_py36_with_rs_master:
