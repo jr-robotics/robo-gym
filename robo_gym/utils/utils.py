@@ -105,7 +105,7 @@ def cartesian_to_polar_3d(cartesian_coordinates):
     #? theta is defined in [0, +pi]
     theta = np.arccos(z/r)
 
-    return [r,phi,theta]
+    return [r,theta,phi]
 
 def downsample_list_to_len(data, output_len):
     """Downsample a list of values to a specific length.
