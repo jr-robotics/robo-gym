@@ -39,7 +39,7 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
     """
     max_episode_steps = 1000
 
-    def __init__(self, rs_address=None, fix_base=False, fix_shoulder=False, fix_elbow=False, fix_wrist_1=False, fix_wrist_2=False, fix_wrist_3=True, ur_model='ur5', include_polar_to_elbow=True, **kwargs) -> None:
+    def __init__(self, rs_address=None, fix_base=False, fix_shoulder=False, fix_elbow=False, fix_wrist_1=False, fix_wrist_2=False, fix_wrist_3=True, ur_model='ur5', include_polar_to_elbow=True, rs_state_to_info=True, **kwargs) -> None:
         super().__init__(rs_address, fix_base, fix_shoulder, fix_elbow, fix_wrist_1, fix_wrist_2, fix_wrist_3, ur_model, include_polar_to_elbow)
 
         file_name = 'trajectory_iros_2021.json'

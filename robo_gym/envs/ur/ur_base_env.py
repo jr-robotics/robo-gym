@@ -34,9 +34,11 @@ class URBaseEnv(gym.Env):
     real_robot = False
     max_episode_steps = 300
 
-    def __init__(self, rs_address=None, fix_base=False, fix_shoulder=False, fix_elbow=False, fix_wrist_1=False, fix_wrist_2=False, fix_wrist_3=True, ur_model='ur5', **kwargs):
+    def __init__(self, rs_address=None, fix_base=False, fix_shoulder=False, fix_elbow=False, fix_wrist_1=False, fix_wrist_2=False, fix_wrist_3=True, ur_model='ur5', rs_state_to_info=True, **kwargs):
         self.ur = ur_utils.UR(model=ur_model)
         self.elapsed_steps = 0
+
+        self.rs_state_to_info = rs_state_to_info
 
         self.fix_base = fix_base
         self.fix_shoulder = fix_shoulder
@@ -88,7 +90,7 @@ class URBaseEnv(gym.Env):
         # Initialize environment state
         state_len = self.observation_space.shape[0]
         state = np.zeros(state_len)
-        rs_state = self._get_robot_server_composition()
+        rs_state = dict.fromkeys(self.get_robot_server_composition(), 0.0)
 
         # Set initial robot joint positions
         self._set_joint_positions(joint_positions)
@@ -105,9 +107,8 @@ class URBaseEnv(gym.Env):
         # Get Robot Server state
         rs_state = self.client.get_state_msg().state_dict
 
-        # Check if the length of the Robot Server state received is correct
-        if not len(rs_state)== self._get_robot_server_state_len():
-            raise InvalidStateError("Robot Server state received has wrong length")
+        # Check if the length and keys of the Robot Server state received is correct
+        self._check_rs_state_keys(rs_state)
 
         # Convert the initial state from Robot Server format to environment format
         state = self._robot_server_state_to_env_state(rs_state)
@@ -192,6 +193,7 @@ class URBaseEnv(gym.Env):
 
         # Send action to Robot Server and get state
         rs_state = self.client.send_action_get_state(rs_action.tolist()).state_dict
+        self._check_rs_state_keys(rs_state)
 
         # Convert the state from Robot Server format to environment format
         state = self._robot_server_state_to_env_state(rs_state)
@@ -206,6 +208,7 @@ class URBaseEnv(gym.Env):
         reward = 0
         done = False
         reward, done, info = self._reward(rs_state=rs_state, action=action)
+        if self.rs_state_to_info: info['rs_state'] = self.rs_state
 
         return state, reward, done, info
 
@@ -216,8 +219,8 @@ class URBaseEnv(gym.Env):
         pass
     
 
-    def _get_robot_server_composition(self) -> dict:
-        rs_state_keys = dict.fromkeys([
+    def get_robot_server_composition(self) -> list:
+        rs_state_keys = [
             'base_joint_position',
             'shoulder_joint_position',
             'elbow_joint_position',
@@ -241,7 +244,7 @@ class URBaseEnv(gym.Env):
             'ee_to_ref_rotation_w',
 
             'in_collision'
-        ], 0.0)
+        ]
         return rs_state_keys
 
 
@@ -252,7 +255,17 @@ class URBaseEnv(gym.Env):
         Describes the composition of the Robot Server state and returns
         its length.
         """
-        return len(self._get_robot_server_composition())
+        return len(self.get_robot_server_composition())
+
+    def _check_rs_state_keys(self, rs_state) -> None:
+        keys = self.get_robot_server_composition()
+        if not len(keys) == len(rs_state.keys()):
+            raise InvalidStateError("Robot Server state keys to not match. Different lengths.")
+
+        
+        for key in keys:
+            if key not in rs_state.keys():
+                raise InvalidStateError("Robot Server state keys to not match")
 
 
     def _set_joint_positions(self, joint_positions) -> None:
