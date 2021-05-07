@@ -134,7 +134,7 @@ class EndEffectorPositioningUR(URBaseEnv):
 
         return state
 
-    def _get_robot_server_composition(self) -> dict:
+    def get_robot_server_composition(self) -> dict:
         rs_state_keys = dict.fromkeys([
             'object_0_to_ref_translation_x', 
             'object_0_to_ref_translation_y',
@@ -188,7 +188,7 @@ class EndEffectorPositioningUR(URBaseEnv):
         # Initialize environment state
         state_len = self.observation_space.shape[0]
         state = np.zeros(state_len)
-        rs_state = self._get_robot_server_composition()
+        rs_state = self.get_robot_server_composition()
 
         # Randomize initial robot joint positions
         if randomize_start:

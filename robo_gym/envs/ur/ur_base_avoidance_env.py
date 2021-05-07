@@ -69,7 +69,7 @@ class URBaseAvoidanceEnv(URBaseEnv):
         # Initialize environment state
         state_len = self.observation_space.shape[0]
         state = np.zeros(state_len)
-        rs_state = self._get_robot_server_composition()
+        rs_state = self.get_robot_server_composition()
 
         # Initialize desired joint positions
         if joint_positions: 
@@ -263,9 +263,9 @@ class URBaseAvoidanceEnv(URBaseEnv):
             int: Length of the Robot Server state.
 
         """
-        return len(self._get_robot_server_composition())  
+        return len(self.get_robot_server_composition())  
     
-    def _get_robot_server_composition(self) -> dict:
+    def get_robot_server_composition(self) -> dict:
         rs_state_keys = dict.fromkeys([
             'object_0_to_ref_translation_x', 
             'object_0_to_ref_translation_y',

@@ -90,7 +90,7 @@ class URBaseEnv(gym.Env):
         # Initialize environment state
         state_len = self.observation_space.shape[0]
         state = np.zeros(state_len)
-        rs_state = self._get_robot_server_composition()
+        rs_state = self.get_robot_server_composition()
 
         # Set initial robot joint positions
         self._set_joint_positions(joint_positions)
@@ -219,7 +219,7 @@ class URBaseEnv(gym.Env):
         pass
     
 
-    def _get_robot_server_composition(self) -> dict:
+    def get_robot_server_composition(self) -> dict:
         rs_state_keys = dict.fromkeys([
             'base_joint_position',
             'shoulder_joint_position',
@@ -255,7 +255,7 @@ class URBaseEnv(gym.Env):
         Describes the composition of the Robot Server state and returns
         its length.
         """
-        return len(self._get_robot_server_composition())
+        return len(self.get_robot_server_composition())
 
 
     def _set_joint_positions(self, joint_positions) -> None:
