@@ -283,7 +283,6 @@ class EndEffectorPositioningUR(URBaseEnv):
             info['final_status'] = 'max_steps_exceeded'
             info['target_coord'] = target_coord
         
-        info['rs_state'] = rs_state
         return reward, done, info
 
     def _get_target_pose(self) -> np.array:
