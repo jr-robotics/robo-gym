@@ -190,14 +190,14 @@ class EndEffectorPositioningUR(URBaseEnv):
         state = np.zeros(state_len)
         rs_state = self._get_robot_server_composition()
 
-        # Set initial robot joint positions
-        self._set_joint_positions(joint_positions)
-
         # Randomize initial robot joint positions
         if randomize_start:
-            joint_positions_low = np.array(self.joint_positions) - np.array(RANDOM_JOINT_OFFSET) 
-            joint_positions_high = np.array(self.joint_positions) + np.array(RANDOM_JOINT_OFFSET)
-            self.joint_positions = np.random.default_rng().uniform(low=joint_positions_low, high=joint_positions_high)
+            joint_positions_low = np.array(joint_positions) - np.array(RANDOM_JOINT_OFFSET) 
+            joint_positions_high = np.array(joint_positions) + np.array(RANDOM_JOINT_OFFSET)
+            joint_positions = np.random.default_rng().uniform(low=joint_positions_low, high=joint_positions_high)
+
+        # Set initial robot joint positions
+        self._set_joint_positions(joint_positions)
 
         # Update joint positions in rs_state
         rs_state.update(self.joint_positions)
@@ -261,7 +261,7 @@ class EndEffectorPositioningUR(URBaseEnv):
         reward = reward - (0.05 * np.sum(delta))
 
         if euclidean_dist_3d <= DISTANCE_THRESHOLD:
-            reward = 100
+            reward = 200
             done = True
             info['final_status'] = 'success'
             info['target_coord'] = target_coord
@@ -273,7 +273,7 @@ class EndEffectorPositioningUR(URBaseEnv):
             collision = False
 
         if collision:
-            reward = -400
+            reward = -200
             done = True
             info['final_status'] = 'collision'
             info['target_coord'] = target_coord
@@ -282,7 +282,8 @@ class EndEffectorPositioningUR(URBaseEnv):
             done = True
             info['final_status'] = 'max_steps_exceeded'
             info['target_coord'] = target_coord
-
+        
+        info['rs_state'] = rs_state
         return reward, done, info
 
     def _get_target_pose(self) -> np.array:
