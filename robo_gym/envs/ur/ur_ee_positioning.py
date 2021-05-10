@@ -170,7 +170,7 @@ class EndEffectorPositioningUR(URBaseEnv):
         ]
         return rs_state_keys
 
-    def reset(self, joint_positions = None, ee_target_pose = None, randomize_start=False) -> np.array:
+    def reset(self, joint_positions = JOINT_POSITIONS, ee_target_pose = None, randomize_start=True) -> np.array:
         """Environment reset.
 
         Args:
@@ -245,7 +245,9 @@ class EndEffectorPositioningUR(URBaseEnv):
         euclidean_dist_3d = np.linalg.norm(target_coord - ee_coord)
 
         # Reward base
-        reward = -1 * euclidean_dist_3d
+        #reward = -1 * euclidean_dist_3d
+
+        reward = reward + (-1/300)
         
         # Joint positions 
         joint_positions = []
@@ -257,10 +259,10 @@ class EndEffectorPositioningUR(URBaseEnv):
         joint_positions_normalized = self.ur.normalize_joint_values(joint_positions)
         
         delta = np.abs(np.subtract(joint_positions_normalized, action))
-        reward = reward - (0.05 * np.sum(delta))
+        # reward = reward - (0.05 * np.sum(delta))
 
         if euclidean_dist_3d <= DISTANCE_THRESHOLD:
-            reward = 200
+            reward = 2
             done = True
             info['final_status'] = 'success'
             info['target_coord'] = target_coord
@@ -272,7 +274,7 @@ class EndEffectorPositioningUR(URBaseEnv):
             collision = False
 
         if collision:
-            reward = -200
+            reward = -1
             done = True
             info['final_status'] = 'collision'
             info['target_coord'] = target_coord

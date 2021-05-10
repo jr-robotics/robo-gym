@@ -62,7 +62,7 @@ class MovingBoxTargetUR(URBaseAvoidanceEnv):
                                             string_params = string_params, state_dict = rs_state)
         return state_msg
 
-    def reset(self, joint_positions = None, fixed_object_position = None) -> np.array:
+    def reset(self, joint_positions = JOINT_POSITIONS, fixed_object_position = None) -> np.array:
         """Environment reset.
 
         Args:
