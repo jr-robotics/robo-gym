@@ -170,7 +170,7 @@ class EndEffectorPositioningUR(URBaseEnv):
         ]
         return rs_state_keys
 
-    def reset(self, joint_positions = JOINT_POSITIONS, ee_target_pose = None, randomize_start=True) -> np.array:
+    def reset(self, joint_positions = JOINT_POSITIONS, ee_target_pose = None, randomize_start=False) -> np.array:
         """Environment reset.
 
         Args:
