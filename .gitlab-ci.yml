@@ -14,6 +14,16 @@ before_script:
   # we use $CI_JOB_TOKEN here which is a special token provided by GitLab
   - echo -n $CI_JOB_TOKEN | docker login -u gitlab-ci-token --password-stdin $CI_REGISTRY
 
+# The pipeline needs at minimum one job to run 
+dummy:
+  stage: build
+  variables:
+    GIT_STRATEGY: none
+  script:
+    - ":"
+  only:
+    - /^docs.*$/
+    
 .build_robo-gym_image: &build_robo-gym_image_def
   image: docker:18.09
   services:
