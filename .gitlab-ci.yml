@@ -37,6 +37,8 @@ before_script:
     - docker push $ROBO_GYM_IMAGE
     - docker tag $ROBO_GYM_IMAGE $CI_REGISTRY_IMAGE:$PYTHON_VER-latest
     - docker push $CI_REGISTRY_IMAGE:$PYTHON_VER-latest
+  except:
+    - /^docs.*$/
 
 build_robo-gym_image_py36:
   <<: *build_robo-gym_image_def  
@@ -80,6 +82,8 @@ build_robo-gym_image_py39:
     - docker-compose -f docker-compose-test-melodic.yml up -d
     - docker exec robo-gym pytest -m "not nightly"
     - docker-compose -f docker-compose-test-melodic.yml down
+  except:
+    - /^docs.*$/
 
 short_test_environments_py36:
   <<: *short_test_environments_def
@@ -136,6 +140,8 @@ short_test_environments_with_rs_manual_deploy:
     - docker-compose -f docker-compose-test-melodic.yml up -d
     - docker exec robo-gym pytest
     - docker-compose -f docker-compose-test-melodic.yml down
+  except:
+    - /^docs.*$/
 
 manual_full_test_environments_py36:
   <<: *full_test_environments_def
@@ -207,6 +213,8 @@ deploy_docker_image:
   only:
     - master 
     - develop
+  except:
+    - /^docs.*$/
 
 deploy_production:
   image: python:3.6-slim-buster
