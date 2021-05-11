@@ -17,7 +17,7 @@ from robo_gym.envs.ur.ur_base_avoidance_env import URBaseAvoidanceEnv
 DEBUG = True
 MINIMUM_DISTANCE = 0.45 # the distance [cm] the robot should keep to the obstacle
 
-class IrosEnv03URTraining(URBaseAvoidanceEnv):
+class IrosEnvURTraining(URBaseAvoidanceEnv):
     """Universal Robots UR IROS environment. Obstacle avoidance while keeping a fixed trajectory.
 
     Args:
@@ -246,7 +246,7 @@ class IrosEnv03URTraining(URBaseAvoidanceEnv):
         temp.append(joint_positions[5])
         return np.array(temp)
 
-class IrosEnv03URTrainingSim(IrosEnv03URTraining, Simulation):
+class IrosEnvURTrainingSim(IrosEnvURTraining, Simulation):
     cmd = "roslaunch ur_robot_server ur_robot_server.launch \
         world_name:=tabletop_sphere50.world \
         reference_frame:=base_link \
@@ -262,9 +262,9 @@ class IrosEnv03URTrainingSim(IrosEnv03URTraining, Simulation):
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, ur_model='ur5', **kwargs):
         self.cmd = self.cmd + ' ' + 'ur_model:=' + ur_model
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
-        IrosEnv03URTraining.__init__(self, rs_address=self.robot_server_ip, ur_model=ur_model, **kwargs)
+        IrosEnvURTraining.__init__(self, rs_address=self.robot_server_ip, ur_model=ur_model, **kwargs)
 
-class IrosEnv03URTrainingRob(IrosEnv03URTraining):
+class IrosEnvURTrainingRob(IrosEnvURTraining):
     real_robot = True
 
 # roslaunch ur_robot_server ur_robot_server.launch ur_model:=ur5 real_robot:=true rviz_gui:=true gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 rs_mode:=1moving2points n_objects:=1.0 object_0_frame:=target
@@ -275,7 +275,7 @@ class IrosEnv03URTrainingRob(IrosEnv03URTraining):
 Testing Environment for more complex obstacle avoidance controlling a robotic arm from UR.
 In contrast to the training environment the obstacle trajectories are fixed instead of random generation.
 """
-class IrosEnv03URTestFixedSplines(IrosEnv03URTraining):
+class IrosEnvURTestFixedSplines(IrosEnvURTraining):
     ep_n = 0 
 
     def _set_initial_robot_server_state(self, rs_state, fixed_object_position = None) -> robot_server_pb2.State:
@@ -298,7 +298,7 @@ class IrosEnv03URTestFixedSplines(IrosEnv03URTraining):
 
         return state
 
-class IrosEnv03URTestFixedSplinesSim(IrosEnv03URTestFixedSplines, Simulation):
+class IrosEnvURTestFixedSplinesSim(IrosEnvURTestFixedSplines, Simulation):
     cmd = "roslaunch ur_robot_server ur_robot_server.launch \
         world_name:=tabletop_sphere50.world \
         reference_frame:=base_link \
@@ -315,9 +315,9 @@ class IrosEnv03URTestFixedSplinesSim(IrosEnv03URTestFixedSplines, Simulation):
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, ur_model='ur5', **kwargs):
         self.cmd = self.cmd + ' ' + 'ur_model:=' + ur_model
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
-        IrosEnv03URTestFixedSplines.__init__(self, rs_address=self.robot_server_ip, ur_model=ur_model, **kwargs)
+        IrosEnvURTestFixedSplines.__init__(self, rs_address=self.robot_server_ip, ur_model=ur_model, **kwargs)
 
-class IrosEnv03URTestFixedSplinesRob(IrosEnv03URTestFixedSplines):
+class IrosEnvURTestFixedSplinesRob(IrosEnvURTestFixedSplines):
     real_robot = True
 
 # roslaunch ur_robot_server ur_robot_server.launch ur_model:=ur5 real_robot:=true rviz_gui:=true gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 rs_mode:=1moving2points n_objects:=1.0 object_0_frame:=target
