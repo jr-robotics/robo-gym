@@ -89,6 +89,7 @@ short_test_environments_py36:
   <<: *short_test_environments_def
   except:
     - schedules
+    - /^docs.*$/
   needs: ["build_robo-gym_image_py36"]
   
 short_test_environments_py37:
