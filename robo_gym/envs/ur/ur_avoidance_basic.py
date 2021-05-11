@@ -13,7 +13,7 @@ from robo_gym.envs.simulation_wrapper import Simulation
 from robo_gym.envs.ur.ur_base_avoidance_env import URBaseAvoidanceEnv
 
 # base, shoulder, elbow, wrist_1, wrist_2, wrist_3
-JOINT_POSITIONS = [-0.78, -1.31, -1.31, -2.18, 1.57, 0.0]
+JOINT_POSITIONS = [-1.57, -1.31, -1.31, -2.18, 1.57, 0.0]
 DEBUG = True
 MINIMUM_DISTANCE = 0.3 # the distance [cm] the robot should keep to the obstacle
 
@@ -51,8 +51,8 @@ class MovingBoxTargetUR(URBaseAvoidanceEnv):
         z_offset = np.random.default_rng().uniform(low=0.2, high=0.6)
         
         string_params = {"object_0_function": "triangle_wave"}
-        float_params = {"object_0_x": -0.13, 
-                        "object_0_y": 0.30, 
+        float_params = {"object_0_x": 0.12, 
+                        "object_0_y": 0.34, 
                         "object_0_z_amplitude": z_amplitude,
                         "object_0_z_frequency": z_frequency, 
                         "object_0_z_offset": z_offset}
