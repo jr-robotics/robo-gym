@@ -252,7 +252,7 @@ class IrosEnvURTrainingSim(IrosEnvURTraining, Simulation):
         reference_frame:=base_link \
         max_velocity_scale_factor:=0.2 \
         action_cycle_rate:=20 \
-        rviz_gui:=true \
+        rviz_gui:=false \
         gazebo_gui:=true \
         objects_controller:=true \
         rs_mode:=1moving2points \
