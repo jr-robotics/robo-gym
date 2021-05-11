@@ -25,7 +25,6 @@ def env(request):
     env = gym.make('IrosEnvURTestFixedSplinesSim-v0', ip='robot-servers', ur_model=request.param)
     env.request_param = request.param
     yield env
-    env.kill_sim()
     env.close()
 
 @pytest.mark.commit 
@@ -118,5 +117,4 @@ def test_fixed_joints(env_name, fix_base, fix_shoulder, fix_elbow, fix_wrist_1, 
     if fix_wrist_3:
         assert math.isclose(initial_joint_positions[5], joint_positions[5], abs_tol=0.05)
 
-    env.kill_sim()
     env.close()

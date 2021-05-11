@@ -6,7 +6,6 @@ import pytest
 def env(request):
     env = gym.make('ObstacleAvoidanceMir100Sim-v0', ip='robot-servers')
     yield env
-    env.kill_sim()
     env.close()
 
 @pytest.mark.commit 
