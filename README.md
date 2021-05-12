@@ -3,6 +3,11 @@
 <!-- omit in toc -->
 # robo-gym 
 
+<br>
+
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/robo-gym)
+![PyPI](https://img.shields.io/pypi/v/robo-gym)
+
 **robo-gym is an open source toolkit for distributed reinforcement learning on real and simulated robots.**
 
 ![](https://user-images.githubusercontent.com/36470989/81711550-11902d00-9474-11ea-8a04-d31da59e8266.gif) ![](https://user-images.githubusercontent.com/36470989/81711381-e73e6f80-9473-11ea-880e-1b0ff50e15ff.gif)
