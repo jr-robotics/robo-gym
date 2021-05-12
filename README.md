@@ -51,6 +51,7 @@ capabilities and additional info can be found on our [website](https://sites.goo
 - [Examples](#examples)
   - [Random Agent MiR100 Simulation Environment](#random-agent-mir100-simulation-environment)
 - [Contributing](#contributing)
+- [Citation](#citation)
 - [News](#news)
 
 
@@ -218,9 +219,9 @@ The commands to control the Server Manager are:
 - ``kill-all-robot-servers`` kills all the running Robot Servers and the Server Manager
 - ``kill-server-manager`` kills the Server Manager
 
-To start the Server Manager it is necessary to make sure that
-ROS and the robo-gym workspace are sourced with:
+The Server Manager must be started in a terminal running the default _Python 2.7_. It is necessary to make sure that ROS and the robo-gym workspace are sourced with:
 
+(_Python 2.7_)
 ```bash
 # Source ROS Melodic
 source /opt/ros/melodic/setup.bash
@@ -237,8 +238,11 @@ same machine use ``ip='127.0.0.1'``.
 
 By default the simulated environments are started in headless mode, without any graphical interface.
 
+The environment itself can be initialized in a Python >3.5 environment. 
+
 To start a simulated environment with **GUI** use the optional *gui* argument:
 
+(_Python >=3.5_ / _robo-gym_ virtual environment)
 ```python
 env = gym.make('EnvironmentNameSim-v0', ip='<server_manager_address>', gui=True)
 ```
@@ -413,6 +417,7 @@ num_episodes = 10
 
 for episode in range(num_episodes):
     done = False
+    env.reset()
     while not done:
         # random step in the environment
         state, reward, done, info = env.step(env.action_space.sample())
@@ -431,6 +436,17 @@ More details and guides on how to contribute will be added soon!
 
 If you encounter troubles running robo-gym or if you have questions please submit a new [issue](https://github.com/jr-robotics/robo-gym/issues/new/).
 
+## Citation
+[back to top](#robo-gym)
+
+```
+@article{lucchi2020robo,
+  title={robo-gym--An Open Source Toolkit for Distributed Deep Reinforcement Learning on Real and Simulated Robots},
+  author={Lucchi, Matteo and Zindler, Friedemann and M{\"u}hlbacher-Karrer, Stephan and Pichler, Horst},
+  journal={2020 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)},
+  year={2020}
+}
+```
 ## News
 [back to top](#robo-gym)
 
