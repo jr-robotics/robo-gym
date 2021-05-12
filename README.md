@@ -274,6 +274,9 @@ Once you are done run `kill-server-manager` to kill the RobotServer and the Serv
 
 If you encounter troubles running robo-gym please take a look at the [existing issues](https://github.com/jr-robotics/robo-gym/issues?q=is%3Aissue++), if you still cannot find solution to your problem please submit a [new issue](https://github.com/jr-robotics/robo-gym/issues/new/).
 
+[Troubleshooting robo-gym-robot-servers](https://github.com/jr-robotics/robo-gym-robot-servers#troubleshooting)
+[Troubleshooting robo-gym-server-modules](https://github.com/jr-robotics/robo-gym-server-modules#troubleshooting)
+
 # Contributing
 [back to top](#robo-gym)
 
