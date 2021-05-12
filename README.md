@@ -34,6 +34,7 @@ capabilities and additional info can be found on our [website](https://sites.goo
 - [Environments](#environments)
 - [Examples](#examples)
 - [Testing](#testing)
+- [Troubleshooting](#troubleshooting)
 - [Contributing](#contributing)
 - [Citation](#citation)
 - [News](#news)
@@ -269,6 +270,10 @@ pytest
 
 Once you are done run `kill-server-manager` to kill the RobotServer and the ServerManager.
 
+# Troubleshooting 
+
+If you encounter troubles running robo-gym please take a look at the [existing issues](https://github.com/jr-robotics/robo-gym/issues?q=is%3Aissue++), if you still cannot find solution to your problem please submit a [new issue](https://github.com/jr-robotics/robo-gym/issues/new/).
+
 # Contributing
 [back to top](#robo-gym)
 
@@ -276,7 +281,7 @@ New environments and new robots and sensors implementations are welcome!
 
 More details and guides on how to contribute will be added soon!
 
-If you encounter troubles running robo-gym or if you have questions please submit a new [issue](https://github.com/jr-robotics/robo-gym/issues/new/).
+If you have general questions or ideas that you would like to share please [start a new discussion](https://github.com/jr-robotics/robo-gym/discussions/new).
 
 # Citation
 [back to top](#robo-gym)
