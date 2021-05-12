@@ -9,6 +9,8 @@ Follow the installation instructions: https://github.com/hill-a/stable-baselines
 
 ## 1. Start the robot-server-manager
 Start the robot-server-manager on the machine where the simulation is supposed to be run by entering the start command in the bash:
+
+(_Python 2.7_ default installation)
 ```bash
 start-server-manager
 ```
@@ -17,6 +19,7 @@ start-server-manager
 ## 2. Example of simulation training using the MiR100 base environment
 Here is a quick example running TD3 in the MiR100 base environment
 
+(_Python >=3.5_ / _robo-gym_ virtual environment)
 ```python
 import gym
 

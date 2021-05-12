@@ -22,10 +22,9 @@ ur_models = [pytest.param('ur3', marks=pytest.mark.skip(reason='not implemented 
 
 @pytest.fixture(scope='module', params=ur_models)
 def env(request):
-    env = gym.make('IrosEnv03URTestFixedSplinesSim-v0', ip='robot-servers', ur_model=request.param)
+    env = gym.make('IrosEnvURTestFixedSplinesSim-v0', ip='robot-servers', ur_model=request.param)
     env.request_param = request.param
     yield env
-    env.kill_sim()
     env.close()
 
 @pytest.mark.commit 
@@ -87,8 +86,8 @@ def test_robot_trajectory(env):
 
 
 test_ur_fixed_joints = [
-    ('IrosEnv03URTestFixedSplinesSim-v0', False, False, False, False, False, True, 'ur5'), # fixed wrist_3
-    ('IrosEnv03URTestFixedSplinesSim-v0', True, False, True, False, False, False, 'ur5'), # fixed Base and Elbow
+    ('IrosEnvURTestFixedSplinesSim-v0', False, False, False, False, False, True, 'ur5'), # fixed wrist_3
+    ('IrosEnvURTestFixedSplinesSim-v0', True, False, True, False, False, False, 'ur5'), # fixed Base and Elbow
 ]
 
 @pytest.mark.nightly
@@ -118,5 +117,4 @@ def test_fixed_joints(env_name, fix_base, fix_shoulder, fix_elbow, fix_wrist_1, 
     if fix_wrist_3:
         assert math.isclose(initial_joint_positions[5], joint_positions[5], abs_tol=0.05)
 
-    env.kill_sim()
     env.close()

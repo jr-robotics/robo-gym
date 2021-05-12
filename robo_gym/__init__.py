@@ -56,23 +56,23 @@ register(
 
 # Iros Env 03
 register(
-    id='IrosEnv03URTrainingSim-v0',
-    entry_point='robo_gym.envs:IrosEnv03URTrainingSim',
+    id='IrosEnvURTrainingSim-v0',
+    entry_point='robo_gym.envs:IrosEnvURTrainingSim',
 )
 
 register(
-    id='IrosEnv03URTrainingRob-v0',
-    entry_point='robo_gym.envs:IrosEnv03URTrainingRob',
+    id='IrosEnvURTrainingRob-v0',
+    entry_point='robo_gym.envs:IrosEnvURTrainingRob',
 )
 
 register(
-    id='IrosEnv03URTestFixedSplinesSim-v0',
-    entry_point='robo_gym.envs:IrosEnv03URTestFixedSplinesSim',
+    id='IrosEnvURTestFixedSplinesSim-v0',
+    entry_point='robo_gym.envs:IrosEnvURTestFixedSplinesSim',
 )
 
 register(
-    id='IrosEnv03URTestFixedSplinesRob-v0',
-    entry_point='robo_gym.envs:IrosEnv03URTestFixedSplinesRob',
+    id='IrosEnvURTestFixedSplinesRob-v0',
+    entry_point='robo_gym.envs:IrosEnvURTestFixedSplinesRob',
 )
 
 
