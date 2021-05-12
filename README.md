@@ -30,15 +30,10 @@ capabilities and additional info can be found on our [website](https://sites.goo
 
 - [Basics](#basics)
 - [Installation](#installation)
-    - [Managing Multiple Python Versions](#managing-multiple-python-versions)
 - [How to use](#how-to-use)
-  - [Simulated Environments](#simulated-environments)
-  - [Real Robot Environments](#real-robot-environments)
 - [Environments](#environments)
 - [Examples](#examples)
-  - [Random Agent MiR100 Simulation Environment](#random-agent-mir100-simulation-environment)
 - [Testing](#testing)
-        - [Test the installation](#test-the-installation)
 - [Contributing](#contributing)
 - [Citation](#citation)
 - [News](#news)
@@ -96,6 +91,7 @@ Install [robo-gym-robot-servers](https://github.com/jr-robotics/robo-gym-robot-s
 following the instructions in the repository's README.
 
 <!-- TODO fix or remove this section -->
+<!-- omit in toc -->
 ### Managing Multiple Python Versions
 
 [Here](docs/managing_multiple_python_vers.md) you can find some additional information
@@ -109,6 +105,7 @@ robot and the scenario and version to be run with the real robot.
 Simulated environments have a name ending with *Sim* whereas real robot environments
 have a name ending with *Rob*.
 
+<!-- omit in toc -->
 ## Simulated Environments
 
 Before making a simulated environment it is necessary to start the Server Manager with: 
@@ -173,6 +170,7 @@ env = gym.make('EnvironmentNameSim-v0', ip='<server_manager_address>')
 env = ExceptionHandling(env)
 ```
 
+<!-- omit in toc -->
 ## Real Robot Environments
 
 When making a real robot environment the Robot Server needs to be started manually, see [here](https://github.com/jr-robotics/robo-gym-robot-servers#how-to-use) how to do that.  
@@ -197,6 +195,8 @@ For information on creating your own environments, see [Creating your own Enviro
 
 # Examples
 [back to top](#robo-gym)
+
+<!-- omit in toc -->
 ## Random Agent MiR100 Simulation Environment
 <!-- TODO change this to UR env -->
 ```python
@@ -229,6 +229,7 @@ Additional examples can be found [here](docs/examples)
 
 <!-- TODO add export alias, run short test and long tests. Add link to this in installaiton section -->
 
+<!-- omit in toc -->
 ##### Test the installation
 
 To test the installation of *robo-gym-server-modules* try to run:  `start-server-manager` . 
