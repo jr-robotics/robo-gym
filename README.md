@@ -227,36 +227,47 @@ Additional examples can be found [here](docs/examples)
 # Testing 
 [back to top](#robo-gym)
 
-<!-- TODO add export alias, run short test and long tests. Add link to this in installaiton section -->
+Start the Server Manager and attach to the session with: 
 
-<!-- omit in toc -->
-##### Test the installation
-
-To test the installation of *robo-gym-server-modules* try to run:  `start-server-manager` . 
-
-If you get: `start-server-manager: command not found` it is most probably because your `$PATH` is not set correctly, to fix the problem add:
-
-```bash
-export PATH="/home/<your_username>/.local/bin:$PATH"
+```sh
+start-server-manager && attach-to-server-manager
 ```
 
-to your `.bashrc` file. 
+<details>
+<summary>Expected output</summary>
+<p>
 
-In a second terminal window activate the Python 3.6 virtual environment and run:
+```sh
+2021-XX-XX XX:XX:XX,XXX - serverManager - INFO - Server Manager started at 50100
+```
 
-```python
-import gym, robo_gym
+For problems at this step see the [Testing](https://github.com/jr-robotics/robo-gym-server-modules#testing) section of [robo-gym-server-modules](https://github.com/jr-robotics/robo-gym-server-modules).
+</p>
+</details>
 
-env = gym.make('NoObstacleNavigationMir100Sim-v0', ip='127.0.0.1', gui=True)
+<br>
 
-env.reset()
+On the pc where you are running robo-gym associate the IP of the pc on which the Server Manager is running to the hostname `robot-servers` with:
+
+```sh
+sudo sh -c 'printf "127.0.0.1 robot-servers" >> /etc/hosts'
 ```
 
 If you are running the ServerManager on a different PC replace *127.0.0.1* with the IP address of the machine. 
 
-After running the command you should see the robot simulation starting and the initial state of the environment printed in the terminal window. 
+We are using [pytest](http://doc.pytest.org/) for tests. You can run a short selection of tests with:
 
-Once you are done run `kill-server-manager` in a terminal window to kill the RobotServer and the ServerManager.
+```sh
+pytest -m "not nightly"
+```
+
+or the full test suite with:
+
+```sh
+pytest
+```
+
+Once you are done run `kill-server-manager` to kill the RobotServer and the ServerManager.
 
 # Contributing
 [back to top](#robo-gym)
