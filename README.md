@@ -3,19 +3,23 @@
 <!-- omit in toc -->
 # robo-gym 
 
+<br>
+
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/robo-gym)
+![PyPI](https://img.shields.io/pypi/v/robo-gym)
+
 **robo-gym is an open source toolkit for distributed reinforcement learning on real and simulated robots.**
 
 ![](https://user-images.githubusercontent.com/36470989/81711550-11902d00-9474-11ea-8a04-d31da59e8266.gif) ![](https://user-images.githubusercontent.com/36470989/81711381-e73e6f80-9473-11ea-880e-1b0ff50e15ff.gif)
 
 ``robo-gym`` provides a collection of reinforcement learning environments involving robotic tasks applicable in both simulation and real world robotics. Additionally, we provide the tools to facilitate the creation of new environments featuring different robots and sensors.
 
-<!-- TODO update  -->
 Main features :
 - [OpenAI Gym](https://gym.openai.com) interface for all the the environments
 - **simulated** and **real** robots interchangeability, which enables a seamless transfer from training in simulation to application on the real robot.
 - built-in **distributed** capabilities, which enable the use of distributed algorithms and distributed hardware
 - based only on **open source** software, which allows to develop applications on own hardware and without incurring in cloud services fees or software licensing costs
-- integration of 2 commercially available **industrial robots**: MiR 100, UR 10 (more to come)
+- integration of multiple commercially available **industrial robots**: MiR 100, Universal Robots (more to come)
 - it has been successfully deployed to train a DRL algorithm to solve two different tasks in simulation that was able to solve the tasks on the real robots as well, without any further training in the real world
 
 A [paper](https://arxiv.org/abs/2007.02753) describing robo-gym has been accepted for IROS 2020. A video showcasing the toolkit's
@@ -90,13 +94,6 @@ and/or on other multiple machines.
 
 Install [robo-gym-robot-servers](https://github.com/jr-robotics/robo-gym-robot-servers)
 following the instructions in the repository's README.
-
-<!-- TODO fix or remove this section -->
-<!-- omit in toc -->
-### Managing Multiple Python Versions
-
-[Here](docs/managing_multiple_python_vers.md) you can find some additional information
-on how to deal with multiple Python versions on the same machine.
 
 # How to use
 [back to top](#robo-gym)
@@ -299,6 +296,16 @@ If you have general questions or ideas that you would like to share please [star
 ```
 # News
 [back to top](#robo-gym)
+
+<!-- TODO complete news -->
+- 2021-XX-XX (v1.0.0)
+  + Added support for all the Universal Robots models: UR3, UR3e, UR5, UR5e, UR10, UR10e, UR16e
+  + The Robot Server state can now be defined as a dictionary instead of a list to reduce errors caused by wrong indexing
+  + Added support for Python 3.7, 3.8, 3.9
+  <!-- TODO add link to obstacle avoidance envs -->
+  + Added Obstacle Avoidance environments  
+  + Improved logging and debugging
+  + Improved code quality and readability 
 
 - 2020-11-03
   + IROS 2020 is live! This year the event is on-demand and accessible for free to everyone. You can register at https://www.iros2020.org/ondemand/signup and find the presentation of our paper about robo-gym here https://www.iros2020.org/ondemand/episode?id=1357&id2=Transfer%20Learning&1603991207687
