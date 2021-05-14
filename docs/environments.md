@@ -1,15 +1,38 @@
+<!-- omit in toc -->
 # Environments
 
+This is a list of the robo-gym environments. 
 
- <!-- TODO add TOC -->
+For information on creating your own environment, see [Creating Environments](creating_environments.md).
 
- 
-## Universal Robots 
+- [Universal Robots](#universal-robots)
+  - [Empty Environment](#empty-environment)
+  - [End Effector Positioning](#end-effector-positioning)
+  - [TBD](#tbd)
+  - [TBD](#tbd-1)
+  - [TBD](#tbd-2)
+- [Mobile Industrial Robots Mir100](#mobile-industrial-robots-mir100)
+  - [No Obstacle Navigation](#no-obstacle-navigation)
+  - [Obstacle Avoidance](#obstacle-avoidance)
+# Universal Robots 
 
 Available UR models: UR3, UR3e, UR5, UR5e, UR10, UR10e, UR16
 
 To select the robot model use: `ur_model='<ur3, ur3e, ur5, ur5e, ur10, ur10e, ur16e>'`
-### End Effector Positioning
+
+## Empty Environment
+
+```python
+# simulated robot environment
+env = gym.make('EmptyEnvironmentURSim-v0', ur_model='ur5', ip='<server_manager_address>')
+# real robot environment
+env = gym.make('EmptyEnvironmentURRob-v0', ur_model='ur5', rs_address='<robot_server_address>')
+```
+
+<img src="https://user-images.githubusercontent.com/36470989/118242650-dae15e00-b49d-11eb-832b-8a59c4fe3749.gif" width="200" height="200">
+
+
+## End Effector Positioning
 
 ```python
 # simulated robot environment
@@ -18,8 +41,9 @@ env = gym.make('EndEffectorPositioningURSim-v0', ur_model='ur10', ip='<server_ma
 env = gym.make('EndEffectorPositioningURRob-v0', ur_model='ur10', rs_address='<robot_server_address>')
 
 ```
+<img src="https://user-images.githubusercontent.com/36470989/118245173-c18de100-b4a0-11eb-9219-9949c70b0fef.gif" width="200" height="200">
 
-![](https://user-images.githubusercontent.com/36470989/79962368-3ce0b700-8488-11ea-83ac-c9e8995c2957.gif)
+<img src="https://user-images.githubusercontent.com/36470989/79962368-3ce0b700-8488-11ea-83ac-c9e8995c2957.gif" width="200" height="200">
 
 The goal in this environment is for the robotic arm to reach a target position with its end effector.
 
@@ -44,11 +68,50 @@ punished with a negative reward and termination of the episode.
  ! When resetting the Real Robot environment the robot could go in self collision, please be cautious. We are working on a solution to fix this.
 
 
-## Mobile Industrial Robots Mir100
+## TBD 
 
-  <!--TODO change env names to line with gym.make   -->
+```python
+# simulated robot environment
+env = gym.make('MovingBoxTargetURSim-v0', ur_model='ur5', ip='<server_manager_address>')
+# real robot environment
+env = gym.make('MovingBoxTargetURRob-v0', ur_model='ur5', rs_address='<robot_server_address>')
+```
 
-``'NoObstacleNavigationMir100Sim-v0'``,  ``'NoObstacleNavigationMir100Rob-v0'``
+<img src="https://user-images.githubusercontent.com/36470989/118245777-7e803d80-b4a1-11eb-9717-7e2d78faf5ca.gif" width="200" height="200">
+
+## TBD 
+
+```python
+# simulated robot environment
+env = gym.make('IrosEnvURTrainingSim-v0', ur_model='ur5', ip='<server_manager_address>')
+# real robot environment
+env = gym.make('IrosEnvURTrainingRob-v0', ur_model='ur5', rs_address='<robot_server_address>')
+```
+
+<img src="https://user-images.githubusercontent.com/36470989/118246176-ed5d9680-b4a1-11eb-8b1f-efc23c8bec6a.gif" width="200" height="200">
+
+
+## TBD 
+
+```python
+# simulated robot environment
+env = gym.make('IrosEnvURTestFixedSplinesSim-v0', ur_model='ur5', ip='<server_manager_address>')
+# real robot environment
+env = gym.make('IrosEnvURTestFixedSplinesRob-v0', ur_model='ur5', rs_address='<robot_server_address>')
+```
+
+
+
+# Mobile Industrial Robots Mir100
+
+## No Obstacle Navigation
+
+```python
+# simulated robot environment
+env = gym.make('NoObstacleNavigationMir100Sim-v0', ip='<server_manager_address>')
+# real robot environment
+env = gym.make('NoObstacleNavigationMir100Rob-v0', rs_address='<robot_server_address>')
+```
 
 In this environment, the task of the mobile robot is to reach a target position
 in a obstacle-free environment.
@@ -69,9 +132,17 @@ negative reward is collected for moving away.
 In addition, the agent receives a large positive reward for reaching the goal
 and a large negative reward when crossing the external boundaries of the map.
 
-``'ObstacleAvoidanceMir100Sim-v0'``, ``'ObstacleAvoidanceMir100Rob-v0'``
+## Obstacle Avoidance
 
-![](https://user-images.githubusercontent.com/36470989/79962530-70bbdc80-8488-11ea-8999-d6db38e4264a.gif)
+```python
+# simulated robot environment
+env = gym.make('ObstacleAvoidanceMir100Sim-v0', ip='<server_manager_address>')
+# real robot environment
+env = gym.make('ObstacleAvoidanceMir100Rob-v0', rs_address='<robot_server_address>')
+```
+
+<img src="https://user-images.githubusercontent.com/36470989/79962530-70bbdc80-8488-11ea-8999-d6db38e4264a.gif" width="200" height="200">
+
 
 In this environment, the task of the mobile robot is to reach a target position
 without touching the obstacles on the way.
