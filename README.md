@@ -47,7 +47,7 @@ capabilities and additional info can be found on our [website](https://sites.goo
 # Basics
 [back to top](#robo-gym)
 
-The robo-gym framework is composed of several building blocks.
+The ``robo-gym`` framework is composed of several building blocks.
 Detailed information on them is given [here](docs/the_framework.md) and in the [paper](https://arxiv.org/abs/2007.02753).
 
 ![robo-gym framework](https://user-images.githubusercontent.com/36470989/79330117-4498dc80-7f19-11ea-9de4-bed4f6390f3a.jpg)
