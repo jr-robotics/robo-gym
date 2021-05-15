@@ -126,7 +126,7 @@ class URBaseEnv(gym.Env):
 
         return state
 
-    def _reward(self, rs_state, action) -> Tuple[float, bool, dict]:
+    def reward(self, rs_state, action) -> Tuple[float, bool, dict]:
         done = False
         info = {}
 
@@ -207,7 +207,7 @@ class URBaseEnv(gym.Env):
         # Assign reward
         reward = 0
         done = False
-        reward, done, info = self._reward(rs_state=rs_state, action=action)
+        reward, done, info = self.reward(rs_state=rs_state, action=action)
         if self.rs_state_to_info: info['rs_state'] = self.rs_state
 
         return state, reward, done, info

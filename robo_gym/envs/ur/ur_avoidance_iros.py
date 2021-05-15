@@ -114,7 +114,7 @@ class IrosEnvURTraining(URBaseAvoidanceEnv):
 
         return state, reward, done, info
 
-    def _reward(self, rs_state, action) -> Tuple[float, bool, dict]:
+    def reward(self, rs_state, action) -> Tuple[float, bool, dict]:
         env_state = self._robot_server_state_to_env_state(rs_state)
 
         reward = 0
