@@ -8,14 +8,14 @@
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/robo-gym)
 ![PyPI](https://img.shields.io/pypi/v/robo-gym)
 
-**robo-gym is an open source toolkit for distributed reinforcement learning on real and simulated robots.**
+**``robo-gym`` is an open source toolkit for distributed reinforcement learning on real and simulated robots.**
 
 ![](https://user-images.githubusercontent.com/36470989/81711550-11902d00-9474-11ea-8a04-d31da59e8266.gif) ![](https://user-images.githubusercontent.com/36470989/81711381-e73e6f80-9473-11ea-880e-1b0ff50e15ff.gif)
 
 ``robo-gym`` provides a collection of reinforcement learning environments involving robotic tasks applicable in both simulation and real world robotics. Additionally, we provide the tools to facilitate the creation of new environments featuring different robots and sensors.
 
 Main features :
-- [OpenAI Gym](https://gym.openai.com) interface for all the the environments
+- [OpenAI Gym](https://gym.openai.com) interface for all the environments
 - **simulated** and **real** robots interchangeability, which enables a seamless transfer from training in simulation to application on the real robot.
 - built-in **distributed** capabilities, which enable the use of distributed algorithms and distributed hardware
 - based only on **open source** software, which allows to develop applications on own hardware and without incurring in cloud services fees or software licensing costs
@@ -47,7 +47,7 @@ capabilities and additional info can be found on our [website](https://sites.goo
 # Basics
 [back to top](#robo-gym)
 
-The robo-gym framework is composed of several building blocks.
+The ``robo-gym`` framework is composed of several building blocks.
 Detailed information on them is given [here](docs/the_framework.md) and in the [paper](https://arxiv.org/abs/2007.02753).
 
 ![robo-gym framework](https://user-images.githubusercontent.com/36470989/79330117-4498dc80-7f19-11ea-9de4-bed4f6390f3a.jpg)
@@ -113,9 +113,7 @@ start-server-manager
 ```
 
 The Server Manager takes care of starting and managing the correct simulation/s and Robot Server/s. 
-Depending on the setup that you chose the Server Manager
-could be running on the same machine where you are calling ``env.make()`` or on
-another machine connected via network.
+Depending on the setup that you choose, the Server Manager could be running on the same machine on which you call  ``env.make()`` or on another machine connected via network.
 
 The Server Manager is part of the [robo-gym-server-modules](https://github.com/jr-robotics/robo-gym-server-modules) package. A list of commands is available [here](https://github.com/jr-robotics/robo-gym-server-modules#how-to-use). 
 
@@ -245,13 +243,13 @@ For problems at this step see the [Testing](https://github.com/jr-robotics/robo-
 
 <br>
 
-On the pc where you are running robo-gym associate the IP of the pc on which the Server Manager is running to the hostname `robot-servers` with:
+On the PC where you are running ``robo-gym`` associate the IP of the pc on which the Server Manager is running to the hostname `robot-servers` with:
 
 ```sh
 sudo sh -c 'printf "127.0.0.1 robot-servers" >> /etc/hosts'
 ```
 
-If you are running the ServerManager on a different PC replace *127.0.0.1* with the IP address of the machine. 
+If you are running the Server Manager on a different PC replace *127.0.0.1* with the IP address of the machine. 
 
 We are using [pytest](http://doc.pytest.org/) for tests. You can run a short selection of tests with:
 
@@ -265,7 +263,7 @@ or the full test suite with:
 pytest
 ```
 
-Once you are done run `kill-server-manager` to kill the RobotServer and the ServerManager.
+Once you are done run `kill-server-manager` to kill the Robot Server and the Server Manager.
 
 # Troubleshooting 
 
