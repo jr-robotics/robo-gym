@@ -14,6 +14,16 @@ before_script:
   # we use $CI_JOB_TOKEN here which is a special token provided by GitLab
   - echo -n $CI_JOB_TOKEN | docker login -u gitlab-ci-token --password-stdin $CI_REGISTRY
 
+# The pipeline needs at minimum one job to run 
+dummy:
+  stage: build
+  variables:
+    GIT_STRATEGY: none
+  script:
+    - ":"
+  only:
+    - /^docs.*$/
+    
 .build_robo-gym_image: &build_robo-gym_image_def
   image: docker:18.09
   services:
@@ -37,6 +47,8 @@ before_script:
     - docker push $ROBO_GYM_IMAGE
     - docker tag $ROBO_GYM_IMAGE $CI_REGISTRY_IMAGE:$PYTHON_VER-latest
     - docker push $CI_REGISTRY_IMAGE:$PYTHON_VER-latest
+  except:
+    - /^docs.*$/
 
 build_robo-gym_image_py36:
   <<: *build_robo-gym_image_def  
@@ -81,11 +93,14 @@ build_robo-gym_image_py39:
     - docker exec robo-gym pytest -m "not nightly"
     - docker-compose -f docker-compose-test-melodic.yml down
   resource_group: test
+  except:
+    - /^docs.*$/
 
 short_test_environments_py36:
   <<: *short_test_environments_def
   except:
     - schedules
+    - /^docs.*$/
   needs: ["build_robo-gym_image_py36"]
   
 short_test_environments_py37:
@@ -138,6 +153,8 @@ short_test_environments_with_rs_manual_deploy:
     - docker exec robo-gym pytest
     - docker-compose -f docker-compose-test-melodic.yml down
   resource_group: test
+  except:
+    - /^docs.*$/
 
 manual_full_test_environments_py36:
   <<: *full_test_environments_def
@@ -209,6 +226,8 @@ deploy_docker_image:
   only:
     - master 
     - develop
+  except:
+    - /^docs.*$/
 
 deploy_production:
   image: python:3.6-slim-buster
