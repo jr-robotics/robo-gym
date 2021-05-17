@@ -8,9 +8,9 @@ For information on creating your own environment, see [Creating Environments](cr
 - [Universal Robots](#universal-robots)
   - [Empty Environment](#empty-environment)
   - [End Effector Positioning](#end-effector-positioning)
-  - [TBD](#tbd)
-  - [TBD](#tbd-1)
-  - [TBD](#tbd-2)
+  - [Basic Avoidance](#basic-avoidance)
+  - [Avoidance IROS 2021](#avoidance-iros-2021)
+  - [Avoidance IROS 2021 Test](#avoidance-iros-2021-test)
 - [Mobile Industrial Robots Mir100](#mobile-industrial-robots-mir100)
   - [No Obstacle Navigation](#no-obstacle-navigation)
   - [Obstacle Avoidance](#obstacle-avoidance)
@@ -68,36 +68,36 @@ punished with a negative reward and termination of the episode.
  ! When resetting the Real Robot environment the robot could go in self collision, please be cautious. We are working on a solution to fix this.
 
 
-## TBD 
+## Basic Avoidance 
 
 ```python
 # simulated robot environment
-env = gym.make('MovingBoxTargetURSim-v0', ur_model='ur5', ip='<server_manager_address>')
+env = gym.make('BasicAvoidanceURSim-v0', ur_model='ur5', ip='<server_manager_address>')
 # real robot environment
-env = gym.make('MovingBoxTargetURRob-v0', ur_model='ur5', rs_address='<robot_server_address>')
+env = gym.make('BasicAvoidanceURRob-v0', ur_model='ur5', rs_address='<robot_server_address>')
 ```
 
 <img src="https://user-images.githubusercontent.com/36470989/118245777-7e803d80-b4a1-11eb-9717-7e2d78faf5ca.gif" width="200" height="200">
 
-## TBD 
+## Avoidance IROS 2021
 
 ```python
 # simulated robot environment
-env = gym.make('IrosEnvURTrainingSim-v0', ur_model='ur5', ip='<server_manager_address>')
+env = gym.make('AvoidanceIros2021URSim-v0', ur_model='ur5', ip='<server_manager_address>')
 # real robot environment
-env = gym.make('IrosEnvURTrainingRob-v0', ur_model='ur5', rs_address='<robot_server_address>')
+env = gym.make('AvoidanceIros2021URRob-v0', ur_model='ur5', rs_address='<robot_server_address>')
 ```
 
 <img src="https://user-images.githubusercontent.com/36470989/118246176-ed5d9680-b4a1-11eb-8b1f-efc23c8bec6a.gif" width="200" height="200">
 
 
-## TBD 
+## Avoidance IROS 2021 Test
 
 ```python
 # simulated robot environment
-env = gym.make('IrosEnvURTestFixedSplinesSim-v0', ur_model='ur5', ip='<server_manager_address>')
+env = gym.make('AvoidanceIros2021TestURSim-v0', ur_model='ur5', ip='<server_manager_address>')
 # real robot environment
-env = gym.make('IrosEnvURTestFixedSplinesRob-v0', ur_model='ur5', rs_address='<robot_server_address>')
+env = gym.make('AvoidanceIros2021TestURRob-v0', ur_model='ur5', rs_address='<robot_server_address>')
 ```
 
 
