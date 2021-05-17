@@ -45,13 +45,13 @@ register(
 )
 
 register(
-    id='MovingBoxTargetURSim-v0',
-    entry_point='robo_gym.envs:MovingBoxTargetURSim',
+    id='BasicAvoidanceURSim-v0',
+    entry_point='robo_gym.envs:BasicAvoidanceURSim',
 )
 
 register(
-    id='MovingBoxTargetURRob-v0',
-    entry_point='robo_gym.envs:MovingBoxTargetURRob',
+    id='BasicAvoidanceURRob-v0',
+    entry_point='robo_gym.envs:BasicAvoidanceURRob',
 )
 
 # Iros Env 03
