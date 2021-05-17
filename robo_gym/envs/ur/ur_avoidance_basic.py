@@ -75,7 +75,7 @@ class MovingBoxTargetUR(URBaseAvoidanceEnv):
 
         return state
 
-    def _reward(self, rs_state, action) -> Tuple[float, bool, dict]:
+    def reward(self, rs_state, action) -> Tuple[float, bool, dict]:
         env_state = self._robot_server_state_to_env_state(rs_state)
 
         reward = 0

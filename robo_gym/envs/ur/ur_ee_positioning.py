@@ -234,7 +234,7 @@ class EndEffectorPositioningUR(URBaseEnv):
             
         return state
 
-    def _reward(self, rs_state, action) -> Tuple[float, bool, dict]:
+    def reward(self, rs_state, action) -> Tuple[float, bool, dict]:
         reward = 0
         done = False
         info = {}
