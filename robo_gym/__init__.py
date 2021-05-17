@@ -54,25 +54,24 @@ register(
     entry_point='robo_gym.envs:BasicAvoidanceURRob',
 )
 
-# Iros Env 03
 register(
-    id='IrosEnvURTrainingSim-v0',
-    entry_point='robo_gym.envs:IrosEnvURTrainingSim',
+    id='AvoidanceIros2021URSim-v0',
+    entry_point='robo_gym.envs:AvoidanceIros2021URSim',
 )
 
 register(
-    id='IrosEnvURTrainingRob-v0',
-    entry_point='robo_gym.envs:IrosEnvURTrainingRob',
+    id='AvoidanceIros2021URRob-v0',
+    entry_point='robo_gym.envs:AvoidanceIros2021URRob',
 )
 
 register(
-    id='IrosEnvURTestFixedSplinesSim-v0',
-    entry_point='robo_gym.envs:IrosEnvURTestFixedSplinesSim',
+    id='AvoidanceIros2021TestURSim-v0',
+    entry_point='robo_gym.envs:AvoidanceIros2021TestURSim',
 )
 
 register(
-    id='IrosEnvURTestFixedSplinesRob-v0',
-    entry_point='robo_gym.envs:IrosEnvURTestFixedSplinesRob',
+    id='AvoidanceIros2021TestURRob-v0',
+    entry_point='robo_gym.envs:AvoidanceIros2021TestURRob',
 )
 
 
