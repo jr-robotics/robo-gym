@@ -80,6 +80,7 @@ build_robo-gym_image_py39:
     - docker-compose -f docker-compose-test-melodic.yml up -d
     - docker exec robo-gym pytest -m "not nightly"
     - docker-compose -f docker-compose-test-melodic.yml down
+  resource_group: test
 
 short_test_environments_py36:
   <<: *short_test_environments_def
@@ -136,6 +137,7 @@ short_test_environments_with_rs_manual_deploy:
     - docker-compose -f docker-compose-test-melodic.yml up -d
     - docker exec robo-gym pytest
     - docker-compose -f docker-compose-test-melodic.yml down
+  resource_group: test
 
 manual_full_test_environments_py36:
   <<: *full_test_environments_def
