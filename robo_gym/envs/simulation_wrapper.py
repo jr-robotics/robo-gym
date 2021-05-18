@@ -38,12 +38,6 @@ class Simulation:
 
         assert self.sm_client.kill_server(self.robot_server_ip)
 
-    def close(self):
-        """Close environment.
-        """
-
-        self.kill_sim()
-
     def restart_sim(self):
         """Restart the simulated Robot Server.
         """

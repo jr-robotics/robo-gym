@@ -141,7 +141,7 @@ env = gym.make('EnvironmentNameSim-v0', ip='<server_manager_address>', gui=True)
 The Simulation wrapper provides some extra functionalities to the Simulated Environments.
 
 - `env.restart_sim()` restart the simulation
-- `env.close()` kill the simulation and close the environment
+- `env.kill_sim()` kill the simulation 
 
 <!-- omit in toc -->
 ### Exception Handling Wrapper
