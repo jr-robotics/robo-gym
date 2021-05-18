@@ -62,6 +62,7 @@ class MovingBoxTargetUR(URBaseAvoidanceEnv):
                                             string_params = string_params, state_dict = rs_state)
         return state_msg
 
+
     def reset(self, joint_positions = JOINT_POSITIONS, fixed_object_position = None) -> np.array:
         """Environment reset.
 
@@ -134,6 +135,7 @@ class MovingBoxTargetUR(URBaseAvoidanceEnv):
         return reward, done, info
 
     def step(self, action) -> Tuple[np.array, float, bool, dict]:
+        if type(action) == list: action = np.array(action)
         
         state, reward, done, info = super().step(action)
 
