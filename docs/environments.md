@@ -20,6 +20,7 @@ Available UR models: UR3, UR3e, UR5, UR5e, UR10, UR10e, UR16
 
 To select the robot model use: `ur_model='<ur3, ur3e, ur5, ur5e, ur10, ur10e, ur16e>'`
 
+*General Warning*: When resetting the environment, in some cases the robot moves to a random initial position. When executing the command to move the robot to the desired position we simply forward the random joint positions to the robot controller, a collision free path is not ensured. Therefore when using the Real Robot environment the robot could go in self collision during the reset stage, please be cautious and always keep the emergency stop at end when operating the real robot. 
 ## Empty Environment
 
 ```python
@@ -31,6 +32,13 @@ env = gym.make('EmptyEnvironmentURRob-v0', ur_model='ur5', rs_address='<robot_se
 
 <img src="https://user-images.githubusercontent.com/36470989/118242650-dae15e00-b49d-11eb-832b-8a59c4fe3749.gif" width="200" height="200">
 
+This is the base UR environment. This environment is not intended to be used as a standalone environment but rather as a starting point and base class to develop UR environments. 
+
+The environment state includes: joint positions normalized with respect to the joint position limits and the joint velocities (rad/s).
+The reward is constant to 0. 
+
+The robot uses position control; therefore, an action in the environment consists
+of six normalized joint position values.
 
 ## End Effector Positioning
 
@@ -51,11 +59,12 @@ The target end effector positions are uniformly distributed across a semi-sphere
 Potential target points generated within the singularity areas of the working space are discarded.
 The starting position is a random robot configuration.
 
-The observations consist of 15 values: the spherical coordinates of the target
-with the origin in the robot's base link, the six joint positions and the six joint velocities.
+The environment state includes: the 3D polar coordinates of the target position with respect to the end effector frame, joint positions normalized with respect to the joint position limits and the joint velocities (rad/s).
 
 The robot uses position control; therefore, an action in the environment consists
-of six normalized joint position values.
+of normalized joint position values.
+
+<!-- TODO fix reward description -->
 
 The base reward that the agent receives at each step is proportional to the
 variation of the three-dimensional Euclidean distance to the goal position.
@@ -63,10 +72,6 @@ Thus, a positive reward is received for moving closer to the goal, whereas a
 negative reward is collected for moving away.
 Both self collisions and collisions with the ground are taken into account and
 punished with a negative reward and termination of the episode.
-
-
- ! When resetting the Real Robot environment the robot could go in self collision, please be cautious. We are working on a solution to fix this.
-
 
 ## Basic Avoidance 
 
@@ -79,6 +84,15 @@ env = gym.make('BasicAvoidanceURRob-v0', ur_model='ur5', rs_address='<robot_serv
 
 <img src="https://user-images.githubusercontent.com/36470989/118245777-7e803d80-b4a1-11eb-9717-7e2d78faf5ca.gif" width="200" height="200">
 
+The goal in this environment is for the robotic arm to keep a minimum distance (calculated from end effector and the elbow) to an obstacle moving vertically while keeping as close as possible to the initial joint configuration. 
+
+
+The environment state includes: the 3D polar coordinates of the obstacle with respect to the end effector frame and with respect to the forearm link frame, joint positions normalized with respect to the joint position limits and the difference between the joint positions and the initial joint configuration.
+
+An action in the environment consists in normalized joint position deltas from the initial joint configuration. 
+
+
+<!-- TODO add reward description -->
 ## Avoidance IROS 2021
 
 ```python
@@ -90,6 +104,15 @@ env = gym.make('AvoidanceIros2021URRob-v0', ur_model='ur5', rs_address='<robot_s
 
 <img src="https://user-images.githubusercontent.com/36470989/118246176-ed5d9680-b4a1-11eb-8b1f-efc23c8bec6a.gif" width="200" height="200">
 
+Environment used in our Paper Submission to IROS 2021. 
+
+The goal in this environment is for the robotic arm to keep a minimum distance (calculated from end effector and the elbow) to an obstacle moving following 3D splines generated in the robot working area while keeping as close as possible to the pre-configured robot trajectory. 
+
+The environment state includes: the 3D polar coordinates of the obstacle with respect to the end effector frame and with respect to the forearm link frame, joint positions normalized with respect to the joint position limits, the difference between the joint positions and the trajectory joint configuration, the trajectory joint configuration and a flag to indicate whether the current trajectory joint configuration is a waypoint. 
+
+An action in the environment consists in normalized joint position deltas from the trajectory joint configuration. 
+
+<!-- TODO add reward description -->
 
 ## Avoidance IROS 2021 Test
 
@@ -100,7 +123,7 @@ env = gym.make('AvoidanceIros2021TestURSim-v0', ur_model='ur5', ip='<server_mana
 env = gym.make('AvoidanceIros2021TestURRob-v0', ur_model='ur5', rs_address='<robot_server_address>')
 ```
 
-
+Same as [Avoidance IROS 2021](#avoidance-iros-2021) but using a fixed set of 3D splines as obstacles trajectories. 
 
 # Mobile Industrial Robots Mir100
 
