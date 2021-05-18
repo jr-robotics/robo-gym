@@ -86,6 +86,7 @@ class AvoidanceIros2021UR(URBaseAvoidanceEnv):
         return state
 
     def step(self, action) -> Tuple[np.array, float, bool, dict]:
+        if type(action) == list: action = np.array(action)
         self.elapsed_steps_in_current_state += 1
         
         state, reward, done, info = super().step(action)

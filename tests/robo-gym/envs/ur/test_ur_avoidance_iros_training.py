@@ -32,6 +32,7 @@ def test_initialization(env):
     assert env.ur.model == env.request_param
     env.reset()
     done = False
+    env.step([0,0,0,0,0])
     for _ in range(10):
         if not done:
             action = env.action_space.sample()
