@@ -18,7 +18,7 @@ DEBUG = True
 MINIMUM_DISTANCE = 0.3 # the distance [cm] the robot should keep to the obstacle
 
 
-class MovingBoxTargetUR(URBaseAvoidanceEnv):
+class BasicAvoidanceUR(URBaseAvoidanceEnv):
     """Universal Robots UR basic obstacle avoidance environment.
 
     Args:
@@ -141,7 +141,7 @@ class MovingBoxTargetUR(URBaseAvoidanceEnv):
 
         return state, reward, done, info
     
-class MovingBoxTargetURSim(MovingBoxTargetUR, Simulation):
+class BasicAvoidanceURSim(BasicAvoidanceUR, Simulation):
     cmd = "roslaunch ur_robot_server ur_robot_server.launch \
         world_name:=tabletop_sphere50.world \
         reference_frame:=base_link \
@@ -157,9 +157,9 @@ class MovingBoxTargetURSim(MovingBoxTargetUR, Simulation):
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, ur_model='ur5', **kwargs):
         self.cmd = self.cmd + ' ' + 'ur_model:=' + ur_model
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
-        MovingBoxTargetUR.__init__(self, rs_address=self.robot_server_ip, ur_model=ur_model, **kwargs)
+        BasicAvoidanceUR.__init__(self, rs_address=self.robot_server_ip, ur_model=ur_model, **kwargs)
 
-class MovingBoxTargetURRob(MovingBoxTargetUR):
+class BasicAvoidanceURRob(BasicAvoidanceUR):
     real_robot = True 
 
 # roslaunch ur_robot_server ur_robot_server.launch ur_model:=ur5 real_robot:=true rviz_gui:=true gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 rs_mode:=moving

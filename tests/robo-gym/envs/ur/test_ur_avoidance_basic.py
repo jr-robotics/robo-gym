@@ -17,7 +17,7 @@ ur_models = [pytest.param('ur3', marks=pytest.mark.nightly), \
 
 @pytest.fixture(scope='module', params=ur_models)
 def env(request):
-    env = gym.make('MovingBoxTargetURSim-v0', ip='robot-servers', ur_model=request.param)
+    env = gym.make('BasicAvoidanceURSim-v0', ip='robot-servers', ur_model=request.param)
     env.request_param = request.param
     yield env
     env.kill_sim()
@@ -77,13 +77,13 @@ def test_object_coordinates(env):
    
 
 test_ur_fixed_joints = [
-    ('MovingBoxTargetURSim-v0', True, False, False, False, False, False, 'ur3'), # fixed shoulder_pan
-    ('MovingBoxTargetURSim-v0', False, True, False, False, False, False, 'ur3e'), # fixed shoulder_lift
-    ('MovingBoxTargetURSim-v0', False, False, False, False, False, True, 'ur5'), # fixed wrist_3
-    ('MovingBoxTargetURSim-v0', True, False, True, False, False, False, 'ur5e'), # fixed Base and Elbow
-    ('MovingBoxTargetURSim-v0', False, False, True, False, False, False, 'ur10'), # fixed elbow
-    ('MovingBoxTargetURSim-v0', False, False, False, True, False, False, 'ur10e'), # fixed wrist_1
-    ('MovingBoxTargetURSim-v0', False, False, False, False, True, False, 'ur16e'), # fixed wrist_2
+    ('BasicAvoidanceURSim-v0', True, False, False, False, False, False, 'ur3'), # fixed shoulder_pan
+    ('BasicAvoidanceURSim-v0', False, True, False, False, False, False, 'ur3e'), # fixed shoulder_lift
+    ('BasicAvoidanceURSim-v0', False, False, False, False, False, True, 'ur5'), # fixed wrist_3
+    ('BasicAvoidanceURSim-v0', True, False, True, False, False, False, 'ur5e'), # fixed Base and Elbow
+    ('BasicAvoidanceURSim-v0', False, False, True, False, False, False, 'ur10'), # fixed elbow
+    ('BasicAvoidanceURSim-v0', False, False, False, True, False, False, 'ur10e'), # fixed wrist_1
+    ('BasicAvoidanceURSim-v0', False, False, False, False, True, False, 'ur16e'), # fixed wrist_2
 ]
 
 @pytest.mark.nightly

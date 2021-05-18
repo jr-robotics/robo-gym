@@ -45,34 +45,33 @@ register(
 )
 
 register(
-    id='MovingBoxTargetURSim-v0',
-    entry_point='robo_gym.envs:MovingBoxTargetURSim',
+    id='BasicAvoidanceURSim-v0',
+    entry_point='robo_gym.envs:BasicAvoidanceURSim',
 )
 
 register(
-    id='MovingBoxTargetURRob-v0',
-    entry_point='robo_gym.envs:MovingBoxTargetURRob',
-)
-
-# Iros Env 03
-register(
-    id='IrosEnvURTrainingSim-v0',
-    entry_point='robo_gym.envs:IrosEnvURTrainingSim',
+    id='BasicAvoidanceURRob-v0',
+    entry_point='robo_gym.envs:BasicAvoidanceURRob',
 )
 
 register(
-    id='IrosEnvURTrainingRob-v0',
-    entry_point='robo_gym.envs:IrosEnvURTrainingRob',
+    id='AvoidanceIros2021URSim-v0',
+    entry_point='robo_gym.envs:AvoidanceIros2021URSim',
 )
 
 register(
-    id='IrosEnvURTestFixedSplinesSim-v0',
-    entry_point='robo_gym.envs:IrosEnvURTestFixedSplinesSim',
+    id='AvoidanceIros2021URRob-v0',
+    entry_point='robo_gym.envs:AvoidanceIros2021URRob',
 )
 
 register(
-    id='IrosEnvURTestFixedSplinesRob-v0',
-    entry_point='robo_gym.envs:IrosEnvURTestFixedSplinesRob',
+    id='AvoidanceIros2021TestURSim-v0',
+    entry_point='robo_gym.envs:AvoidanceIros2021TestURSim',
+)
+
+register(
+    id='AvoidanceIros2021TestURRob-v0',
+    entry_point='robo_gym.envs:AvoidanceIros2021TestURRob',
 )
 
 
