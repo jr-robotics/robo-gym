@@ -64,15 +64,6 @@ The environment state includes: the 3D polar coordinates of the target position 
 The robot uses position control; therefore, an action in the environment consists
 of normalized joint position values.
 
-<!-- TODO fix reward description -->
-
-The base reward that the agent receives at each step is proportional to the
-variation of the three-dimensional Euclidean distance to the goal position.
-Thus, a positive reward is received for moving closer to the goal, whereas a
-negative reward is collected for moving away.
-Both self collisions and collisions with the ground are taken into account and
-punished with a negative reward and termination of the episode.
-
 ## Basic Avoidance 
 
 ```python
@@ -92,7 +83,6 @@ The environment state includes: the 3D polar coordinates of the obstacle with re
 An action in the environment consists in normalized joint position deltas from the initial joint configuration. 
 
 
-<!-- TODO add reward description -->
 ## Avoidance IROS 2021
 
 ```python
@@ -112,7 +102,6 @@ The environment state includes: the 3D polar coordinates of the obstacle with re
 
 An action in the environment consists in normalized joint position deltas from the trajectory joint configuration. 
 
-<!-- TODO add reward description -->
 
 ## Avoidance IROS 2021 Test
 
