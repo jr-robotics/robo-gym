@@ -295,12 +295,10 @@ If you have general questions or ideas that you would like to share please [star
 # News
 [back to top](#robo-gym)
 
-<!-- TODO complete news -->
-- 2021-XX-XX (v1.0.0)
+- 2021-05-19 (v1.0.0)
   + Added support for all the Universal Robots models: UR3, UR3e, UR5, UR5e, UR10, UR10e, UR16e
   + The Robot Server state can now be defined as a dictionary instead of a list to reduce errors caused by wrong indexing
-  + Added support for Python 3.7, 3.8, 3.9
-  <!-- TODO add link to obstacle avoidance envs -->
+  + Added support for Python 3.7, 3.8, 3.9 and stopped support for 3.5
   + Added Obstacle Avoidance environments  
   + Improved logging and debugging
   + Improved code quality and readability 
