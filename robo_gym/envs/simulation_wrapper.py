@@ -25,20 +25,20 @@ class Simulation:
                 self.sm_client = sm_client.Client(ip)
             self._start_sim()
 
-    def _start_sim(self,):
+    def _start_sim(self):
         """Start a new simulated Robot Server.
         """
 
         self.robot_server_ip = self.sm_client.start_new_server(cmd = self.cmd, gui = self.gui)
 
 
-    def kill_sim(self,):
+    def kill_sim(self):
         """Kill the simulated Robot Server.
         """
 
         assert self.sm_client.kill_server(self.robot_server_ip)
 
-    def restart_sim(self,):
+    def restart_sim(self):
         """Restart the simulated Robot Server.
         """
 

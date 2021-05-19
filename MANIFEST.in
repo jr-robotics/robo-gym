@@ -1,0 +1,2 @@
+include robo_gym/utils/ur_parameters/*
+include robo_gym/envs/ur/robot_trajectories/*

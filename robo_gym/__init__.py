@@ -2,86 +2,78 @@ from gym.envs.registration import register
 
 # naming convention: EnvnameRobotSim
 
-## Mir100 Environments
+# MiR100 Environments
 register(
     id='NoObstacleNavigationMir100Sim-v0',
     entry_point='robo_gym.envs:NoObstacleNavigationMir100Sim',
-    max_episode_steps=500
 )
 
 register(
     id='NoObstacleNavigationMir100Rob-v0',
     entry_point='robo_gym.envs:NoObstacleNavigationMir100Rob',
-    max_episode_steps=500
 )
 
 register(
     id='ObstacleAvoidanceMir100Sim-v0',
     entry_point='robo_gym.envs:ObstacleAvoidanceMir100Sim',
-    max_episode_steps=500
 )
 
 register(
     id='ObstacleAvoidanceMir100Rob-v0',
     entry_point='robo_gym.envs:ObstacleAvoidanceMir100Rob',
-    max_episode_steps=500
 )
 
-## UR5 Environments
+# UR Environments
 register(
-    id='EndEffectorPositioningUR5Sim-v0',
-    entry_point='robo_gym.envs:EndEffectorPositioningUR5Sim',
-    max_episode_steps=300
+    id='EmptyEnvironmentURSim-v0',
+    entry_point='robo_gym.envs:EmptyEnvironmentURSim',
 )
 
 register(
-    id='EndEffectorPositioningUR5Rob-v0',
-    entry_point='robo_gym.envs:EndEffectorPositioningUR5Rob',
-    max_episode_steps=300
+    id='EmptyEnvironmentURRob-v0',
+    entry_point='robo_gym.envs:EmptyEnvironmentURRob',
 )
 
 register(
-    id='EndEffectorPositioningUR5DoF5Sim-v0',
-    entry_point='robo_gym.envs:EndEffectorPositioningUR5DoF5Sim',
-    max_episode_steps=300
+    id='EndEffectorPositioningURSim-v0',
+    entry_point='robo_gym.envs:EndEffectorPositioningURSim',
 )
 
 register(
-    id='EndEffectorPositioningUR5DoF5Rob-v0',
-    entry_point='robo_gym.envs:EndEffectorPositioningUR5DoF5Rob',
-    max_episode_steps=300
+    id='EndEffectorPositioningURRob-v0',
+    entry_point='robo_gym.envs:EndEffectorPositioningURRob',
 )
 
 register(
-    id='MovingBoxTargetUR5DoF3Sim-v0',
-    entry_point='robo_gym.envs:MovingBoxTargetUR5DoF3Sim',
-    max_episode_steps=1000
-)
-
-## UR10 Environments
-register(
-    id='EndEffectorPositioningUR10Sim-v0',
-    entry_point='robo_gym.envs:EndEffectorPositioningUR10Sim',
-    max_episode_steps=300
+    id='BasicAvoidanceURSim-v0',
+    entry_point='robo_gym.envs:BasicAvoidanceURSim',
 )
 
 register(
-    id='EndEffectorPositioningUR10Rob-v0',
-    entry_point='robo_gym.envs:EndEffectorPositioningUR10Rob',
-    max_episode_steps=300
+    id='BasicAvoidanceURRob-v0',
+    entry_point='robo_gym.envs:BasicAvoidanceURRob',
 )
 
 register(
-    id='EndEffectorPositioningUR10DoF5Sim-v0',
-    entry_point='robo_gym.envs:EndEffectorPositioningUR10DoF5Sim',
-    max_episode_steps=300
+    id='AvoidanceIros2021URSim-v0',
+    entry_point='robo_gym.envs:AvoidanceIros2021URSim',
 )
 
 register(
-    id='EndEffectorPositioningUR10DoF5Rob-v0',
-    entry_point='robo_gym.envs:EndEffectorPositioningUR10DoF5Rob',
-    max_episode_steps=300
+    id='AvoidanceIros2021URRob-v0',
+    entry_point='robo_gym.envs:AvoidanceIros2021URRob',
 )
+
+register(
+    id='AvoidanceIros2021TestURSim-v0',
+    entry_point='robo_gym.envs:AvoidanceIros2021TestURSim',
+)
+
+register(
+    id='AvoidanceIros2021TestURRob-v0',
+    entry_point='robo_gym.envs:AvoidanceIros2021TestURRob',
+)
+
 
 
 

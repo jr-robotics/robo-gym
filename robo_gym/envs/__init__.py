@@ -1,14 +1,10 @@
-from robo_gym.envs.mir100.mir100 import NoObstacleNavigationMir100Sim
-from robo_gym.envs.mir100.mir100 import NoObstacleNavigationMir100Rob
-from robo_gym.envs.mir100.mir100 import ObstacleAvoidanceMir100Sim
-from robo_gym.envs.mir100.mir100 import ObstacleAvoidanceMir100Rob
+# MiR100
+from robo_gym.envs.mir100.mir100 import NoObstacleNavigationMir100Sim, NoObstacleNavigationMir100Rob
+from robo_gym.envs.mir100.mir100 import ObstacleAvoidanceMir100Sim, ObstacleAvoidanceMir100Rob
 
-from robo_gym.envs.ur10.ur10 import EndEffectorPositioningUR10Sim
-from robo_gym.envs.ur10.ur10 import EndEffectorPositioningUR10Rob
-from robo_gym.envs.ur10.ur10 import EndEffectorPositioningUR10DoF5Sim
-from robo_gym.envs.ur10.ur10 import EndEffectorPositioningUR10DoF5Rob
-from robo_gym.envs.ur5.ur5 import EndEffectorPositioningUR5Sim
-from robo_gym.envs.ur5.ur5 import EndEffectorPositioningUR5Rob
-from robo_gym.envs.ur5.ur5 import EndEffectorPositioningUR5DoF5Sim
-from robo_gym.envs.ur5.ur5 import EndEffectorPositioningUR5DoF5Rob
-from robo_gym.envs.ur5.ur5 import MovingBoxTargetUR5DoF3Sim
+# UR
+from robo_gym.envs.ur.ur_base_env import EmptyEnvironmentURSim, EmptyEnvironmentURRob
+from robo_gym.envs.ur.ur_ee_positioning import EndEffectorPositioningURSim, EndEffectorPositioningURRob
+from robo_gym.envs.ur.ur_avoidance_basic import BasicAvoidanceURSim, BasicAvoidanceURRob
+from robo_gym.envs.ur.ur_avoidance_iros import AvoidanceIros2021URSim, AvoidanceIros2021URRob
+from robo_gym.envs.ur.ur_avoidance_iros import AvoidanceIros2021TestURSim, AvoidanceIros2021TestURRob
