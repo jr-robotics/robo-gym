@@ -245,9 +245,9 @@ class EndEffectorPositioningUR(URBaseEnv):
         euclidean_dist_3d = np.linalg.norm(target_coord - ee_coord)
 
         # Reward base
-        #reward = -1 * euclidean_dist_3d
+        reward = -1 * euclidean_dist_3d
 
-        reward = reward + (-1/300)
+        # reward = reward + (-1/300)
         
         # Joint positions 
         joint_positions = []
@@ -262,7 +262,7 @@ class EndEffectorPositioningUR(URBaseEnv):
         # reward = reward - (0.05 * np.sum(delta))
 
         if euclidean_dist_3d <= DISTANCE_THRESHOLD:
-            reward = 2
+            reward = 100
             done = True
             info['final_status'] = 'success'
             info['target_coord'] = target_coord
@@ -274,7 +274,7 @@ class EndEffectorPositioningUR(URBaseEnv):
             collision = False
 
         if collision:
-            reward = -1
+            reward = -400
             done = True
             info['final_status'] = 'collision'
             info['target_coord'] = target_coord
