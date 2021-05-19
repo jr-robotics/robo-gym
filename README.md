@@ -70,7 +70,7 @@ connected via network.
 
 <!-- omit in toc -->
 ## Environment Side
-**Requirements:** Python >= 3.5
+**Requirements:** Python >= 3.6
 
 You can perform a minimal install of robo-gym with:
 
