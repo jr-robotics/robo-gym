@@ -241,5 +241,6 @@ deploy_production:
   only:
     - /^v*$/
   except:
-    - branches
-    - triggers
+    refs:
+      - branches
+      - triggers
