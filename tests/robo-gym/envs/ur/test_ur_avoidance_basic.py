@@ -1,9 +1,7 @@
 import gym
 import robo_gym
-from robo_gym.utils import ur_utils
 import math
 import numpy as np 
-
 import pytest
 
 ur_models = [pytest.param('ur3', marks=pytest.mark.nightly), \
