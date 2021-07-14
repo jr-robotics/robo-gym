@@ -268,10 +268,7 @@ class EndEffectorPositioningUR(URBaseEnv):
             info['target_coord'] = target_coord
             
         # Check if robot is in collision
-        if rs_state['in_collision'] == 1:
-            collision = True
-        else:
-            collision = False
+        collision = True if rs_state['in_collision'] == 1 else False
 
         if collision:
             reward = -400
@@ -279,7 +276,7 @@ class EndEffectorPositioningUR(URBaseEnv):
             info['final_status'] = 'collision'
             info['target_coord'] = target_coord
 
-        if self.elapsed_steps >= self.max_episode_steps:
+        elif self.elapsed_steps >= self.max_episode_steps:
             done = True
             info['final_status'] = 'max_steps_exceeded'
             info['target_coord'] = target_coord

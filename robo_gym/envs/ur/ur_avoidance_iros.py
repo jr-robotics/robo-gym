@@ -170,7 +170,7 @@ class AvoidanceIros2021UR(URBaseAvoidanceEnv):
             done = True
             info['final_status'] = 'collision'
 
-        if self.elapsed_steps >= self.max_episode_steps:
+        elif self.elapsed_steps >= self.max_episode_steps:
             done = True
             info['final_status'] = 'success'
         
