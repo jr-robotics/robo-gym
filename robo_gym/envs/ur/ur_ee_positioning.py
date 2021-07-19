@@ -68,7 +68,7 @@ class EndEffectorPositioningUR(URBaseEnv):
         state_msg = robot_server_pb2.State(state = state, float_params = float_params, string_params = string_params, state_dict = rs_state)
         return state_msg
 
-    def _robot_server_state_to_env_state(self, rs_state) -> np.array:
+    def _robot_server_state_to_env_state(self, rs_state) -> np.ndarray:
         """Transform state from Robot Server to environment format.
 
         Args:
@@ -170,7 +170,7 @@ class EndEffectorPositioningUR(URBaseEnv):
         ]
         return rs_state_keys
 
-    def reset(self, joint_positions = JOINT_POSITIONS, ee_target_pose = None, randomize_start=False) -> np.array:
+    def reset(self, joint_positions = JOINT_POSITIONS, ee_target_pose = None, randomize_start=False) -> np.ndarray:
         """Environment reset.
 
         Args:
@@ -283,7 +283,7 @@ class EndEffectorPositioningUR(URBaseEnv):
         
         return reward, done, info
 
-    def _get_target_pose(self) -> np.array:
+    def _get_target_pose(self) -> np.ndarray:
         """Generate target End Effector pose.
 
         Returns:
