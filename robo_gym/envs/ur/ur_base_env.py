@@ -70,7 +70,7 @@ class URBaseEnv(gym.Env):
                                             string_params = string_params, state_dict = rs_state)
         return state_msg
 
-    def reset(self, joint_positions = None) -> np.array:
+    def reset(self, joint_positions = None) -> np.ndarray:
         """Environment reset.
 
         Args:
@@ -143,7 +143,7 @@ class URBaseEnv(gym.Env):
         
         return 0, done, info
 
-    def add_fixed_joints(self, action) -> np.array:
+    def add_fixed_joints(self, action) -> np.ndarray:
         action = action.tolist()
         fixed_joints = np.array([self.fix_base, self.fix_shoulder, self.fix_elbow, self.fix_wrist_1, self.fix_wrist_2, self.fix_wrist_3])
         fixed_joint_indices = np.where(fixed_joints)[0]
@@ -165,7 +165,7 @@ class URBaseEnv(gym.Env):
                 temp.append(action.pop(0))
         return np.array(temp)
 
-    def env_action_to_rs_action(self, action) -> np.array:
+    def env_action_to_rs_action(self, action) -> np.ndarray:
         """Convert environment action to Robot Server action"""
         rs_action = copy.deepcopy(action)
 
@@ -283,7 +283,7 @@ class URBaseEnv(gym.Env):
         """Get robot joint positions with standard indexing."""
         return self.joint_positions
 
-    def _get_joint_positions_as_array(self) -> np.array:
+    def _get_joint_positions_as_array(self) -> np.ndarray:
         """Get robot joint positions with standard indexing."""
         joint_positions = []
         joint_positions.append(self.joint_positions['base_joint_position'])
@@ -299,7 +299,7 @@ class URBaseEnv(gym.Env):
     def get_joint_name_order(self) -> list:
         return ['base', 'shoulder', 'elbow', 'wrist_1', 'wrist_2', 'wrist_3']
 
-    def _robot_server_state_to_env_state(self, rs_state) -> np.array:
+    def _robot_server_state_to_env_state(self, rs_state) -> np.ndarray:
         """Transform state from Robot Server to environment format.
 
         Args:
