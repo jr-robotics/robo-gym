@@ -58,7 +58,7 @@ class AvoidanceIros2021UR(URBaseAvoidanceEnv):
         
         float_params = {"object_0_x_min": -1.0, "object_0_x_max": 1.0, "object_0_y_min": -1.0, "object_0_y_max": 1.0, \
                         "object_0_z_min": 0.1, "object_0_z_max": 1.0, "object_0_n_points": 10, \
-                        "n_sampling_points": n_sampling_points}
+                        "object_0_n_sampling_points": n_sampling_points, "n_sampling_points": n_sampling_points}
         state = {}
 
         state_msg = robot_server_pb2.State(state = state, float_params = float_params, 
