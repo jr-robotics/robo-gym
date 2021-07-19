@@ -73,7 +73,7 @@ def test_object_coordinates(env):
 
    state = env.reset(joint_positions=params[env.ur.model]['joint_positions'], fixed_object_position=params[env.ur.model]['object_coords'])
    assert np.isclose([params[env.ur.model]['polar_coords']['r']], state[0], atol=0.05).all()
-   assert np.isclose([params[env.ur.model]['polar_coords']['r'], params[env.ur.model]['polar_coords']['theta'], params[env.ur.model]['polar_coords']['phi']], state[1:3], atol=0.2).all()
+   assert np.isclose([params[env.ur.model]['polar_coords']['theta'], params[env.ur.model]['polar_coords']['phi']], state[1:3], atol=0.2).all()
 
 test_ur_fixed_joints = [
     ('BasicAvoidanceURSim-v0', True, False, False, False, False, False, 'ur3'), # fixed shoulder_pan
