@@ -37,7 +37,7 @@ class EndEffectorPositioningURTrainingCurriculum(gym.Wrapper):
         reward, done, info = self.reward(rs_state=self.env.rs_state, action=action)
         
         if done and self.print_reward:
-            print(f'Episode counter: {self.episode_counter}   Current level: {self.get_level}')
+            print(f'Episode counter: {self.episode_counter}   Current level: {self.get_level()}')
             print(self.reward_composition)
 
         return next_state, reward, done, info
