@@ -33,6 +33,11 @@ class EndEffectorPositioningUR(URBaseEnv):
         real_robot (bool): True if the environment is controlling a real robot.
 
     """
+    def __init__(self, rs_address=None, fix_base=False, fix_shoulder=False, fix_elbow=False, fix_wrist_1=False, fix_wrist_2=False, fix_wrist_3=True, ur_model='ur5', rs_state_to_info=True, **kwargs):
+        super().__init__(rs_address, fix_base, fix_shoulder, fix_elbow, fix_wrist_1, fix_wrist_2, fix_wrist_3, ur_model, rs_state_to_info)
+        
+        self.successful_ending = False
+        self.last_position = np.zeros(6)
 
     def _get_observation_space(self) -> gym.spaces.Box:
         """Get environment observation space.
@@ -179,13 +184,14 @@ class EndEffectorPositioningUR(URBaseEnv):
         ]
         return rs_state_keys
 
-    def reset(self, joint_positions = JOINT_POSITIONS, ee_target_pose = None, randomize_start=False) -> np.array:
+    def reset(self, joint_positions = JOINT_POSITIONS, ee_target_pose = None, randomize_start=False, continue_on_success=False) -> np.array:
         """Environment reset.
 
         Args:
             joint_positions (list[6] or np.array[6]): robot joint positions in radians.
             ee_target_pose (list[6] or np.array[6]): [x,y,z,r,p,y] target end effector pose.
             randomize_start (bool): if True the starting position is randomized defined by the RANDOM_JOINT_OFFSET
+            continue_on_success (bool): if True the next robot will continue from it current position when last episode was a success
         """
         if joint_positions: 
             assert len(joint_positions) == 6
@@ -205,6 +211,10 @@ class EndEffectorPositioningUR(URBaseEnv):
             joint_positions_low = np.array(joint_positions) - np.array(RANDOM_JOINT_OFFSET) 
             joint_positions_high = np.array(joint_positions) + np.array(RANDOM_JOINT_OFFSET)
             joint_positions = np.random.default_rng().uniform(low=joint_positions_low, high=joint_positions_high)
+
+        # Continue from last position if last episode was a success
+        if self.successful_ending and continue_on_success:
+            joint_positions = self.last_position
 
         # Set initial robot joint positions
         self._set_joint_positions(joint_positions)
@@ -249,6 +259,21 @@ class EndEffectorPositioningUR(URBaseEnv):
         
         state, reward, done, info = super().step(action)
         self.previous_action = self.add_fixed_joints(action)
+
+        if done:
+            if info['final_status'] == 'success':
+                self.successful_ending = True
+
+                joint_positions = []
+                joint_positions_keys = ['base_joint_position', 'shoulder_joint_position', 'elbow_joint_position',
+                                        'wrist_1_joint_position', 'wrist_2_joint_position', 'wrist_3_joint_position']
+
+                for position in joint_positions_keys:
+                    joint_positions.append(self.rs_state[position])
+                joint_positions = np.array(joint_positions)
+                self.last_position = joint_positions
+
+
         
         return state, reward, done, info
    
