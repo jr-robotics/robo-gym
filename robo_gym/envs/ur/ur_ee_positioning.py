@@ -60,7 +60,7 @@ class EndEffectorPositioningUR(URBaseEnv):
         min_joint_velocities = - np.array([np.inf] * 6)
         # Cartesian coords of the target location
         max_target_coord = np.array([np.inf] * 3)
-        min_target_coord = np.array([np.inf] * 3)
+        min_target_coord = - np.array([np.inf] * 3)
         # Cartesian coords of the end effector
         max_ee_coord = np.array([np.inf] * 3)
         min_ee_coord = - np.array([np.inf] * 3)
