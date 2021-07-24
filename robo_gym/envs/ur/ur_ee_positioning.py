@@ -51,12 +51,18 @@ class EndEffectorPositioningUR(URBaseEnv):
         # Joint velocities range 
         max_joint_velocities = np.array([np.inf] * 6)
         min_joint_velocities = - np.array([np.inf] * 6)
+        # Cartesian coords of the target location
+        max_target_coord = np.array([np.inf] * 3)
+        min_target_coord = np.array([np.inf] * 3)
+        # Cartesian coords of the end effector
+        max_ee_coord = np.array([np.inf] * 3)
+        min_ee_coord = - np.array([np.inf] * 3)
         # Previous action
         max_action = np.array([1.01] * 6)
         min_action = - np.array([1.01] * 6)
         # Definition of environment observation_space
-        max_obs = np.concatenate((target_range, max_joint_positions, max_joint_velocities))
-        min_obs = np.concatenate((-target_range, min_joint_positions, min_joint_velocities))
+        max_obs = np.concatenate((target_range, max_joint_positions, max_joint_velocities, max_target_coord, max_ee_coord, max_action))
+        min_obs = np.concatenate((-target_range, min_joint_positions, min_joint_velocities, min_target_coord, min_ee_coord, min_action))
 
         return gym.spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
 
@@ -133,7 +139,7 @@ class EndEffectorPositioningUR(URBaseEnv):
 
 
         # Compose environment state
-        state = np.concatenate((target_polar, joint_positions, joint_velocities))
+        state = np.concatenate((target_polar, joint_positions, joint_velocities, target_coord, ee_to_ref_frame_translation, self.previous_action))
 
         return state
 
