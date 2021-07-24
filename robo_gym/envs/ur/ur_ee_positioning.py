@@ -258,42 +258,29 @@ class EndEffectorPositioningUR(URBaseEnv):
         done = False
         info = {}
 
+        # Reward weight for reaching the goal position
+        g_w = 2
+        # Reward weight for collision (ground, table or self)
+        c_w = -1
+        # Reward weight according to the distance to the goal
+        d_w = -0.005
+
         # Calculate distance to the target
         target_coord = np.array([rs_state['object_0_to_ref_translation_x'], rs_state['object_0_to_ref_translation_y'], rs_state['object_0_to_ref_translation_z']])
         ee_coord = np.array([rs_state['ee_to_ref_translation_x'], rs_state['ee_to_ref_translation_y'], rs_state['ee_to_ref_translation_z']])
         euclidean_dist_3d = np.linalg.norm(target_coord - ee_coord)
 
         # Reward base
-        reward = -1 * euclidean_dist_3d
-
-        # reward = reward + (-1/300)
-        
-        # Joint positions 
-        joint_positions = []
-        joint_positions_keys = ['base_joint_position', 'shoulder_joint_position', 'elbow_joint_position',
-                            'wrist_1_joint_position', 'wrist_2_joint_position', 'wrist_3_joint_position']
-        for position in joint_positions_keys:
-            joint_positions.append(rs_state[position])
-        joint_positions = np.array(joint_positions)
-        joint_positions_normalized = self.ur.normalize_joint_values(joint_positions)
-        
-        delta = np.abs(np.subtract(joint_positions_normalized, action))
-        # reward = reward - (0.05 * np.sum(delta))
+        reward += d_w * euclidean_dist_3d
 
         if euclidean_dist_3d <= DISTANCE_THRESHOLD:
-            reward = 100
+            reward = g_w * 1
             done = True
             info['final_status'] = 'success'
             info['target_coord'] = target_coord
-            
-        # Check if robot is in collision
-        if rs_state['in_collision'] == 1:
-            collision = True
-        else:
-            collision = False
 
-        if collision:
-            reward = -400
+        if rs_state['in_collision']:
+            reward = c_w * 1
             done = True
             info['final_status'] = 'collision'
             info['target_coord'] = target_coord
