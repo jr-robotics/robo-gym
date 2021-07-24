@@ -51,6 +51,9 @@ class EndEffectorPositioningUR(URBaseEnv):
         # Joint velocities range 
         max_joint_velocities = np.array([np.inf] * 6)
         min_joint_velocities = - np.array([np.inf] * 6)
+        # Previous action
+        max_action = np.array([1.01] * 6)
+        min_action = - np.array([1.01] * 6)
         # Definition of environment observation_space
         max_obs = np.concatenate((target_range, max_joint_positions, max_joint_velocities))
         min_obs = np.concatenate((-target_range, min_joint_positions, min_joint_velocities))
@@ -184,6 +187,7 @@ class EndEffectorPositioningUR(URBaseEnv):
             joint_positions = JOINT_POSITIONS
 
         self.elapsed_steps = 0
+        self.previous_action = np.zeros(6)
 
         # Initialize environment state
         state_len = self.observation_space.shape[0]
@@ -233,6 +237,15 @@ class EndEffectorPositioningUR(URBaseEnv):
                 raise InvalidStateError('Reset joint positions are not within defined range')
             
         return state
+
+    def step(self, action) -> Tuple[np.array, float, bool, dict]:
+        if type(action) == list: action = np.array(action)
+        
+        state, reward, done, info = super().step(action)
+        self.previous_action = self.add_fixed_joints(action)
+        
+        return state, reward, done, info
+   
 
     def reward(self, rs_state, action) -> Tuple[float, bool, dict]:
         reward = 0
