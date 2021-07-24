@@ -35,6 +35,9 @@ class EndEffectorPositioningURTrainingCurriculum(gym.Wrapper):
 
         action = self.env.add_fixed_joints(action)
         reward, done, info = self.reward(rs_state=self.env.rs_state, action=action)
+
+        if done:
+            self.episode_counter += 1
         
         if done and self.print_reward:
             print(f'Episode counter: {self.episode_counter}   Current level: {self.get_level()}')
