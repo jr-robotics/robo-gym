@@ -10,8 +10,8 @@ from robo_gym.envs.simulation_wrapper import Simulation
 from robo_gym.envs.ur.ur_base_env import URBaseEnv
 
 # base, shoulder, elbow, wrist_1, wrist_2, wrist_3
-JOINT_POSITIONS = [0.0, -2.5, 1.5, 0.0, -1.4, 0.0]
-RANDOM_JOINT_OFFSET = [0.65, 0.25, 0.5, 3.14, 0.4, 3.14]
+JOINT_POSITIONS = [0.0, -2.5, 1.5, -1.5, -1.4, 0.0]
+RANDOM_JOINT_OFFSET = [1.5, 0.25, 0.5, 1.0, 0.4, 3.14]
 # distance to target that need to be reached
 DISTANCE_THRESHOLD = 0.1
 class EndEffectorPositioningUR(URBaseEnv):
@@ -33,9 +33,11 @@ class EndEffectorPositioningUR(URBaseEnv):
         real_robot (bool): True if the environment is controlling a real robot.
 
     """
-    def __init__(self, rs_address=None, fix_base=False, fix_shoulder=False, fix_elbow=False, fix_wrist_1=False, fix_wrist_2=False, fix_wrist_3=True, ur_model='ur5', rs_state_to_info=True, **kwargs):
+    def __init__(self, rs_address=None, fix_base=False, fix_shoulder=False, fix_elbow=False, fix_wrist_1=False, fix_wrist_2=False, fix_wrist_3=True, ur_model='ur5', rs_state_to_info=True, restrict_wrist_1=True, **kwargs):
         super().__init__(rs_address, fix_base, fix_shoulder, fix_elbow, fix_wrist_1, fix_wrist_2, fix_wrist_3, ur_model, rs_state_to_info)
         
+        self.restrict_wrist_1 = restrict_wrist_1
+
         self.successful_ending = False
         self.last_position = np.zeros(6)
 
@@ -325,6 +327,27 @@ class EndEffectorPositioningUR(URBaseEnv):
 
         """
         return self.ur.get_random_workspace_pose()
+
+    def env_action_to_rs_action(self, action) -> np.array:
+        """Convert environment action to Robot Server action"""
+        rs_action = copy.deepcopy(action)
+
+        if self.restrict_wrist_1:
+            min_action = -1
+            max_action = 1
+            max_wrist1 = 0.31
+            min_wrist1 = -3.48
+            wrist1 = (((rs_action[3] - min_action) * (max_wrist1 - min_wrist1)) / (max_action- min_action)) + min_wrist1
+            # Scale action
+            rs_action = np.multiply(rs_action, self.abs_joint_pos_range)
+            rs_action[3] = wrist1
+            # Convert action indexing from ur to ros
+            rs_action = self.ur._ur_joint_list_to_ros_joint_list(rs_action)
+        else:
+            rs_action = super().env_action_to_rs_action(rs_action)
+
+        return rs_action
+
         
 class EndEffectorPositioningURSim(EndEffectorPositioningUR, Simulation):
     cmd = "roslaunch ur_robot_server ur_robot_server.launch \
