@@ -152,9 +152,8 @@ def test_success(env):
         _, _, done, info = env.step(action)    
     assert info['final_status'] == 'success'
 
-
 @pytest.mark.commit 
-def test_success(env):
+def test_continue_on_success(env):
     params = {
     'ur3': {'object_coords':[0.0, 0.194, 0.692, 0.0, 0.0, 0.0]},
     'ur3e': {'object_coords':[0.0, 0.223, 0.694, 0.0, 0.0, 0.0]},
