@@ -85,6 +85,15 @@ register(
     entry_point='robo_gym.envs:AvoidanceIros2021TestURRob',
 )
 
+register(
+    id='ReachAndAvoidURSim-v0',
+    entry_point='robo_gym.envs:ReachAndAvoidURSim',
+)
+
+register(
+    id='ReachAndAvoidURRob-v0',
+    entry_point='robo_gym.envs:ReachAndAvoidURRob',
+)
 
 
 
