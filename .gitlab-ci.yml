@@ -25,9 +25,9 @@ dummy:
     - /^docs.*$/
     
 .build_robo-gym_image: &build_robo-gym_image_def
-  image: docker:19.03
+  image: docker:18.09
   services:
-    - docker:19.03-dind
+    - docker:18.09-dind
   tags:
     - docker-executor
   stage: build
@@ -74,11 +74,11 @@ build_robo-gym_image_py39:
     - schedules
 
 .short_test_environments: &short_test_environments_def
-  image: docker:19.03
+  image: docker:18.09
   before_script:
   - apk add docker-compose
   services:
-    - docker:19.03-dind
+    - docker:18.09-dind
   tags:
     - docker-executor
   stage: test
@@ -133,11 +133,11 @@ short_test_environments_with_rs_manual_deploy:
   when: manual
 
 .full_test_environments: &full_test_environments_def
-  image: docker:19.03
+  image: docker:18.09
   before_script:
   - apk add docker-compose
   services:
-    - docker:19.03-dind
+    - docker:18.09-dind
   tags:
     - docker-executor
   stage: test
@@ -208,9 +208,9 @@ full_test_environments_py36_with_rs_manual_deploy:
   when: manual
 
 deploy_docker_image: 
-  image: docker:19.03
+  image: docker:18.09
   services:
-    - docker:19.03-dind
+    - docker:18.09-dind
   tags:
     - docker-executor
   stage: deploy
