@@ -58,14 +58,14 @@ class AvoidanceIros2021UR(URBaseAvoidanceEnv):
         
         float_params = {"object_0_x_min": -1.0, "object_0_x_max": 1.0, "object_0_y_min": -1.0, "object_0_y_max": 1.0, \
                         "object_0_z_min": 0.1, "object_0_z_max": 1.0, "object_0_n_points": 10, \
-                        "n_sampling_points": n_sampling_points}
+                        "object_0_n_sampling_points": n_sampling_points, "n_sampling_points": n_sampling_points}
         state = {}
 
         state_msg = robot_server_pb2.State(state = state, float_params = float_params, 
                                             string_params = string_params, state_dict = rs_state)
         return state_msg
 
-    def reset(self, fixed_object_position = None) -> np.array:
+    def reset(self, fixed_object_position = None) -> np.ndarray:
         """Environment reset.
 
         Args:
@@ -170,7 +170,7 @@ class AvoidanceIros2021UR(URBaseAvoidanceEnv):
             done = True
             info['final_status'] = 'collision'
 
-        if self.elapsed_steps >= self.max_episode_steps:
+        elif self.elapsed_steps >= self.max_episode_steps:
             done = True
             info['final_status'] = 'success'
         
@@ -179,7 +179,7 @@ class AvoidanceIros2021UR(URBaseAvoidanceEnv):
 
         return reward, done, info
 
-    def _robot_server_state_to_env_state(self, rs_state) -> np.array:
+    def _robot_server_state_to_env_state(self, rs_state) -> np.ndarray:
         """Transform state from Robot Server to environment format.
 
         Args:
@@ -222,7 +222,7 @@ class AvoidanceIros2021UR(URBaseAvoidanceEnv):
         return gym.spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
 
 
-    def _get_joint_positions(self) -> np.array:
+    def _get_joint_positions(self) -> np.ndarray:
         """Get robot joint positions with standard indexing."""
 
         if self.elapsed_steps_in_current_state < len(self.trajectory[self.state_n]):
@@ -235,7 +235,7 @@ class AvoidanceIros2021UR(URBaseAvoidanceEnv):
         
         return joint_positions
 
-    def _get_joint_positions_as_array(self) -> np.array:
+    def _get_joint_positions_as_array(self) -> np.ndarray:
         """Get robot joint positions with standard indexing."""
         joint_positions = self._get_joint_positions()
         temp = []

@@ -50,7 +50,7 @@ class ExampleEnv(gym.Env):
                                             string_params = string_params, state_dict = rs_state)
         return state_msg
 
-    def reset(self, position = None) -> np.array:
+    def reset(self, position = None) -> np.ndarray:
         """Environment reset.
 
         Args:
@@ -178,7 +178,7 @@ class ExampleEnv(gym.Env):
                 raise InvalidStateError("Robot Server state keys to not match")
 
 
-    def _robot_server_state_to_env_state(self, rs_state) -> np.array:
+    def _robot_server_state_to_env_state(self, rs_state) -> np.ndarray:
         """Transform state from Robot Server to environment format.
 
         Args:
