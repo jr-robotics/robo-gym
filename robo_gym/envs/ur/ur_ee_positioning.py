@@ -84,7 +84,7 @@ class EndEffectorPositioningUR(URBaseEnv):
         state_msg = robot_server_pb2.State(state = state, float_params = float_params, string_params = string_params, state_dict = rs_state)
         return state_msg
 
-    def _robot_server_state_to_env_state(self, rs_state) -> np.array:
+    def _robot_server_state_to_env_state(self, rs_state) -> np.ndarray:
         """Transform state from Robot Server to environment format.
 
         Args:
@@ -186,7 +186,7 @@ class EndEffectorPositioningUR(URBaseEnv):
         ]
         return rs_state_keys
 
-    def reset(self, joint_positions = JOINT_POSITIONS, ee_target_pose = None, randomize_start=False, continue_on_success=False) -> np.array:
+    def reset(self, joint_positions = JOINT_POSITIONS, ee_target_pose = None, randomize_start=False, continue_on_success=False) -> np.ndarray:
         """Environment reset.
 
         Args:
@@ -312,14 +312,14 @@ class EndEffectorPositioningUR(URBaseEnv):
             info['final_status'] = 'collision'
             info['target_coord'] = target_coord
 
-        if self.elapsed_steps >= self.max_episode_steps:
+        elif self.elapsed_steps >= self.max_episode_steps:
             done = True
             info['final_status'] = 'max_steps_exceeded'
             info['target_coord'] = target_coord
         
         return reward, done, info
 
-    def _get_target_pose(self) -> np.array:
+    def _get_target_pose(self) -> np.ndarray:
         """Generate target End Effector pose.
 
         Returns:
@@ -370,4 +370,4 @@ class EndEffectorPositioningURSim(EndEffectorPositioningUR, Simulation):
 class EndEffectorPositioningURRob(EndEffectorPositioningUR):
     real_robot = True
 
-# roslaunch ur_robot_server ur_robot_server.launch ur_model:=ur5 real_robot:=true rviz_gui:=true gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 rs_mode:=moving
+# roslaunch ur_robot_server ur_robot_server.launch ur_model:=ur5 real_robot:=true rviz_gui:=true gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 objects_controller:=true rs_mode:=1object n_objects:=1.0 object_0_frame:=target
