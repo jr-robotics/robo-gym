@@ -31,6 +31,7 @@ class EndEffectorPositioningURTrainingCurriculum(gym.Wrapper):
         return state
 
     def step(self, action):
+        self.previous_action = self.env.previous_action
         next_state, _, _, _ = self.env.step(action)
 
         action = self.env.add_fixed_joints(action)
@@ -46,7 +47,7 @@ class EndEffectorPositioningURTrainingCurriculum(gym.Wrapper):
         return next_state, reward, done, info
 
     def get_level(self):
-        level_thresholds = [50, 250, 500, 1000, 1500, 2500]
+        level_thresholds = [75, 250, 500, 1000, 1500, 2500]
         
         for i in range(len(level_thresholds)):
             if self.episode_counter < level_thresholds[i]:
@@ -113,6 +114,7 @@ class EndEffectorPositioningURTrainingCurriculum(gym.Wrapper):
 
 
     def reward(self, rs_state, action) -> Tuple[float, bool, dict]:
+        env_state = self.env._robot_server_state_to_env_state(rs_state)
         reward = 0
         done = False
         info = {}
@@ -128,7 +130,8 @@ class EndEffectorPositioningURTrainingCurriculum(gym.Wrapper):
         
         joint_velocities = np.array([rs_state['base_joint_velocity'], rs_state['shoulder_joint_velocity'], rs_state['elbow_joint_velocity'], rs_state['wrist_1_joint_velocity'], rs_state['wrist_2_joint_velocity'], rs_state['wrist_3_joint_velocity']]) 
 
-        previous_action = self.env.previous_action
+        previous_action = self.previous_action
+        
 
         # distance weight
         x = d_w * euclidean_dist_3d
