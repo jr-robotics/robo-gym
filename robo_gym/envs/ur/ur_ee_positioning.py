@@ -10,8 +10,8 @@ from robo_gym.envs.simulation_wrapper import Simulation
 from robo_gym.envs.ur.ur_base_env import URBaseEnv
 
 # base, shoulder, elbow, wrist_1, wrist_2, wrist_3
-JOINT_POSITIONS = [0.0, -2.5, 1.5, 0.0, -1.4, 0.0]
-RANDOM_JOINT_OFFSET = [0.65, 0.25, 0.5, 3.14, 0.4, 3.14]
+JOINT_POSITIONS = [0.0, -2.5, 1.5, -1.5, -1.4, 0.0]
+RANDOM_JOINT_OFFSET = [1.5, 0.25, 0.5, 1.0, 0.4, 3.14]
 # distance to target that need to be reached
 DISTANCE_THRESHOLD = 0.1
 class EndEffectorPositioningUR(URBaseEnv):
@@ -33,6 +33,13 @@ class EndEffectorPositioningUR(URBaseEnv):
         real_robot (bool): True if the environment is controlling a real robot.
 
     """
+    def __init__(self, rs_address=None, fix_base=False, fix_shoulder=False, fix_elbow=False, fix_wrist_1=False, fix_wrist_2=False, fix_wrist_3=True, ur_model='ur5', rs_state_to_info=True, restrict_wrist_1=True, **kwargs):
+        super().__init__(rs_address, fix_base, fix_shoulder, fix_elbow, fix_wrist_1, fix_wrist_2, fix_wrist_3, ur_model, rs_state_to_info)
+        
+        self.restrict_wrist_1 = restrict_wrist_1
+
+        self.successful_ending = False
+        self.last_position = np.zeros(6)
 
     def _get_observation_space(self) -> gym.spaces.Box:
         """Get environment observation space.
@@ -51,9 +58,18 @@ class EndEffectorPositioningUR(URBaseEnv):
         # Joint velocities range 
         max_joint_velocities = np.array([np.inf] * 6)
         min_joint_velocities = - np.array([np.inf] * 6)
+        # Cartesian coords of the target location
+        max_target_coord = np.array([np.inf] * 3)
+        min_target_coord = - np.array([np.inf] * 3)
+        # Cartesian coords of the end effector
+        max_ee_coord = np.array([np.inf] * 3)
+        min_ee_coord = - np.array([np.inf] * 3)
+        # Previous action
+        max_action = np.array([1.01] * 6)
+        min_action = - np.array([1.01] * 6)
         # Definition of environment observation_space
-        max_obs = np.concatenate((target_range, max_joint_positions, max_joint_velocities))
-        min_obs = np.concatenate((-target_range, min_joint_positions, min_joint_velocities))
+        max_obs = np.concatenate((target_range, max_joint_positions, max_joint_velocities, max_target_coord, max_ee_coord, max_action))
+        min_obs = np.concatenate((-target_range, min_joint_positions, min_joint_velocities, min_target_coord, min_ee_coord, min_action))
 
         return gym.spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
 
@@ -130,7 +146,7 @@ class EndEffectorPositioningUR(URBaseEnv):
 
 
         # Compose environment state
-        state = np.concatenate((target_polar, joint_positions, joint_velocities))
+        state = np.concatenate((target_polar, joint_positions, joint_velocities, target_coord, ee_to_ref_frame_translation, self.previous_action))
 
         return state
 
@@ -170,13 +186,14 @@ class EndEffectorPositioningUR(URBaseEnv):
         ]
         return rs_state_keys
 
-    def reset(self, joint_positions = JOINT_POSITIONS, ee_target_pose = None, randomize_start=False) -> np.ndarray:
+    def reset(self, joint_positions = JOINT_POSITIONS, ee_target_pose = None, randomize_start=False, continue_on_success=False) -> np.ndarray:
         """Environment reset.
 
         Args:
             joint_positions (list[6] or np.array[6]): robot joint positions in radians.
             ee_target_pose (list[6] or np.array[6]): [x,y,z,r,p,y] target end effector pose.
             randomize_start (bool): if True the starting position is randomized defined by the RANDOM_JOINT_OFFSET
+            continue_on_success (bool): if True the next robot will continue from it current position when last episode was a success
         """
         if joint_positions: 
             assert len(joint_positions) == 6
@@ -184,6 +201,7 @@ class EndEffectorPositioningUR(URBaseEnv):
             joint_positions = JOINT_POSITIONS
 
         self.elapsed_steps = 0
+        self.previous_action = np.zeros(6)
 
         # Initialize environment state
         state_len = self.observation_space.shape[0]
@@ -195,6 +213,10 @@ class EndEffectorPositioningUR(URBaseEnv):
             joint_positions_low = np.array(joint_positions) - np.array(RANDOM_JOINT_OFFSET) 
             joint_positions_high = np.array(joint_positions) + np.array(RANDOM_JOINT_OFFSET)
             joint_positions = np.random.default_rng().uniform(low=joint_positions_low, high=joint_positions_high)
+
+        # Continue from last position if last episode was a success
+        if self.successful_ending and continue_on_success:
+            joint_positions = self.last_position
 
         # Set initial robot joint positions
         self._set_joint_positions(joint_positions)
@@ -234,10 +256,41 @@ class EndEffectorPositioningUR(URBaseEnv):
             
         return state
 
+    def step(self, action) -> Tuple[np.array, float, bool, dict]:
+        if type(action) == list: action = np.array(action)
+        
+        state, reward, done, info = super().step(action)
+        self.previous_action = self.add_fixed_joints(action)
+
+        if done:
+            if info['final_status'] == 'success':
+                self.successful_ending = True
+
+                joint_positions = []
+                joint_positions_keys = ['base_joint_position', 'shoulder_joint_position', 'elbow_joint_position',
+                                        'wrist_1_joint_position', 'wrist_2_joint_position', 'wrist_3_joint_position']
+
+                for position in joint_positions_keys:
+                    joint_positions.append(self.rs_state[position])
+                joint_positions = np.array(joint_positions)
+                self.last_position = joint_positions
+
+
+        
+        return state, reward, done, info
+   
+
     def reward(self, rs_state, action) -> Tuple[float, bool, dict]:
         reward = 0
         done = False
         info = {}
+
+        # Reward weight for reaching the goal position
+        g_w = 2
+        # Reward weight for collision (ground, table or self)
+        c_w = -1
+        # Reward weight according to the distance to the goal
+        d_w = -0.005
 
         # Calculate distance to the target
         target_coord = np.array([rs_state['object_0_to_ref_translation_x'], rs_state['object_0_to_ref_translation_y'], rs_state['object_0_to_ref_translation_z']])
@@ -245,33 +298,16 @@ class EndEffectorPositioningUR(URBaseEnv):
         euclidean_dist_3d = np.linalg.norm(target_coord - ee_coord)
 
         # Reward base
-        reward = -1 * euclidean_dist_3d
-
-        # reward = reward + (-1/300)
-        
-        # Joint positions 
-        joint_positions = []
-        joint_positions_keys = ['base_joint_position', 'shoulder_joint_position', 'elbow_joint_position',
-                            'wrist_1_joint_position', 'wrist_2_joint_position', 'wrist_3_joint_position']
-        for position in joint_positions_keys:
-            joint_positions.append(rs_state[position])
-        joint_positions = np.array(joint_positions)
-        joint_positions_normalized = self.ur.normalize_joint_values(joint_positions)
-        
-        delta = np.abs(np.subtract(joint_positions_normalized, action))
-        # reward = reward - (0.05 * np.sum(delta))
+        reward += d_w * euclidean_dist_3d
 
         if euclidean_dist_3d <= DISTANCE_THRESHOLD:
-            reward = 100
+            reward = g_w * 1
             done = True
             info['final_status'] = 'success'
             info['target_coord'] = target_coord
-            
-        # Check if robot is in collision
-        collision = True if rs_state['in_collision'] == 1 else False
 
-        if collision:
-            reward = -400
+        if rs_state['in_collision']:
+            reward = c_w * 1
             done = True
             info['final_status'] = 'collision'
             info['target_coord'] = target_coord
@@ -291,13 +327,34 @@ class EndEffectorPositioningUR(URBaseEnv):
 
         """
         return self.ur.get_random_workspace_pose()
+
+    def env_action_to_rs_action(self, action) -> np.array:
+        """Convert environment action to Robot Server action"""
+        rs_action = copy.deepcopy(action)
+
+        if self.restrict_wrist_1:
+            min_action = -1
+            max_action = 1
+            max_wrist1 = 0.31
+            min_wrist1 = -3.48
+            wrist1 = (((rs_action[3] - min_action) * (max_wrist1 - min_wrist1)) / (max_action- min_action)) + min_wrist1
+            # Scale action
+            rs_action = np.multiply(rs_action, self.abs_joint_pos_range)
+            rs_action[3] = wrist1
+            # Convert action indexing from ur to ros
+            rs_action = self.ur._ur_joint_list_to_ros_joint_list(rs_action)
+        else:
+            rs_action = super().env_action_to_rs_action(rs_action)
+
+        return rs_action
+
         
 class EndEffectorPositioningURSim(EndEffectorPositioningUR, Simulation):
     cmd = "roslaunch ur_robot_server ur_robot_server.launch \
         world_name:=tabletop_sphere50_no_collision.world \
         reference_frame:=base_link \
-        max_velocity_scale_factor:=0.2 \
-        action_cycle_rate:=20 \
+        max_velocity_scale_factor:=0.1 \
+        action_cycle_rate:=10 \
         rviz_gui:=false \
         gazebo_gui:=true \
         objects_controller:=true \
