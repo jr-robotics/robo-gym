@@ -93,7 +93,7 @@ class UR():
                 joints[i] = joints[i]/abs(self.max_joint_positions[i])
         return joints
 
-    def get_random_workspace_pose(self):
+    def get_random_workspace_pose(self, min_z = 0.0):
         """Get pose of a random point in the robot workspace.
 
         Returns:
@@ -103,9 +103,10 @@ class UR():
         pose =  np.zeros(6)
 
         singularity_area = True
+        min_z_violated = True 
 
-        # check if generated x,y,z are in singularityarea
-        while singularity_area:
+        # check if generated x,y,z are in singularity area and z is greater than min_z
+        while singularity_area or min_z_violated:
             # Generate random uniform sample in semisphere taking advantage of the
             # sampling rule
 
@@ -122,6 +123,8 @@ class UR():
 
             if (x**2 + y**2) > self.ws_min_r**2:
                 singularity_area = False
+            if z >= min_z:
+                min_z_violated = False
 
         pose[0:3] = [x,y,z]
 
