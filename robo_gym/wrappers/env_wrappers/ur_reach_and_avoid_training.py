@@ -51,7 +51,7 @@ class ReachAndAvoidURTrainingCurriculum(gym.Wrapper):
         return next_state, reward, done, info
 
     def get_level(self):
-        level_thresholds = [75, 250, 500, 1000, 1500, 2500]
+        level_thresholds = [100, 250, 500, 1000, 1500, 2500]
         
         for i in range(len(level_thresholds)):
             if self.episode_counter < level_thresholds[i]:
@@ -81,8 +81,8 @@ class ReachAndAvoidURTrainingCurriculum(gym.Wrapper):
 
         if level == 1:
             # learn how to reach a target position
-            self.min_distance = 0.15
-            d_w = d_w * 1
+            self.min_distance = 0.20
+            d_w = d_w * 0.8
 
             # do not consider obstacle
             o_d_w = o_d_w * 0
@@ -96,7 +96,7 @@ class ReachAndAvoidURTrainingCurriculum(gym.Wrapper):
             v_w = v_w * 0
         if level == 2:
             # learn how to reach a target position
-            self.min_distance = 0.15
+            self.min_distance = 0.20
             d_w = d_w * 0
 
             # do not consider obstacle
@@ -111,7 +111,7 @@ class ReachAndAvoidURTrainingCurriculum(gym.Wrapper):
             v_w = v_w * 0
         if level == 3:
             # learn how to reach a target position
-            self.min_distance = 0.10
+            self.min_distance = 0.15
             d_w = d_w * 0
 
             # do not consider obstacle
@@ -193,6 +193,7 @@ class ReachAndAvoidURTrainingCurriculum(gym.Wrapper):
         reward = 0
         done = False
         info = {}
+        info['rs_state'] = self.env.rs_state
 
         level = self.get_level()
         g_w, c_w, d_w, s_w, a_w, v_w, o_d_w, o_c_w = self.get_weights(level)
@@ -270,5 +271,6 @@ class ReachAndAvoidURTrainingCurriculum(gym.Wrapper):
             done = True
             info['final_status'] = 'max_steps_exceeded'
             info['target_coord'] = target_coord
+
         
         return reward, done, info

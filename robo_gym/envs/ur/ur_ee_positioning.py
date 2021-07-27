@@ -14,6 +14,7 @@ JOINT_POSITIONS = [0.0, -2.5, 1.5, -1.5, -1.4, 0.0]
 RANDOM_JOINT_OFFSET = [1.5, 0.25, 0.5, 1.0, 0.4, 3.14]
 # distance to target that need to be reached
 DISTANCE_THRESHOLD = 0.1
+
 class EndEffectorPositioningUR(URBaseEnv):
     """Universal Robots UR end effector positioning environment.
 
@@ -253,7 +254,9 @@ class EndEffectorPositioningUR(URBaseEnv):
         for joint in self.joint_positions.keys():
             if not np.isclose(self.joint_positions[joint], rs_state[joint], atol=0.05):
                 raise InvalidStateError('Reset joint positions are not within defined range')
-            
+        
+        self.successful_ending = False
+
         return state
 
     def step(self, action) -> Tuple[np.array, float, bool, dict]:

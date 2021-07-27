@@ -91,7 +91,7 @@ class ReachAndAvoidUR(URBaseEnv):
                             "object_1_y": fixed_object_position[1], 
                             "object_1_z": fixed_object_position[2]}
         else: 
-            n_sampling_points = int(np.random.default_rng().uniform(low=8000, high=12000))
+            n_sampling_points = int(np.random.default_rng().uniform(low=16000, high=20000))
             
             string_params = {"object_0_function": "fixed_position", 
                             "object_1_function": "3d_spline_ur5_workspace"  }
@@ -306,6 +306,7 @@ class ReachAndAvoidUR(URBaseEnv):
             if not np.isclose(self.joint_positions[joint], rs_state[joint], atol=0.05):
                 raise InvalidStateError('Reset joint positions are not within defined range')
             
+        self.successful_ending = False
         return state
 
     def reward(self, rs_state, action) -> Tuple[float, bool, dict]:
