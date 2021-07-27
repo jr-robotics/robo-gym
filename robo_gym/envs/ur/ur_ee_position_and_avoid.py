@@ -374,7 +374,7 @@ class ReachAndAvoidUR(URBaseEnv):
             np.array: [x,y,z,alpha,theta,gamma] pose.
 
         """
-        return self.ur.get_random_workspace_pose()
+        return self.ur.get_random_workspace_pose(min_z=0.1)
 
 
 
