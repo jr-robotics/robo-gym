@@ -95,5 +95,12 @@ register(
     entry_point='robo_gym.envs:ReachAndAvoidURRob',
 )
 
+register(
+    id='ReachAndAvoidABURSim-v0',
+    entry_point='robo_gym.envs:ReachAndAvoidABURSim',
+)
 
-
+register(
+    id='ReachAndAvoidABURRob-v0',
+    entry_point='robo_gym.envs:ReachAndAvoidABURRob',
+)
