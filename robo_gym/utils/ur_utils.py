@@ -163,3 +163,42 @@ class UR():
         """
 
         return np.array([thetas[2],thetas[1],thetas[0],thetas[3],thetas[4],thetas[5]])
+
+    def get_random_pose_outside_workspace(self):
+        """Get pose of a random point outside the robot workspace.
+
+        Returns:
+            np.array: [x,y,z,alpha,theta,gamma] pose.
+
+        """
+        pose =  np.zeros(6)
+
+        # Pick a sphere radius greater than the workspace radius 
+        r = np.random.default_rng().uniform(low= self.ws_r, high= 2*self.ws_r)
+
+        v = np.random.normal(size = (3,1))
+        v = r /  np.linalg.norm(v) * v
+
+       
+        pose[0:3] = [v[0][0],v[1][0],v[2][0]]
+
+        return pose
+
+    def get_pose_close_to_pose(self, pose, min_dist=0.1, max_dist=0.5):
+        """Get pose close to given pose.
+
+        Args:
+            pose (np.ndarray): Initial pose 
+            min_dist (float, optional): Min distance from initial pose. Defaults to 0.1.
+            max_dist (float, optional): Max distance from initial pose. Defaults to 0.5.
+
+        Returns:
+            np.ndarray: [x,y,z,alpha,theta,gamma] pose.
+
+        """
+
+        r = np.random.default_rng().uniform(low= min_dist, high= max_dist)
+        v = np.random.normal(size = 3)
+        v = r /  np.linalg.norm(v) * v
+        
+        return (pose + np.concatenate((v, [0,0,0])))

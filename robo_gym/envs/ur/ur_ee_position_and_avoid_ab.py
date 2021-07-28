@@ -84,20 +84,31 @@ class ReachAndAvoidABUR(URBaseEnv):
         if fixed_object_position:
 
             hold_a = float(np.random.default_rng().uniform(low=5, high=10))
-            hold_b = 30
+            hold_b = float(np.random.default_rng().uniform(low=5, high=10))
+            hold_c = 30
+            b = self.ur.get_pose_close_to_pose(ee_target_pose)
+            c = self.ur.get_random_pose_outside_workspace()
+            n_sampling_points_ab = int(np.random.default_rng().uniform(low=500, high=1000))
+            n_sampling_points_bc = int(np.random.default_rng().uniform(low=1000, high=2000))
             string_params = {"object_0_function": "fixed_position", 
-                            "object_1_function": "fixed_position_ab"}
+                            "object_1_function": "interpolated_abc"}
             float_params = {"object_0_x": ee_target_pose[0], 
                             "object_0_y": ee_target_pose[1], 
                             "object_0_z": ee_target_pose[2],
                             "object_1_x_a": fixed_object_position[0], 
                             "object_1_y_a": fixed_object_position[1], 
                             "object_1_z_a": fixed_object_position[2],
-                            "object_1_x_b": 0.0, 
-                            "object_1_y_b": 0.0, 
-                            "object_1_z_b": 2.0,
+                            "object_1_x_b": b[0], 
+                            "object_1_y_b": b[1], 
+                            "object_1_z_b": b[2],
+                            "object_1_x_c": c[0], 
+                            "object_1_y_c": c[1], 
+                            "object_1_z_c": c[2],
                             "object_1_hold_a": hold_a,
-                            "object_1_hold_b": hold_b}
+                            "object_1_hold_b": hold_b,
+                            "object_1_hold_c": hold_c,
+                            "object_1_n_sampling_points_ab": n_sampling_points_ab,
+                            "object_1_n_sampling_points_bc": n_sampling_points_bc}
         else: 
             n_sampling_points = int(np.random.default_rng().uniform(low=8000, high=12000))
             
