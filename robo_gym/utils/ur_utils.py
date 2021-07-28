@@ -183,3 +183,22 @@ class UR():
         pose[0:3] = [v[0][0],v[1][0],v[2][0]]
 
         return pose
+
+    def get_pose_close_to_pose(self, pose, min_dist=0.1, max_dist=0.5):
+        """Get pose close to given pose.
+
+        Args:
+            pose (np.ndarray): Initial pose 
+            min_dist (float, optional): Min distance from initial pose. Defaults to 0.1.
+            max_dist (float, optional): Max distance from initial pose. Defaults to 0.5.
+
+        Returns:
+            np.ndarray: [x,y,z,alpha,theta,gamma] pose.
+
+        """
+
+        r = np.random.default_rng().uniform(low= min_dist, high= max_dist)
+        v = np.random.normal(size = 3)
+        v = r /  np.linalg.norm(v) * v
+        
+        return (pose + np.concatenate((v, [0,0,0])))
