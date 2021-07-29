@@ -64,7 +64,7 @@ class ReachAndAvoidStaticURTrainingCurriculum(gym.Wrapper):
         return next_state, reward, done, info
 
     def get_level(self):
-        level_thresholds = [100, 250, 500, 1000, 1500, 2500]
+        level_thresholds = [100, 250, 500, 1000, 1500, 2500, 4000]
         
         for i in range(len(level_thresholds)):
             if self.episode_counter < level_thresholds[i]:
@@ -84,7 +84,7 @@ class ReachAndAvoidStaticURTrainingCurriculum(gym.Wrapper):
         # obstacle distance weight
         o_d_w = -0.001
         # obstacle collision weight
-        o_c_w = -0.1
+        o_c_w = -1.2
         # punishment delta in two consecutive actions
         s_w = -0.0002
         # punishment for acting in general
@@ -94,7 +94,7 @@ class ReachAndAvoidStaticURTrainingCurriculum(gym.Wrapper):
 
         if level == 1:
             # learn how to reach a target position
-            self.min_distance = 0.20
+            self.min_distance = 0.15
             d_w = d_w * 0.8
 
             # do not consider obstacle
@@ -109,7 +109,7 @@ class ReachAndAvoidStaticURTrainingCurriculum(gym.Wrapper):
             v_w = v_w * 0
         if level == 2:
             # learn how to reach a target position
-            self.min_distance = 0.20
+            self.min_distance = 0.15
             d_w = d_w * 0
 
             # do not consider obstacle
@@ -124,7 +124,7 @@ class ReachAndAvoidStaticURTrainingCurriculum(gym.Wrapper):
             v_w = v_w * 0
         if level == 3:
             # learn how to reach a target position
-            self.min_distance = 0.15
+            self.min_distance = 0.10
             d_w = d_w * 0
 
             # do not consider obstacle
@@ -164,9 +164,9 @@ class ReachAndAvoidStaticURTrainingCurriculum(gym.Wrapper):
             self.obstacle_collision_distance = 0.30
 
             # no smoothness
-            s_w = s_w * 5
-            a_w = a_w * 5
-            v_w = v_w * 5
+            s_w = s_w * 1
+            a_w = a_w * 1
+            v_w = v_w * 1
         if level == 6:
             # learn how to reach a target position
             self.min_distance = 0.10
@@ -189,14 +189,30 @@ class ReachAndAvoidStaticURTrainingCurriculum(gym.Wrapper):
 
             # do not consider obstacle
             o_d_w = o_d_w * 0
-            o_c_w = o_c_w * 2
+            o_c_w = o_c_w * 1
             self.obstacle_distance_treshold = 0.5
             self.obstacle_collision_distance = 0.30
 
             # no smoothness
-            s_w = s_w * 10
-            a_w = a_w * 10
-            v_w = v_w * 10
+            s_w = s_w * 8
+            a_w = a_w * 8
+            v_w = v_w * 8
+
+        if level == 8:
+             # learn how to reach a target position
+            self.min_distance = 0.05
+            d_w = d_w * 0
+
+            # do not consider obstacle
+            o_d_w = o_d_w * 0
+            o_c_w = o_c_w * 1
+            self.obstacle_distance_treshold = 0.5
+            self.obstacle_collision_distance = 0.30
+
+            # no smoothness
+            s_w = s_w * 8
+            a_w = a_w * 8
+            v_w = v_w * 8
 
         return g_w, c_w, d_w, s_w, a_w, v_w, o_d_w, o_c_w
 
@@ -237,15 +253,6 @@ class ReachAndAvoidStaticURTrainingCurriculum(gym.Wrapper):
         reward += x
         self.reward_composition['obstacle_distance'] += x
 
-        # obstacle collision
-        if obstacle_distance < self.obstacle_collision_distance:
-            x = o_c_w * 1
-            print('obstacle distance')
-        else:
-            x = 0
-        reward += x
-        self.reward_composition['obstacle_collision']
-
         # smoothness 
         x = s_w * np.linalg.norm(action - previous_action)**2
         reward += x
@@ -259,6 +266,14 @@ class ReachAndAvoidStaticURTrainingCurriculum(gym.Wrapper):
         reward += x
         self.reward_composition['velocity_magnitude_weight'] += x
 
+        if obstacle_distance <= self.obstacle_collision_distance:
+            x = o_c_w * 1
+            reward += x
+            self.reward_composition['obstacle_collision']
+
+            done = True
+            info['final_status'] = 'collision'
+            info['target_coord'] = target_coord
 
         if euclidean_dist_3d <= self.min_distance:
             # goal reached
