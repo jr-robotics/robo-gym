@@ -48,6 +48,19 @@ class ReachAndAvoidStaticURTrainingCurriculum(gym.Wrapper):
             print(f'Episode counter: {self.episode_counter}   Current level: {self.get_level()}')
             print(self.reward_composition)
 
+        if done:
+            if info['final_status'] == 'success':
+                    self.env.successful_ending = True
+
+                    joint_positions = []
+                    joint_positions_keys = ['base_joint_position', 'shoulder_joint_position', 'elbow_joint_position',
+                                            'wrist_1_joint_position', 'wrist_2_joint_position', 'wrist_3_joint_position']
+
+                    for position in joint_positions_keys:
+                        joint_positions.append(self.rs_state[position])
+                    joint_positions = np.array(joint_positions)
+                    self.env.last_position = joint_positions
+
         return next_state, reward, done, info
 
     def get_level(self):
