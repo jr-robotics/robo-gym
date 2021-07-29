@@ -323,6 +323,7 @@ class ReachAndAvoidABUR(URBaseEnv):
             if not np.isclose(self.joint_positions[joint], rs_state[joint], atol=0.05):
                 raise InvalidStateError('Reset joint positions are not within defined range')
             
+        self.successful_ending = False
         return state
 
     def reward(self, rs_state, action) -> Tuple[float, bool, dict]:
