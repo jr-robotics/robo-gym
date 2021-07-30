@@ -13,7 +13,7 @@ from robo_gym.envs.ur.ur_base_env import URBaseEnv
 JOINT_POSITIONS = [0.0, -2.5, 1.5, -1.5, -1.4, 0.0]
 RANDOM_JOINT_OFFSET = [1.5, 0.25, 0.5, 1.0, 0.4, 3.14]
 # distance to target that need to be reached
-DISTANCE_THRESHOLD = 0.1
+DISTANCE_THRESHOLD = 0.08
 
 class EndEffectorPositioningUR(URBaseEnv):
     """Universal Robots UR end effector positioning environment.
@@ -187,7 +187,7 @@ class EndEffectorPositioningUR(URBaseEnv):
         ]
         return rs_state_keys
 
-    def reset(self, joint_positions = JOINT_POSITIONS, ee_target_pose = None, randomize_start=False, continue_on_success=False) -> np.ndarray:
+    def reset(self, joint_positions = JOINT_POSITIONS, ee_target_pose = None, randomize_start=False, continue_on_success=True) -> np.ndarray:
         """Environment reset.
 
         Args:
