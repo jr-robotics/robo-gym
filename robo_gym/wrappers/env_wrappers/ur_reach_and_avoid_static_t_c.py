@@ -210,7 +210,7 @@ class ReachAndAvoidStaticURTrainingCurriculum(gym.Wrapper):
             self.obstacle_collision_distance = 0.30
 
             # no smoothness
-            s_w = s_w * 8
+            s_w = s_w * 15
             a_w = a_w * 8
             v_w = v_w * 8
 
@@ -269,7 +269,7 @@ class ReachAndAvoidStaticURTrainingCurriculum(gym.Wrapper):
         if obstacle_distance <= self.obstacle_collision_distance:
             x = o_c_w * 1
             reward += x
-            self.reward_composition['obstacle_collision']
+            self.reward_composition['obstacle_collision'] = x
 
             done = True
             info['final_status'] = 'collision'
