@@ -87,6 +87,9 @@ class AvoidanceIros2021UR(URBaseAvoidanceEnv):
 
     def step(self, action) -> Tuple[np.array, float, bool, dict]:
         if type(action) == list: action = np.array(action)
+
+        action = action.astype(np.float32)
+        
         self.elapsed_steps_in_current_state += 1
         
         state, reward, done, info = super().step(action)
@@ -192,7 +195,7 @@ class AvoidanceIros2021UR(URBaseAvoidanceEnv):
 
         state = np.concatenate((state, trajectory_joint_position, [target_point_flag]))
 
-        return state
+        return state.astype(np.float32)
 
     def _get_observation_space(self) -> gym.spaces.Box:
         """Get environment observation space."""

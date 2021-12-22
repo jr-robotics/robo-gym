@@ -178,6 +178,8 @@ class URBaseEnv(gym.Env):
 
     def step(self, action) -> Tuple[np.array, float, bool, dict]:
         if type(action) == list: action = np.array(action)
+
+        action = action.astype(np.float32)
             
         self.elapsed_steps += 1
 
@@ -330,7 +332,7 @@ class URBaseEnv(gym.Env):
         # Compose environment state
         state = np.concatenate((joint_positions, joint_velocities))
 
-        return state
+        return state.astype(np.float32)
 
 
     def _get_observation_space(self) -> gym.spaces.Box:
