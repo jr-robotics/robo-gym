@@ -269,7 +269,7 @@ class Mir100Env(gym.Env):
             # Compose environment state
             state = np.concatenate((np.array([polar_r, polar_theta]),rs_state[6:8]))
 
-        return state
+        return state.astype(np.float32)
 
     def _get_observation_space(self):
         """Get environment observation space.

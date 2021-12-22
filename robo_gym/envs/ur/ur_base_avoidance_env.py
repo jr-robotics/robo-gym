@@ -196,8 +196,7 @@ class URBaseAvoidanceEnv(URBaseEnv):
         else:
             state = np.concatenate((object_polar, joint_positions, delta_joints, np.zeros(3)))
 
-        return state
-    
+        return state.astype(np.float32)
 
     def _get_observation_space(self) -> gym.spaces.Box:
         """Get environment observation space.
