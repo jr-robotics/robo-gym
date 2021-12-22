@@ -178,6 +178,8 @@ class URBaseEnv(gym.Env):
 
     def step(self, action) -> Tuple[np.array, float, bool, dict]:
         if type(action) == list: action = np.array(action)
+
+        action = action.astype(np.float32)
             
         self.elapsed_steps += 1
 

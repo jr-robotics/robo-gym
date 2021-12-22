@@ -258,6 +258,8 @@ class EndEffectorPositioningUR(URBaseEnv):
 
     def step(self, action) -> Tuple[np.array, float, bool, dict]:
         if type(action) == list: action = np.array(action)
+
+        action = action.astype(np.float32)
         
         state, reward, done, info = super().step(action)
         self.previous_action = self.add_fixed_joints(action)
