@@ -63,7 +63,7 @@ class BasicAvoidanceUR(URBaseAvoidanceEnv):
         return state_msg
 
 
-    def reset(self, joint_positions = JOINT_POSITIONS, fixed_object_position = None) -> np.array:
+    def reset(self, joint_positions = JOINT_POSITIONS, fixed_object_position = None) -> np.ndarray:
         """Environment reset.
 
         Args:
@@ -125,7 +125,7 @@ class BasicAvoidanceUR(URBaseAvoidanceEnv):
             info['target_coord'] = obstacle_coord
             self.last_position_on_success = []
 
-        if self.elapsed_steps >= self.max_episode_steps:
+        elif self.elapsed_steps >= self.max_episode_steps:
             done = True
             info['final_status'] = 'success'
             info['target_coord'] = obstacle_coord

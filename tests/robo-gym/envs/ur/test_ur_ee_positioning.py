@@ -91,7 +91,8 @@ def test_object_coordinates(env):
    }
 
    state = env.reset(joint_positions=params[env.ur.model]['joint_positions'], ee_target_pose=params[env.ur.model]['object_coords'])
-   assert np.isclose([params[env.ur.model]['polar_coords']['r'], params[env.ur.model]['polar_coords']['theta'], params[env.ur.model]['polar_coords']['phi']], state[0:3], atol=0.1).all()
+   assert np.isclose([params[env.ur.model]['polar_coords']['r']], state[0], atol=0.05).all()
+   assert np.isclose([params[env.ur.model]['polar_coords']['theta'], params[env.ur.model]['polar_coords']['phi']], state[1:3], atol=0.2).all()
    
 
 test_ur_fixed_joints = [
@@ -151,3 +152,34 @@ def test_success(env):
     while not done:
         _, _, done, info = env.step(action)    
     assert info['final_status'] == 'success'
+
+@pytest.mark.commit 
+def test_continue_on_success(env):
+    params = {
+    'ur3': {'object_coords':[0.0, 0.194, 0.692, 0.0, 0.0, 0.0]},
+    'ur3e': {'object_coords':[0.0, 0.223, 0.694, 0.0, 0.0, 0.0]},
+    'ur5': {'object_coords':[0.0, 0.191, 1.001, 0.0, 0.0, 0.0]},   
+    'ur5e': {'object_coords':[0.0, 0.233, 1.079, 0.0, 0.0, 0.0]}, 
+    'ur10': {'object_coords':[0.0, 0.256, 1.428, 0.0, 0.0, 0.0]}, 
+    'ur10e': {'object_coords':[0.0, 0.291, 1.485, 0.0, 0.0, 0.0]},  
+    'ur16e': {'object_coords':[0.0, 0.291, 1.139, 0.0, 0.0, 0.0]}
+    }
+
+    env.reset(joint_positions=[0.0, -1.3, 0.0, -1.3, 0.0, 0.0], ee_target_pose=params[env.ur.model]['object_coords'])
+    action = env.ur.normalize_joint_values([0.0, -1.57, 0.0, -1.57, 0.0])
+    done = False
+    while not done:
+        state, _, done, info = env.step(action) 
+    assert info['final_status'] == 'success'    
+    
+    joint_positions = state[3:9]
+    state = env.reset(continue_on_success=True)
+    assert np.isclose(joint_positions, state[3:9], atol=0.05).all()
+
+    
+    
+
+
+
+
+
