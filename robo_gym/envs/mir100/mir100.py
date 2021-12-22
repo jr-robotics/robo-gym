@@ -119,6 +119,9 @@ class Mir100Env(gym.Env):
         return 0, False, {}
 
     def step(self, action):
+        
+        action = action.astype(np.float32)
+
         self.elapsed_steps += 1
 
         # Check if the action is within the action space
