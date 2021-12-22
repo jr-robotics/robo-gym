@@ -330,7 +330,7 @@ class URBaseEnv(gym.Env):
         # Compose environment state
         state = np.concatenate((joint_positions, joint_velocities))
 
-        return state
+        return state.astype(np.float32)
 
 
     def _get_observation_space(self) -> gym.spaces.Box:

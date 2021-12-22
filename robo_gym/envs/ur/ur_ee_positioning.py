@@ -148,7 +148,7 @@ class EndEffectorPositioningUR(URBaseEnv):
         # Compose environment state
         state = np.concatenate((target_polar, joint_positions, joint_velocities, target_coord, ee_to_ref_frame_translation, self.previous_action))
 
-        return state
+        return state.astype(np.float32)
 
     def get_robot_server_composition(self) -> list:
         rs_state_keys = [
