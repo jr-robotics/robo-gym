@@ -17,8 +17,8 @@ from robo_gym.envs.ur.ur_base_avoidance_env import URBaseAvoidanceEnv
 DEBUG = True
 MINIMUM_DISTANCE = 0.45 # the distance [cm] the robot should keep to the obstacle
 
-class AvoidanceIros2021UR(URBaseAvoidanceEnv):
-    """Universal Robots UR IROS environment. Obstacle avoidance while keeping a fixed trajectory.
+class AvoidanceRaad2022UR(URBaseAvoidanceEnv):
+    """Universal Robots UR RAAD environment. Obstacle avoidance while keeping a fixed trajectory.
 
     Args:
         rs_address (str): Robot Server address. Formatted as 'ip:port'. Defaults to None.
@@ -42,7 +42,7 @@ class AvoidanceIros2021UR(URBaseAvoidanceEnv):
     def __init__(self, rs_address=None, fix_base=False, fix_shoulder=False, fix_elbow=False, fix_wrist_1=False, fix_wrist_2=False, fix_wrist_3=True, ur_model='ur5', include_polar_to_elbow=True, rs_state_to_info=True, **kwargs) -> None:
         super().__init__(rs_address, fix_base, fix_shoulder, fix_elbow, fix_wrist_1, fix_wrist_2, fix_wrist_3, ur_model, include_polar_to_elbow)
 
-        file_name = 'trajectory_iros_2021.json'
+        file_name = 'trajectory_raad_2022.json'
         file_path = os.path.join(os.path.dirname(__file__), 'robot_trajectories', file_name)
         with open(file_path) as json_file:
             self.trajectory = json.load(json_file)['trajectory']
@@ -250,7 +250,7 @@ class AvoidanceIros2021UR(URBaseAvoidanceEnv):
         temp.append(joint_positions[5])
         return np.array(temp)
 
-class AvoidanceIros2021URSim(AvoidanceIros2021UR, Simulation):
+class AvoidanceRaad2022URSim(AvoidanceRaad2022UR, Simulation):
     cmd = "roslaunch ur_robot_server ur_robot_server.launch \
         world_name:=tabletop_sphere50.world \
         reference_frame:=base_link \
@@ -266,9 +266,9 @@ class AvoidanceIros2021URSim(AvoidanceIros2021UR, Simulation):
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, ur_model='ur5', **kwargs):
         self.cmd = self.cmd + ' ' + 'ur_model:=' + ur_model
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
-        AvoidanceIros2021UR.__init__(self, rs_address=self.robot_server_ip, ur_model=ur_model, **kwargs)
+        AvoidanceRaad2022UR.__init__(self, rs_address=self.robot_server_ip, ur_model=ur_model, **kwargs)
 
-class AvoidanceIros2021URRob(AvoidanceIros2021UR):
+class AvoidanceRaad2022URRob(AvoidanceRaad2022UR):
     real_robot = True
 
 # roslaunch ur_robot_server ur_robot_server.launch ur_model:=ur5 real_robot:=true rviz_gui:=true gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 rs_mode:=1moving2points n_objects:=1.0 object_0_frame:=target
@@ -279,7 +279,7 @@ class AvoidanceIros2021URRob(AvoidanceIros2021UR):
 Testing Environment for more complex obstacle avoidance controlling a robotic arm from UR.
 In contrast to the training environment the obstacle trajectories are fixed instead of random generation.
 """
-class AvoidanceIros2021TestUR(AvoidanceIros2021UR):
+class AvoidanceRaad2022TestUR(AvoidanceRaad2022UR):
     ep_n = 0 
 
     def _set_initial_robot_server_state(self, rs_state, fixed_object_position = None) -> robot_server_pb2.State:
@@ -302,7 +302,7 @@ class AvoidanceIros2021TestUR(AvoidanceIros2021UR):
 
         return state
 
-class AvoidanceIros2021TestURSim(AvoidanceIros2021TestUR, Simulation):
+class AvoidanceRaad2022TestURSim(AvoidanceRaad2022TestUR, Simulation):
     cmd = "roslaunch ur_robot_server ur_robot_server.launch \
         world_name:=tabletop_sphere50.world \
         reference_frame:=base_link \
@@ -319,9 +319,9 @@ class AvoidanceIros2021TestURSim(AvoidanceIros2021TestUR, Simulation):
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, ur_model='ur5', **kwargs):
         self.cmd = self.cmd + ' ' + 'ur_model:=' + ur_model
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
-        AvoidanceIros2021TestUR.__init__(self, rs_address=self.robot_server_ip, ur_model=ur_model, **kwargs)
+        AvoidanceRaad2022TestUR.__init__(self, rs_address=self.robot_server_ip, ur_model=ur_model, **kwargs)
 
-class AvoidanceIros2021TestURRob(AvoidanceIros2021TestUR):
+class AvoidanceRaad2022TestURRob(AvoidanceRaad2022TestUR):
     real_robot = True
 
 # roslaunch ur_robot_server ur_robot_server.launch ur_model:=ur5 real_robot:=true rviz_gui:=true gui:=true reference_frame:=base max_velocity_scale_factor:=0.2 action_cycle_rate:=20 rs_mode:=1moving2points n_objects:=1.0 object_0_frame:=target

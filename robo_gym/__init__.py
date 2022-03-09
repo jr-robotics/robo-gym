@@ -66,23 +66,23 @@ register(
 )
 
 register(
-    id='AvoidanceIros2021URSim-v0',
-    entry_point='robo_gym.envs:AvoidanceIros2021URSim',
+    id='AvoidanceRaad2022URSim-v0',
+    entry_point='robo_gym.envs:AvoidanceRaad2022URSim',
 )
 
 register(
-    id='AvoidanceIros2021URRob-v0',
-    entry_point='robo_gym.envs:AvoidanceIros2021URRob',
+    id='AvoidanceRaad2022URRob-v0',
+    entry_point='robo_gym.envs:AvoidanceRaad2022URRob',
 )
 
 register(
-    id='AvoidanceIros2021TestURSim-v0',
-    entry_point='robo_gym.envs:AvoidanceIros2021TestURSim',
+    id='AvoidanceRaad2022TestURSim-v0',
+    entry_point='robo_gym.envs:AvoidanceRaad2022TestURSim',
 )
 
 register(
-    id='AvoidanceIros2021TestURRob-v0',
-    entry_point='robo_gym.envs:AvoidanceIros2021TestURRob',
+    id='AvoidanceRaad2022TestURRob-v0',
+    entry_point='robo_gym.envs:AvoidanceRaad2022TestURRob',
 )
 
 
