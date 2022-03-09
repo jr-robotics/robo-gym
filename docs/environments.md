@@ -9,8 +9,8 @@ For information on creating your own environment, see [Creating Environments](cr
   - [Empty Environment](#empty-environment)
   - [End Effector Positioning](#end-effector-positioning)
   - [Basic Avoidance](#basic-avoidance)
-  - [Avoidance IROS 2021](#avoidance-iros-2021)
-  - [Avoidance IROS 2021 Test](#avoidance-iros-2021-test)
+  - [Avoidance RAAD 2022](#avoidance-raad-2022)
+  - [Avoidance RAAD 2022 Test](#avoidance-raad-2022-test)
 - [Mobile Industrial Robots Mir100](#mobile-industrial-robots-mir100)
   - [No Obstacle Navigation](#no-obstacle-navigation)
   - [Obstacle Avoidance](#obstacle-avoidance)
@@ -83,18 +83,18 @@ The environment state includes: the 3D polar coordinates of the obstacle with re
 An action in the environment consists in normalized joint position deltas from the initial joint configuration. 
 
 
-## Avoidance IROS 2021
+## Avoidance RAAD 2022
 
 ```python
 # simulated robot environment
-env = gym.make('AvoidanceIros2021URSim-v0', ur_model='ur5', ip='<server_manager_address>')
+env = gym.make('AvoidanceRaad2022URSim-v0', ur_model='ur5', ip='<server_manager_address>')
 # real robot environment
-env = gym.make('AvoidanceIros2021URRob-v0', ur_model='ur5', rs_address='<robot_server_address>')
+env = gym.make('AvoidanceRaad2022URRob-v0', ur_model='ur5', rs_address='<robot_server_address>')
 ```
 
 <img src="https://user-images.githubusercontent.com/36470989/118246176-ed5d9680-b4a1-11eb-8b1f-efc23c8bec6a.gif" width="200" height="200">
 
-Environment used in our Paper Submission to IROS 2021. 
+Environment used in our Paper Submission to RAAD 2022. 
 
 The goal in this environment is for the robotic arm to keep a minimum distance (calculated from end effector and the elbow) to an obstacle moving following 3D splines generated in the robot working area while keeping as close as possible to the pre-configured robot trajectory. 
 
@@ -103,16 +103,16 @@ The environment state includes: the 3D polar coordinates of the obstacle with re
 An action in the environment consists in normalized joint position deltas from the trajectory joint configuration. 
 
 
-## Avoidance IROS 2021 Test
+## Avoidance RAAD 2022 Test
 
 ```python
 # simulated robot environment
-env = gym.make('AvoidanceIros2021TestURSim-v0', ur_model='ur5', ip='<server_manager_address>')
+env = gym.make('AvoidanceRaad2022TestURSim-v0', ur_model='ur5', ip='<server_manager_address>')
 # real robot environment
-env = gym.make('AvoidanceIros2021TestURRob-v0', ur_model='ur5', rs_address='<robot_server_address>')
+env = gym.make('AvoidanceRaad2022TestURRob-v0', ur_model='ur5', rs_address='<robot_server_address>')
 ```
 
-Same as [Avoidance IROS 2021](#avoidance-iros-2021) but using a fixed set of 3D splines as obstacles trajectories. 
+Same as [Avoidance RAAD 2022](#avoidance-raad-2022) but using a fixed set of 3D splines as obstacles trajectories. 
 
 # Mobile Industrial Robots Mir100
 

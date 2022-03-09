@@ -20,7 +20,7 @@ ur_models = [pytest.param('ur3', marks=pytest.mark.skip(reason='not implemented 
 
 @pytest.fixture(scope='module', params=ur_models)
 def env(request):
-    env = gym.make('AvoidanceIros2021URSim-v0', ip='robot-servers', ur_model=request.param)
+    env = gym.make('AvoidanceRaad2022URSim-v0', ip='robot-servers', ur_model=request.param)
     env.request_param = request.param
     yield env
     env.kill_sim()
@@ -66,7 +66,7 @@ def test_object_coordinates(env):
 @pytest.mark.commit    
 def test_robot_trajectory(env):
     params = {
-    'ur5': {'traj_relative_path':'envs/ur/robot_trajectories/trajectory_iros_2021.json'}  
+    'ur5': {'traj_relative_path':'envs/ur/robot_trajectories/trajectory_raad_2022.json'}  
     }
 
     env.reset()
@@ -95,8 +95,8 @@ def test_robot_trajectory(env):
 
 
 test_ur_fixed_joints = [
-    ('AvoidanceIros2021URSim-v0', False, False, False, False, False, True, 'ur5'), # fixed wrist_3
-    ('AvoidanceIros2021URSim-v0', True, False, True, False, False, False, 'ur5'), # fixed Base and Elbow
+    ('AvoidanceRaad2022URSim-v0', False, False, False, False, False, True, 'ur5'), # fixed wrist_3
+    ('AvoidanceRaad2022URSim-v0', True, False, True, False, False, False, 'ur5'), # fixed Base and Elbow
 ]
 
 @pytest.mark.nightly
