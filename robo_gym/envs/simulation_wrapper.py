@@ -45,3 +45,6 @@ class Simulation:
         self.kill_sim()
         self._start_sim()
         self.client = rs_client.Client(self.robot_server_ip)
+
+    def __del__(self):
+        self.kill_sim()
