@@ -36,6 +36,7 @@ class Mir100Env(gym.Env):
 
     def __init__(self, rs_address=None, **kwargs):
 
+        self.state = None
         self.mir100 = mir100_utils.Mir100()
         self.elapsed_steps = 0
         self.observation_space = self._get_observation_space()
@@ -132,11 +133,12 @@ class Mir100Env(gym.Env):
         # Scale action
         rs_action = np.multiply(action, self.max_vel)
         # Send action to Robot Server
-        if not self.client.send_action(rs_action.tolist()):
+
+        try:
+            rs_state = self.client.send_action_get_state(rs_action)
+        except Exception:
             raise RobotServerError("send_action")
 
-        # Get state from Robot Server
-        rs_state = self.client.get_state_msg().state
         # Convert the state from Robot Server format to environment format
         self.state = self._robot_server_state_to_env_state(rs_state)
 
