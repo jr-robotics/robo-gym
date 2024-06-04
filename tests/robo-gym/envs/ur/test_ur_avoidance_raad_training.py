@@ -1,4 +1,4 @@
-import gym
+import gymnasium as gym
 import robo_gym
 import math
 import numpy as np 
@@ -34,7 +34,7 @@ def test_initialization(env):
     for _ in range(10):
         if not done:
             action = env.action_space.sample()
-            observation, _, done, _ = env.step(action)
+            observation, _, done, _, _ = env.step(action)
 
     assert env.observation_space.contains(observation)
 
@@ -45,11 +45,11 @@ def test_object_collision(env):
        'ur5': {'object_coords':[-0.2, -0.1, 0.5], 'n_steps': 250},
    }
    
-   env.reset(fixed_object_position=params[env.ur.model]['object_coords'])
+   env.reset(options={"fixed_object_position": params[env.ur.model]['object_coords']})
    done = False
    i = 0
    while (not done) or i<=params[env.ur.model]['n_steps'] :
-       _, _, done, info = env.step(np.zeros(5))
+       _, _, done, _, info = env.step(np.zeros(5))
        i += 1
    assert info['final_status'] == 'collision'
 
@@ -59,7 +59,7 @@ def test_object_coordinates(env):
    'ur5': {'object_coords':[0.3, 0.1, 1.0, 0.0, 0.0, 0.0], 'polar_coords_ee':{'r': 0.980, 'theta': 2.488, 'phi': 1.246}, 'polar_coords_forearm':{'r': 0.607, 'theta': 1.023, 'phi': -0.825}}  
    }
 
-   state = env.reset(fixed_object_position=params[env.ur.model]['object_coords'])
+   state = env.reset(options={"fixed_object_position": params[env.ur.model]['object_coords']})
    assert np.isclose([params[env.ur.model]['polar_coords_ee']['r'], params[env.ur.model]['polar_coords_ee']['theta'], params[env.ur.model]['polar_coords_ee']['phi']], state[0:3], atol=0.1).all()
    assert np.isclose([params[env.ur.model]['polar_coords_forearm']['r'], params[env.ur.model]['polar_coords_forearm']['theta'], params[env.ur.model]['polar_coords_forearm']['phi']], state[15:18], atol=0.1).all()
 
@@ -78,7 +78,7 @@ def test_robot_trajectory(env):
     action = np.zeros(5)
     for i in range(len(trajectory[0])):
         traj_joint_positions = trajectory[0][i]
-        state, _, _, _ = env.step(action)
+        state, _, _, _, _ = env.step(action)
         ur_j_pos_norm = state[3:9]
         delta_joints = state[9:15]
         desired_joints = state[18:24]
@@ -90,7 +90,7 @@ def test_robot_trajectory(env):
     assert state[24] == 1.0
     # check that state machine has transitioned to segment 1 of trajectory 
     traj_joint_positions = trajectory[1][0]
-    state, _, _, _ = env.step(action)
+    state, _, _, _, _ = env.step(action)
     assert np.isclose(env.ur.normalize_joint_values(traj_joint_positions), state[3:9], atol=0.1).all()
 
 
@@ -110,7 +110,7 @@ def test_fixed_joints(env_name, fix_base, fix_shoulder, fix_elbow, fix_wrist_1, 
     # Take 20 actions
     action = env.action_space.sample()
     for _ in range(20):
-        state, _, _, _ = env.step(action)
+        state, _, _, _, _ = env.step(action)
     joint_positions = state[3:9]
 
     if fix_base:

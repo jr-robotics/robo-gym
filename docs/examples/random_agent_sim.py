@@ -1,4 +1,4 @@
-import gym
+import gymnasium as gym
 import robo_gym
 from robo_gym.wrappers.exception_handling import ExceptionHandling
 
@@ -15,4 +15,5 @@ for episode in range(num_episodes):
     env.reset()
     while not done:
         # random step in the environment
-        state, reward, done, info = env.step(env.action_space.sample())
+        state, reward, terminated, truncated, info = env.step(env.action_space.sample())
+        done = terminated or truncated

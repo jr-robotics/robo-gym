@@ -1,4 +1,4 @@
-import gym
+import gymnasium as gym
 import robo_gym
 import math
 import numpy as np 
@@ -29,7 +29,7 @@ def test_initialization(env):
     for _ in range(10):
         if not done:
             action = env.action_space.sample()
-            observation, _, done, _ = env.step(action)
+            observation, _, done, _, _ = env.step(action)
 
     assert env.observation_space.contains(observation)
 
@@ -47,7 +47,7 @@ def test_self_collision(env):
     action = env.ur.normalize_joint_values(collision_joint_config[env.ur.model])
     done = False
     while not done:
-        _, _, done, info = env.step(action)    
+        _, _, done, _, info = env.step(action)
     assert info['final_status'] == 'collision'
 
 @pytest.mark.nightly
@@ -64,7 +64,7 @@ def test_collision_with_ground(env):
     action = env.ur.normalize_joint_values(collision_joint_config[env.ur.model])
     done = False
     while not done:
-        _, _, done, info = env.step(action)    
+        _, _, done, _, info = env.step(action)
     assert info['final_status'] == 'collision'
 
 @pytest.mark.nightly    
@@ -116,7 +116,7 @@ def test_fixed_joints(env_name, fix_base, fix_shoulder, fix_elbow, fix_wrist_1, 
     # Take 20 actions
     action = env.action_space.sample()
     for _ in range(20):
-        state, _, _, _ = env.step(action)
+        state, _, _, _, _ = env.step(action)
     joint_positions = state[3:9]
 
     if fix_base:
@@ -150,7 +150,7 @@ def test_success(env):
     action = env.ur.normalize_joint_values([0.0, -1.57, 0.0, -1.57, 0.0])
     done = False
     while not done:
-        _, _, done, info = env.step(action)    
+        _, _, done, _, info = env.step(action)
     assert info['final_status'] == 'success'
 
 @pytest.mark.commit 
@@ -165,15 +165,15 @@ def test_continue_on_success(env):
     'ur16e': {'object_coords':[0.0, 0.291, 1.139, 0.0, 0.0, 0.0]}
     }
 
-    env.reset(joint_positions=[0.0, -1.3, 0.0, -1.3, 0.0, 0.0], ee_target_pose=params[env.ur.model]['object_coords'])
+    env.reset(options={"joint_positions": [0.0, -1.3, 0.0, -1.3, 0.0, 0.0], "ee_target_pose": params[env.ur.model]['object_coords']})
     action = env.ur.normalize_joint_values([0.0, -1.57, 0.0, -1.57, 0.0])
     done = False
     while not done:
-        state, _, done, info = env.step(action) 
+        state, _, done, _, info = env.step(action)
     assert info['final_status'] == 'success'    
     
     joint_positions = state[3:9]
-    state = env.reset(continue_on_success=True)
+    state = env.reset(options={"continue_on_success": True})
     assert np.isclose(joint_positions, state[3:9], atol=0.05).all()
 
     

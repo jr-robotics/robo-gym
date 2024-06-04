@@ -20,7 +20,7 @@ setuptools.setup(name='robo-gym',
           'Programming Language :: Python :: 3.9',
       ],
       install_requires=[
-      'gym',
+      'gymnasium',
       'robo-gym-server-modules',
       'numpy',
       'scipy',

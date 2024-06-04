@@ -1,4 +1,4 @@
-import gym
+import gymnasium as gym
 import robo_gym
 import pytest
 
@@ -15,6 +15,6 @@ def test_initialization(env):
     for _ in range(10):
         if not done:
             action = env.action_space.sample()
-            observation, _, done, _ = env.step(action)
+            observation, _, done, _, _ = env.step(action)
 
     assert env.observation_space.contains(observation)
