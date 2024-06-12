@@ -200,7 +200,8 @@ class EndEffectorPositioningUR(URBaseEnv):
                 dict: info
 
         """
-        super(gym.Env).reset(seed=seed, options=options)
+        super(URBaseEnv, self).reset(seed=seed, options=options)
+
         if options is None:
             options = {}
         joint_positions = options["joint_positions"] if "joint_positions" in options else None
@@ -272,8 +273,8 @@ class EndEffectorPositioningUR(URBaseEnv):
         if type(action) == list: action = np.array(action)
 
         action = action.astype(np.float32)
-        
-        state, reward, done, info = super().step(action)
+
+        state, reward, done, truncated, info = super().step(action)
         self.previous_action = self.add_fixed_joints(action)
 
         if done:
@@ -291,7 +292,7 @@ class EndEffectorPositioningUR(URBaseEnv):
 
 
         
-        return state, reward, done, False, info
+        return state, reward, done, truncated, info
    
 
     def reward(self, rs_state, action) -> Tuple[float, bool, dict]:
