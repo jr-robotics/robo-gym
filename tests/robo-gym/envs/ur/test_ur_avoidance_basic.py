@@ -1,3 +1,5 @@
+import os
+
 import gymnasium as gym
 import robo_gym
 import math
@@ -15,7 +17,8 @@ ur_models = [pytest.param('ur3', marks=pytest.mark.nightly), \
 
 @pytest.fixture(scope='module', params=ur_models)
 def env(request):
-    env = gym.make('BasicAvoidanceURSim-v0', ip='robot-servers', ur_model=request.param)
+    ip = os.environ.get("ROBOGYM_SERVERS_HOST", 'robot-servers')
+    env = gym.make('BasicAvoidanceURSim-v0', ip=ip, ur_model=request.param)
     env.request_param = request.param
     yield env
     env.kill_sim()

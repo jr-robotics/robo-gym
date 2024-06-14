@@ -1,10 +1,13 @@
+import os
+
 import gymnasium as gym
 import robo_gym
 import pytest
 
 @pytest.fixture(scope='module')
 def env(request):
-    env = gym.make('NoObstacleNavigationMir100Sim-v0', ip='robot-servers')
+    ip = os.environ.get("ROBOGYM_SERVERS_HOST", 'robot-servers')
+    env = gym.make('NoObstacleNavigationMir100Sim-v0', ip=ip)
     yield env
     env.kill_sim()
 
