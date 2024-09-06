@@ -15,7 +15,7 @@
 ``robo-gym`` provides a collection of reinforcement learning environments involving robotic tasks applicable in both simulation and real world robotics. Additionally, we provide the tools to facilitate the creation of new environments featuring different robots and sensors.
 
 Main features :
-- [OpenAI Gym](https://gym.openai.com) interface for all the environments
+- [Gymnasium](https://gymnasium.farama.org/) interface for all the environments
 - **simulated** and **real** robots interchangeability, which enables a seamless transfer from training in simulation to application on the real robot.
 - built-in **distributed** capabilities, which enable the use of distributed algorithms and distributed hardware
 - based only on **open source** software, which allows to develop applications on own hardware and without incurring in cloud services fees or software licensing costs
@@ -119,7 +119,7 @@ The Server Manager is part of the [robo-gym-server-modules](https://github.com/j
 
 To start an environment use:
 ```python
-import gym, robo_gym
+import import gymnasium as gym, robo_gym
 
 env = gym.make('EnvironmentNameSim-v0', ip='<server_manager_address>')
 env.reset()
@@ -159,7 +159,8 @@ return self.env.observation_space.sample(), 0, True, {"Exception":True, "Excepti
 Adding the wrapper to any simulated environment is very easy:
 
 ```python
-import gym, robo_gym
+import gymnasium as gym
+import robo_gym
 from robo_gym.wrappers.exception_handling import ExceptionHandling
 
 env = gym.make('EnvironmentNameSim-v0', ip='<server_manager_address>')
@@ -174,7 +175,8 @@ When making a real robot environment the Robot Server needs to be started manual
 Once the Real Robot Server is running, you can start the corresponding environment with: 
 
 ```python
-import gym, robo_gym
+import gymnasium as gym
+import robo_gym
 
 env = gym.make('EnvironmentNameRob-v0', rs_address='<robot_server_address>')
 
@@ -196,7 +198,7 @@ For information on creating your own environments, see [Creating your own Enviro
 ## Random Agent MiR100 Simulation Environment
 <!-- TODO change this to UR env -->
 ```python
-import gym
+import gymnasium as gym
 import robo_gym
 from robo_gym.wrappers.exception_handling import ExceptionHandling
 
@@ -294,6 +296,12 @@ If you have general questions or ideas that you would like to share please [star
 ```
 # News
 [back to top](#robo-gym)
+
+- 2024-09-06 (v2.0.0)
+  * Added support for gymnasium, dropped support for gym
+  * Added support for Python up to 3.11
+  * Dropped support for Python 3.7
+  * Improved cleanup of simulation robot servers
 
 - 2021-05-19 (v1.0.0)
   + Added support for all the Universal Robots models: UR3, UR3e, UR5, UR5e, UR10, UR10e, UR16e

@@ -8,16 +8,16 @@ setuptools.setup(name='robo-gym',
       version=VERSION,
       description='robo-gym: an open source toolkit for Distributed Deep Reinforcement Learning on real and simulated robots.',
       url='https://github.com/jr-robotics/robo-gym',
-      author="Matteo Lucchi, Friedemann Zindler",
-      author_email="matteo.lucchi@joanneum.at, friedemann.zindler@joanneum.at",
+      author="Matteo Lucchi, Friedemann Zindler, Bernhard Reiterer, Thomas Gallien, Benjamim Breiling",
+      author_email="bernhard.reiterer@joanneum.at",
       packages=setuptools.find_packages(),
       include_package_data=True,
       classifiers=[
           'Programming Language :: Python :: 3',
-          'Programming Language :: Python :: 3.6',
-          'Programming Language :: Python :: 3.7',
           'Programming Language :: Python :: 3.8',
           'Programming Language :: Python :: 3.9',
+          'Programming Language :: Python :: 3.10',
+          'Programming Language :: Python :: 3.11',
       ],
       install_requires=[
       'gymnasium',
@@ -26,6 +26,6 @@ setuptools.setup(name='robo-gym',
       'scipy',
       'pyyaml'
       ],
-      python_requires='>=3.6',
+      python_requires='>=3.8',
       scripts = ['bin/run-rs-side-standard']
 )
