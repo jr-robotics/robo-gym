@@ -1,4 +1,6 @@
-import gym
+import os
+
+import gymnasium as gym
 import robo_gym
 import math
 import numpy as np 
@@ -15,7 +17,8 @@ ur_models = [pytest.param('ur3', marks=pytest.mark.nightly), \
 
 @pytest.fixture(scope='module', params=ur_models)
 def env(request):
-    env = gym.make('BasicAvoidanceURSim-v0', ip='robot-servers', ur_model=request.param)
+    ip = os.environ.get("ROBOGYM_SERVERS_HOST", 'robot-servers')
+    env = gym.make('BasicAvoidanceURSim-v0', ip=ip, ur_model=request.param)
     env.request_param = request.param
     yield env
     env.kill_sim()
@@ -29,7 +32,7 @@ def test_initialization(env):
     for _ in range(10):
         if not done:
             action = env.action_space.sample()
-            observation, _, done, _ = env.step(action)
+            observation, _, done, _, _ = env.step(action)
 
     assert env.observation_space.contains(observation)
 
@@ -40,11 +43,11 @@ def test_object_collision(env):
        'ur5': {'joint_positions': [0.0, -1.57, 1.57, -1.57, 0.0, 0.0], 'object_coords':[0.2, -0.1, 0.52], 'action':[-1,0,0,0,0], 'n_steps': 30},
    }
    
-   env.reset(desired_joint_positions=params[env.ur.model]['joint_positions'], fixed_object_position=params[env.ur.model]['object_coords'])
+   env.reset(options={"desired_joint_positions": params[env.ur.model]['joint_positions'], "fixed_object_position": params[env.ur.model]['object_coords']})
    done = False
    i = 0
    while (not done) or i<=params[env.ur.model]['n_steps'] :
-       _, _, done, info = env.step(params[env.ur.model]['action'])
+       _, _, done, _, info = env.step(params[env.ur.model]['action'])
        i += 1
    assert info['final_status'] == 'collision'
   
@@ -52,7 +55,7 @@ def test_object_collision(env):
 def test_reset_joint_positions(env):
    joint_positions =  [0.5, -2.7, 1.3, -1.7, -1.9, 1.6]
 
-   state = env.reset(joint_positions=joint_positions)
+   state = env.reset(options={"joint_positions":joint_positions})
    assert np.isclose(env.ur.normalize_joint_values(joint_positions), state[3:9], atol=0.1).all()
 
 @pytest.mark.commit 
@@ -71,7 +74,7 @@ def test_object_coordinates(env):
    'ur16e': {'joint_positions':[0.0, -1.57, 0.0, -1.57, 0.0, 0.0], 'object_coords':[0.0, (0.291 +0.2), (1.139 + 0.3), 0.0, 0.0, 0.0], 'polar_coords':{'r': 0.360, 'theta': 0.983, 'phi': -1.571}}
    }
 
-   state = env.reset(joint_positions=params[env.ur.model]['joint_positions'], fixed_object_position=params[env.ur.model]['object_coords'])
+   state = env.reset(options={"joint_positions": params[env.ur.model]['joint_positions'], "fixed_object_position": params[env.ur.model]['object_coords']})
    assert np.isclose([params[env.ur.model]['polar_coords']['r']], state[0], atol=0.05).all()
    assert np.isclose([params[env.ur.model]['polar_coords']['theta'], params[env.ur.model]['polar_coords']['phi']], state[1:3], atol=0.2).all()
 
@@ -96,7 +99,7 @@ def test_fixed_joints(env_name, fix_base, fix_shoulder, fix_elbow, fix_wrist_1, 
     # Take 20 actions
     action = env.action_space.sample()
     for _ in range(20):
-        state, _, _, _ = env.step(action)
+        state, _, _, _, _ = env.step(action)
     joint_positions = state[3:9]
 
     if fix_base:

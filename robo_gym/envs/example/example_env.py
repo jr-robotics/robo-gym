@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import numpy as np
-import gym
-from typing import Tuple
+import gymnasium as gym
+from typing import Tuple, Any
 from robo_gym.utils.exceptions import InvalidStateError, RobotServerError, InvalidActionError
 import robo_gym_server_modules.robot_server.client as rs_client
 from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
@@ -32,7 +32,7 @@ class ExampleEnv(gym.Env):
         self.action_space = self._get_action_space()
 
         self.rs_state = None
-        
+
         # Connect to Robot Server
         if rs_address:
             self.client = rs_client.Client(rs_address)
@@ -40,31 +40,36 @@ class ExampleEnv(gym.Env):
             print("WARNING: No IP and Port passed. Simulation will not be started")
             print("WARNING: Use this only to get environment shape")
 
-
     def _set_initial_robot_server_state(self, rs_state) -> robot_server_pb2.State:
         string_params = {}
         float_params = {}
         state = {}
 
-        state_msg = robot_server_pb2.State(state = state, float_params = float_params, 
-                                            string_params = string_params, state_dict = rs_state)
+        state_msg = robot_server_pb2.State(state=state, float_params=float_params,
+                                           string_params=string_params, state_dict=rs_state)
         return state_msg
 
-    def reset(self, position = None) -> np.ndarray:
+    def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None) -> tuple[np.ndarray, dict[str, Any]]:
         """Environment reset.
 
-        Args:
+        options:
             position (list[2] or np.array[2]): [x,y] initial robot position.
            
         Returns:
             np.array: Environment state.
+            dict: info
 
         """
+        super().reset(seed=seed)
+        if options is None:
+            options = {}
+        position = options["position"] if "position" in options else None
+
         # Set Robot starting position
         if position:
-            assert len(position)==2
+            assert len(position) == 2
         else:
-            position = [0,0]
+            position = [0, 0]
 
         self.elapsed_steps = 0
 
@@ -72,7 +77,6 @@ class ExampleEnv(gym.Env):
         state_len = self.observation_space.shape[0]
         state = np.zeros(state_len)
         rs_state = dict.fromkeys(self.get_robot_server_composition(), 0.0)
-        
 
         # Fill rs_state
         rs_state['pos_x'] = position[0]
@@ -80,7 +84,7 @@ class ExampleEnv(gym.Env):
 
         # Set initial state of the Robot Server
         state_msg = self._set_initial_robot_server_state(rs_state)
-        
+
         if not self.client.set_state_msg(state_msg):
             raise RobotServerError("set_state")
 
@@ -99,7 +103,7 @@ class ExampleEnv(gym.Env):
 
         self.rs_state = rs_state
 
-        return state
+        return state, {}
 
     def reward(self, rs_state, action) -> Tuple[float, bool, dict]:
         done = False
@@ -108,20 +112,17 @@ class ExampleEnv(gym.Env):
         if self.elapsed_steps >= self.max_episode_steps:
             done = True
             info['final_status'] = 'max_steps_exceeded'
-            
-        
-        return 0, done, info
-   
 
-    def step(self, action) -> Tuple[np.array, float, bool, dict]:
+        return 0, done, info
+
+    def step(self, action) -> Tuple[np.array, float, bool, bool, dict]:
         if type(action) == list: action = np.array(action)
-            
+
         self.elapsed_steps += 1
 
         # Check if the action is contained in the action space
         if not self.action_space.contains(action):
             raise InvalidActionError()
-
 
         # Send action to Robot Server and get state
         rs_state = self.client.send_action_get_state(action.tolist()).state_dict
@@ -142,14 +143,14 @@ class ExampleEnv(gym.Env):
         reward, done, info = self.reward(rs_state=rs_state, action=action)
         if self.rs_state_to_info: info['rs_state'] = self.rs_state
 
-        return state, reward, done, info
+        return state, reward, done, False, info
 
     def get_rs_state(self):
         return self.rs_state
 
-    def render():
+    def render(self):
         pass
-    
+
     def get_robot_server_composition(self) -> list:
         rs_state_keys = [
             'pos_x',
@@ -158,7 +159,6 @@ class ExampleEnv(gym.Env):
             'ang_vel',
         ]
         return rs_state_keys
-
 
     def _get_robot_server_state_len(self) -> int:
         """Get length of the Robot Server state.
@@ -172,11 +172,10 @@ class ExampleEnv(gym.Env):
         keys = self.get_robot_server_composition()
         if not len(keys) == len(rs_state.keys()):
             raise InvalidStateError("Robot Server state keys to not match. Different lengths.")
-        
+
         for key in keys:
             if key not in rs_state.keys():
                 raise InvalidStateError("Robot Server state keys to not match")
-
 
     def _robot_server_state_to_env_state(self, rs_state) -> np.ndarray:
         """Transform state from Robot Server to environment format.
@@ -199,7 +198,6 @@ class ExampleEnv(gym.Env):
 
         return state
 
-
     def _get_observation_space(self) -> gym.spaces.Box:
         """Get environment observation space.
 
@@ -207,15 +205,14 @@ class ExampleEnv(gym.Env):
             gym.spaces: Gym observation space object.
 
         """
- 
+
         # Definition of environment observation_space
         max_obs = np.array([np.inf] * 4)
         min_obs = -np.array([np.inf] * 4)
 
         return gym.spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
 
-    
-    def _get_action_space(self)-> gym.spaces.Box:
+    def _get_action_space(self) -> gym.spaces.Box:
         """Get environment action space.
 
         Returns:
@@ -228,9 +225,11 @@ class ExampleEnv(gym.Env):
 
 class ExampleEnvSim(ExampleEnv, Simulation):
     cmd = "roslaunch example_robot_server robot_server.launch"
+
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
         ExampleEnv.__init__(self, rs_address=self.robot_server_ip, **kwargs)
+
 
 class ExampleEnvRob(ExampleEnv):
     real_robot = True

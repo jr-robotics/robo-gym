@@ -1,5 +1,7 @@
-import gym
+import gymnasium as gym
 import robo_gym
+
+# PLEASE DON'T USE RANDOM SAMPLES WITH A REAL ROBOT! THIS IS JUST A CODE EXAMPLE!
 
 robot_address = 'xxx.xxx.xxx.xxx'
 
@@ -13,4 +15,5 @@ for episode in range(num_episodes):
     env.reset()
     while not done:
         # random step in the environment
-        state, reward, done, info = env.step(env.action_space.sample())
+        state, reward, terminated, truncated, info = env.step(env.action_space.sample())
+        done = terminated or truncated

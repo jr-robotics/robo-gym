@@ -1,4 +1,6 @@
-import gym
+import os
+
+import gymnasium as gym
 import robo_gym
 from robo_gym.utils import ur_utils
 import math
@@ -22,7 +24,8 @@ ur_models = [pytest.param('ur3', marks=pytest.mark.skip(reason='not implemented 
 
 @pytest.fixture(scope='module', params=ur_models)
 def env(request):
-    env = gym.make('AvoidanceRaad2022TestURSim-v0', ip='robot-servers', ur_model=request.param)
+    ip = os.environ.get("ROBOGYM_SERVERS_HOST", 'robot-servers')
+    env = gym.make('AvoidanceRaad2022TestURSim-v0', ip=ip, ur_model=request.param)
     env.request_param = request.param
     yield env
     env.kill_sim()
@@ -36,7 +39,7 @@ def test_initialization(env):
     for _ in range(10):
         if not done:
             action = env.action_space.sample()
-            observation, _, done, _ = env.step(action)
+            observation, _, done, _, _ = env.step(action)
 
     assert env.observation_space.contains(observation)
 
@@ -47,7 +50,7 @@ def test_object_collision(env):
        'ur5': {'object_coords':[-0.2, -0.1, 0.5], 'n_steps': 250},
    }
    
-   env.reset(fixed_object_position=params[env.ur.model]['object_coords'])
+   env.reset(options={"fixed_object_position": params[env.ur.model]['object_coords']})
    done = False
    i = 0
    while (not done) or i<=params[env.ur.model]['n_steps'] :
@@ -82,7 +85,7 @@ def test_robot_trajectory(env):
     assert state[24] == 1.0
     # check that state machine has transitioned to segment 1 of trajectory 
     traj_joint_positions = trajectory[1][0]
-    state, _, _, _ = env.step(action)
+    state, _, _, _, _ = env.step(action)
     assert np.isclose(env.ur.normalize_joint_values(traj_joint_positions), state[3:9], atol=0.1).all()
 
 
@@ -102,7 +105,7 @@ def test_fixed_joints(env_name, fix_base, fix_shoulder, fix_elbow, fix_wrist_1, 
     # Take 20 actions
     action = env.action_space.sample()
     for _ in range(20):
-        state, _, _, _ = env.step(action)
+        state, _, _, _, _ = env.step(action)
     joint_positions = state[3:9]
 
     if fix_base:

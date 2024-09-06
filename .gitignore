@@ -1,6 +1,7 @@
 *__pycache__
 *.egg-info
 /.vscode
+/.idea
 
 # Setuptools
 /build
