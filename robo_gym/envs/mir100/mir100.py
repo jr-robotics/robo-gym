@@ -141,13 +141,13 @@ class Mir100Env(gym.Env):
         # Convert environment action to Robot Server action
         rs_action = copy.deepcopy(action)
         # Scale action
-        rs_action = np.multiply(action, self.max_vel)
+        rs_action = np.multiply(rs_action, self.max_vel)
         # Send action to Robot Server
-
-        try:
-            rs_state = self.client.send_action_get_state(rs_action).state
-        except Exception:
+        if not self.client.send_action(rs_action.tolist()):
             raise RobotServerError("send_action")
+
+        # Get state from Robot Server
+        rs_state = self.client.get_state_msg().state
 
         # Convert the state from Robot Server format to environment format
         self.state = self._robot_server_state_to_env_state(rs_state)
