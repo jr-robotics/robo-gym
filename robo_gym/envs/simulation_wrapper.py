@@ -47,4 +47,8 @@ class Simulation:
         self.client = rs_client.Client(self.robot_server_ip)
 
     def __del__(self):
-        self.sm_client.kill_server_async(self.robot_server_ip)
+        # If we reach this point, we want to kill our simulation.
+        # But normal kill_sim won't work here because our client object is being removed right now, and killing takes time.
+        # We can kill outside of the context of the client object if server modules are upgraded to provide this method:
+        if hasattr(sm_client.Client, 'kill_server_async') and callable(getattr(sm_client.Client, 'kill_server_async')):
+            self.sm_client.kill_server_async(self.robot_server_ip)
