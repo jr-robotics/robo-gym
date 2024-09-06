@@ -1,4 +1,6 @@
-import gym
+import os
+
+import gymnasium as gym
 import robo_gym
 import math
 import numpy as np 
@@ -15,7 +17,8 @@ ur_models = [pytest.param('ur3', marks=pytest.mark.nightly), \
 
 @pytest.fixture(scope='module', params=ur_models)
 def env(request):
-    env = gym.make('EmptyEnvironmentURSim-v0', ip='robot-servers', ur_model=request.param, fix_wrist_3=True)
+    ip = os.environ.get("ROBOGYM_SERVERS_HOST", 'robot-servers')
+    env = gym.make('EmptyEnvironmentURSim-v0', ip=ip, ur_model=request.param, fix_wrist_3=True)
     env.request_param = request.param
     yield env
     env.kill_sim()
@@ -29,7 +32,7 @@ def test_initialization(env):
     for _ in range(10):
         if not done:
             action = env.action_space.sample()
-            observation, _, done, _ = env.step(action)
+            observation, _, done, _, _ = env.step(action)
 
     assert env.observation_space.contains(observation)
 
@@ -47,7 +50,7 @@ def test_self_collision(env):
     action = env.ur.normalize_joint_values(collision_joint_config[env.ur.model])
     done = False
     while not done:
-        _, _, done, info = env.step(action)    
+        _, _, done, _, info = env.step(action)
     assert info['final_status'] == 'collision'
 
 @pytest.mark.commit 
@@ -64,14 +67,14 @@ def test_collision_with_ground(env):
     action = env.ur.normalize_joint_values(collision_joint_config[env.ur.model])
     done = False
     while not done:
-        _, _, done, info = env.step(action)    
+        _, _, done, _, info = env.step(action)
     assert info['final_status'] == 'collision'
 
 @pytest.mark.commit     
 def test_reset_joint_positions(env):
    joint_positions =  [0.2, -2.5, 1.1, -2.0, -1.2, 1.2]
 
-   state = env.reset(joint_positions = joint_positions)
+   state = env.reset(options={"joint_positions": joint_positions})
    assert np.isclose(env.ur.normalize_joint_values(joint_positions), state[0:6], atol=0.1).all()
 
 
@@ -96,7 +99,7 @@ def test_fixed_joints(env_name, fix_base, fix_shoulder, fix_elbow, fix_wrist_1, 
     # Take 20 actions
     action = env.action_space.sample()
     for _ in range(20):
-        state, _, _, _ = env.step(action)
+        state, _, _, _, _ = env.step(action)
     joint_positions = state[0:6]
 
     if fix_base:

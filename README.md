@@ -15,15 +15,14 @@
 ``robo-gym`` provides a collection of reinforcement learning environments involving robotic tasks applicable in both simulation and real world robotics. Additionally, we provide the tools to facilitate the creation of new environments featuring different robots and sensors.
 
 Main features :
-- [OpenAI Gym](https://gym.openai.com) interface for all the environments
+- [Gymnasium](https://gymnasium.farama.org/) interface for all the environments
 - **simulated** and **real** robots interchangeability, which enables a seamless transfer from training in simulation to application on the real robot.
 - built-in **distributed** capabilities, which enable the use of distributed algorithms and distributed hardware
 - based only on **open source** software, which allows to develop applications on own hardware and without incurring in cloud services fees or software licensing costs
 - integration of multiple commercially available **industrial robots**: MiR 100, Universal Robots (more to come)
 - it has been successfully deployed to train a DRL algorithm to solve two different tasks in simulation that was able to solve the tasks on the real robots as well, without any further training in the real world
 
-A [paper](https://arxiv.org/abs/2007.02753) describing robo-gym has been accepted for IROS 2020. A video showcasing the toolkit's
-capabilities and additional info can be found on our [website](https://sites.google.com/view/robo-gym)
+A [paper](https://arxiv.org/abs/2007.02753) describing robo-gym has been accepted for IROS 2020. A video showcasing the toolkit's capabilities and additional info can be found on our [website](https://sites.google.com/view/robo-gym)
 
 **NOTE**: We are continuously working to improve and expand robo-gym. If you are interested in reproducing the results obtained in the IROS 2020 paper please refer to v.0.1.0 for all the 3 repositories involved in the framework: [robo-gym](https://github.com/jr-robotics/robo-gym/tree/v0.1.0), [robo-gym-robot-servers](https://github.com/jr-robotics/robo-gym-robot-servers/tree/v0.1.0), [robo-gym-server-modules](https://github.com/jr-robotics/robo-gym-server-modules/tree/v0.1.0).
 
@@ -119,7 +118,7 @@ The Server Manager is part of the [robo-gym-server-modules](https://github.com/j
 
 To start an environment use:
 ```python
-import gym, robo_gym
+import import gymnasium as gym, robo_gym
 
 env = gym.make('EnvironmentNameSim-v0', ip='<server_manager_address>')
 env.reset()
@@ -159,7 +158,8 @@ return self.env.observation_space.sample(), 0, True, {"Exception":True, "Excepti
 Adding the wrapper to any simulated environment is very easy:
 
 ```python
-import gym, robo_gym
+import gymnasium as gym
+import robo_gym
 from robo_gym.wrappers.exception_handling import ExceptionHandling
 
 env = gym.make('EnvironmentNameSim-v0', ip='<server_manager_address>')
@@ -174,7 +174,8 @@ When making a real robot environment the Robot Server needs to be started manual
 Once the Real Robot Server is running, you can start the corresponding environment with: 
 
 ```python
-import gym, robo_gym
+import gymnasium as gym
+import robo_gym
 
 env = gym.make('EnvironmentNameRob-v0', rs_address='<robot_server_address>')
 
@@ -196,7 +197,7 @@ For information on creating your own environments, see [Creating your own Enviro
 ## Random Agent MiR100 Simulation Environment
 <!-- TODO change this to UR env -->
 ```python
-import gym
+import gymnasium as gym
 import robo_gym
 from robo_gym.wrappers.exception_handling import ExceptionHandling
 
@@ -294,6 +295,12 @@ If you have general questions or ideas that you would like to share please [star
 ```
 # News
 [back to top](#robo-gym)
+
+- 2024-09-06 (v2.0.0)
+  * Added support for gymnasium, dropped support for gym
+  * Added support for Python up to 3.11
+  * Dropped support for Python 3.7
+  * Improved cleanup of simulation robot servers
 
 - 2021-05-19 (v1.0.0)
   + Added support for all the Universal Robots models: UR3, UR3e, UR5, UR5e, UR10, UR10e, UR16e

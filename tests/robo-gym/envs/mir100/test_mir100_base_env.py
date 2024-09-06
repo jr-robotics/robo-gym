@@ -1,10 +1,13 @@
-import gym
+import os
+
+import gymnasium as gym
 import robo_gym
 import pytest
 
 @pytest.fixture(scope='module')
 def env(request):
-    env = gym.make('NoObstacleNavigationMir100Sim-v0', ip='robot-servers')
+    ip = os.environ.get("ROBOGYM_SERVERS_HOST", 'robot-servers')
+    env = gym.make('NoObstacleNavigationMir100Sim-v0', ip=ip)
     yield env
     env.kill_sim()
 
@@ -15,6 +18,6 @@ def test_initialization(env):
     for _ in range(10):
         if not done:
             action = env.action_space.sample()
-            observation, _, done, _ = env.step(action)
+            observation, _, done, _, _ = env.step(action)
 
     assert env.observation_space.contains(observation)

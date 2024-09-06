@@ -8,8 +8,8 @@ This trajectory is sampled at a frequency of 20 Hz.
 """
 import os, copy, json
 import numpy as np
-import gym
-from typing import Tuple
+import gymnasium as gym
+from typing import Tuple, Any
 from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
 from robo_gym.envs.simulation_wrapper import Simulation
 from robo_gym.envs.ur.ur_base_avoidance_env import URBaseAvoidanceEnv
@@ -65,12 +65,19 @@ class AvoidanceRaad2022UR(URBaseAvoidanceEnv):
                                             string_params = string_params, state_dict = rs_state)
         return state_msg
 
-    def reset(self, fixed_object_position = None) -> np.ndarray:
+    def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None) -> tuple[np.ndarray, dict[str, Any]]:
         """Environment reset.
 
-        Args:
-            fixed_object_position (list[3]): x,y,z fixed position of object
+            options:
+                joint_positions (list[6] or np.array[6]): robot joint positions in radians.
+                fixed_object_position (list[3]): x,y,z fixed position of object
+
+            Returns:
+                np.array: Environment state.
+                dict: info
+
         """
+
         # Initialize state machine variables
         self.state_n = 0 
         self.elapsed_steps_in_current_state = 0 
@@ -81,11 +88,15 @@ class AvoidanceRaad2022UR(URBaseAvoidanceEnv):
 
         joint_positions = self._get_joint_positions()
 
-        state = super().reset(joint_positions = joint_positions, fixed_object_position = fixed_object_position)
-            
-        return state
+        if not options:
+            options = {}
+        options["joint_positions"] = joint_positions
 
-    def step(self, action) -> Tuple[np.array, float, bool, dict]:
+        super_result = super().reset(seed=seed, options=options)
+            
+        return super_result
+
+    def step(self, action) -> Tuple[np.array, float, bool, bool, dict]:
         if type(action) == list: action = np.array(action)
 
         action = action.astype(np.float32)
@@ -116,7 +127,7 @@ class AvoidanceRaad2022UR(URBaseAvoidanceEnv):
 
         self.prev_action = self.add_fixed_joints(action)
 
-        return state, reward, done, info
+        return state, reward, done, False, info
 
     def reward(self, rs_state, action) -> Tuple[float, bool, dict]:
         env_state = self._robot_server_state_to_env_state(rs_state)
@@ -295,12 +306,24 @@ class AvoidanceRaad2022TestUR(AvoidanceRaad2022UR):
                                 string_params = string_params, state_dict = rs_state)
         return state_msg
 
-    def reset(self):
-        state = super().reset()
-        
+    def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None) -> tuple[np.ndarray, dict[str, Any]]:
+        """Environment reset.
+
+            options:
+                joint_positions (list[6] or np.array[6]): robot joint positions in radians.
+                fixed_object_position (list[3]): x,y,z fixed position of object
+
+            Returns:
+                np.array: Environment state.
+                dict: info
+
+        """
+
         self.ep_n +=1
 
-        return state
+        super_result = super().reset(seed=seed, options=options)
+
+        return super_result
 
 class AvoidanceRaad2022TestURSim(AvoidanceRaad2022TestUR, Simulation):
     cmd = "roslaunch ur_robot_server ur_robot_server.launch \

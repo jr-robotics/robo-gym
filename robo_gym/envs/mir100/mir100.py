@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 
 import sys, time, math, copy
+from typing import Any
+
 import numpy as np
-import gym
-from gym import spaces, logger
-from gym.utils import seeding
+import gymnasium as gym
+from gymnasium import spaces, logger
+from gymnasium.utils import seeding
 from robo_gym.utils import utils, mir100_utils
 from robo_gym.utils.exceptions import InvalidStateError, RobotServerError
 import robo_gym_server_modules.robot_server.client as rs_client
@@ -36,6 +38,7 @@ class Mir100Env(gym.Env):
 
     def __init__(self, rs_address=None, **kwargs):
 
+        self.state = None
         self.mir100 = mir100_utils.Mir100()
         self.elapsed_steps = 0
         self.observation_space = self._get_observation_space()
@@ -57,20 +60,28 @@ class Mir100Env(gym.Env):
             print("WARNING: Use this only to get environment shape")
 
     def seed(self, seed=None):
+        # TODO mark as deprecated
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
-    def reset(self, start_pose = None, target_pose = None):
+    def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None) -> tuple[np.ndarray, dict[str, Any]]:
         """Environment reset.
 
-        Args:
+        options:
             start_pose (list[3] or np.array[3]): [x,y,yaw] initial robot position.
             target_pose (list[3] or np.array[3]): [x,y,yaw] target robot position.
 
         Returns:
             np.array: Environment state.
+            dict: info
 
         """
+        super().reset(seed=seed)
+        if options is None:
+            options = {}
+        start_pose = options["start_pose"] if "start_pose" in options else None
+        target_pose = options["target_pose"] if "target_pose" in options else None
+
         self.elapsed_steps = 0
 
         self.prev_base_reward = None
@@ -113,7 +124,7 @@ class Mir100Env(gym.Env):
         if not self.observation_space.contains(self.state):
             raise InvalidStateError()
 
-        return self.state
+        return self.state, {}
 
     def _reward(self, rs_state, action):
         return 0, False, {}
@@ -130,13 +141,14 @@ class Mir100Env(gym.Env):
         # Convert environment action to Robot Server action
         rs_action = copy.deepcopy(action)
         # Scale action
-        rs_action = np.multiply(action, self.max_vel)
+        rs_action = np.multiply(rs_action, self.max_vel)
         # Send action to Robot Server
         if not self.client.send_action(rs_action.tolist()):
             raise RobotServerError("send_action")
 
         # Get state from Robot Server
         rs_state = self.client.get_state_msg().state
+
         # Convert the state from Robot Server format to environment format
         self.state = self._robot_server_state_to_env_state(rs_state)
 
@@ -147,7 +159,7 @@ class Mir100Env(gym.Env):
         # Assign reward
         reward, done, info = self._reward(rs_state=rs_state, action=action)
 
-        return self.state, reward, done, info
+        return self.state, reward, done, False, info
 
     def render(self):
         pass
