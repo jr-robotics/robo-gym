@@ -6,6 +6,7 @@ The goal of the robot is to avoid dynamic obstacles while following pre-planned 
 which was programmed with the UR’s teach pendant. 
 This trajectory is sampled at a frequency of 20 Hz.
 """
+from __future__ import annotations
 import os, copy, json
 import numpy as np
 import gymnasium as gym
