@@ -1,7 +1,6 @@
 import robo_gym_server_modules.server_manager.client as sm_client
 import robo_gym_server_modules.robot_server.client as rs_client
 import traceback
-import random
 
 class Simulation:
     """Simulation Wrapper Class - can be used to add simulation capability to a robo-gym environment.
