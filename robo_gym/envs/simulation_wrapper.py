@@ -15,6 +15,7 @@ class Simulation:
     """
     instances_count = 0
     verbose = False
+    del_try_async_kill = True
 
     def __init__(self, cmd, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
 
@@ -98,11 +99,18 @@ class Simulation:
             self.print("close end")
 
     def __del__(self):
-        # If we reach this point, we want to kill our simulation.
-        # But normal kill_sim won't work here because our client object is being removed right now, and killing takes time.
-        # We can kill outside of the context of the client object if server modules are upgraded to provide this method:
+        # If we reach this point and the simulation is still running, we want to kill it.
+        # But in some situations normal kill_sim won't work here (because of the state we're in).
+        # We can try to kill outside of the context of the client object if server modules are upgraded to provide the kill_server_async.
+        # The flag Simulation.del_try_async_kill can be set to False to skip trying.
         self.print("__del__ start")
         try:
+            try:
+                self.print("__del__ trying self.kill_sim")
+                self.kill_sim()
+                self.print("__del__ self.kill_sim returned")
+            except Exception as e:
+                self.print("__del__ self.kill_sim threw " + str(e))
             if hasattr(self, "expect_sim_running"):
                 if not self.expect_sim_running:
                     self.print("__del__ returning early: I don't expect my simulation to be running!")
@@ -119,7 +127,7 @@ class Simulation:
                     self.print("__del__: I have been connected " + str(self.connections_count) + " times")
             else:
                 self.print("__del__: I do not know my connections count!")
-            if True: # hasattr(self, "sm_client") and hasattr(sm_client.Client, 'kill_server_async') and callable(getattr(sm_client.Client, 'kill_server_async') and self.sm_client is not None):
+            if Simulation.del_try_async_kill and hasattr(self, "sm_client") and hasattr(sm_client.Client, 'kill_server_async') and callable(getattr(sm_client.Client, 'kill_server_async') and self.sm_client is not None):
                 self.print("__del__ calling self.sm_client.kill_server_async")
                 self.sm_client.kill_server_async(self.robot_server_ip)
                 self.print("__del__ finished self.sm_client.kill_server_async")
