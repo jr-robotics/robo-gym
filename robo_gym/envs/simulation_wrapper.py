@@ -5,28 +5,37 @@ import traceback
 class Simulation:
     """Simulation Wrapper Class - can be used to add simulation capability to a robo-gym environment.
 
-    Args:
-        cmd (str): roslaunch command to execute to start the simulated Robot Server.
-        ip (str): IP address of the machine hosting the Server Manager. Defaults to None.
-        lower_bound_port (str): Lower bound of Server Manager port range. Defaults to None.
-        upper_bound_port (str): Upper bound of Server Manager port range. Defaults to None.
-        gui (bool): If True the simulation is started with GUI. Defaults to False.
-
+    Attributes:
+    -----------
+    verbose: bool
+        A class variable that controls whether certain methods of this class log in a verbose manner, with the purpose of tracking the management of connections to simulation robot servers.
+    del_try_async_kill: bool
+        A class variable that controls whether the __del__ method should try to kill a remaining associated simulation in an asynchronous fashion.
+    _instances_count: int
+        A class variable that counts the instances constructed so far, used for assigning a name for verbose output
     """
-    instances_count = 0
+    _instances_count = 0
     verbose = False
     del_try_async_kill = True
 
     def __init__(self, cmd, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
+        """ Initializes the simulation-specific aspects of a RoboGym en.
 
+        Args:
+            cmd (str): roslaunch command to execute to start the simulated Robot Server.
+            ip (str): IP address of the machine hosting the Server Manager. Defaults to None.
+            lower_bound_port (str): Lower bound of Server Manager port range. Defaults to None.
+            upper_bound_port (str): Upper bound of Server Manager port range. Defaults to None.
+            gui (bool): If True the simulation is started with GUI. Defaults to False.
+        """
         self.robot_server_ip = None
         self.cmd = cmd
         self.gui = gui
         self.connections_count = 0
         self.expect_sim_running = False
         self.verbose = Simulation.verbose
-        self.instance_id = str(chr(ord('A') + Simulation.instances_count))
-        Simulation.instances_count += 1
+        self.instance_id = str(chr(ord('A') + Simulation._instances_count))
+        Simulation._instances_count += 1
         if ip:
             if lower_bound_port and upper_bound_port:
                 self.sm_client = sm_client.Client(ip,lower_bound_port,upper_bound_port)
