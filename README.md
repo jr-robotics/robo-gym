@@ -26,6 +26,14 @@ A [paper](https://arxiv.org/abs/2007.02753) describing robo-gym has been accepte
 
 **NOTE**: We are continuously working to improve and expand robo-gym. If you are interested in reproducing the results obtained in the IROS 2020 paper please refer to v.0.1.0 for all the 3 repositories involved in the framework: [robo-gym](https://github.com/jr-robotics/robo-gym/tree/v0.1.0), [robo-gym-robot-servers](https://github.com/jr-robotics/robo-gym-robot-servers/tree/v0.1.0), [robo-gym-server-modules](https://github.com/jr-robotics/robo-gym-server-modules/tree/v0.1.0).
 
+**NOTE**: robo-gym is undergoing a necessary overhaul process. Things may break temporarily, and some old setups may not be supported anymore. In particular:
+* Agents using the old Gym versions need to upgrade to Gymnasium, see also [Gymnasium's migration guide](https://gymnasium.farama.org/content/migration-guide/).
+* Across all components, Python versions up to 3.7.x will not be supported anymore.
+* On the server side, ROS distros before noetic will not be supported anymore.
+* Installation guides and other documentation may be inconsistent and not up to date.
+* Version-agnostic references to robo-gym repositories from old commits (e.g., git clone commands in Dockerfiles) may need adjustment to retrieve a compatible version.
+* Temporarily, robo-gym's packages on PyPI may not be updated. Install from source instead (`pip install -e .`) if required.
+
 [See the News section](#news)
 
 <!-- omit in toc -->
@@ -58,7 +66,7 @@ The framework can be subdivided in two main parts:
   It includes the robot simulation itself, the drivers to communicate with
   the real robot and additional required software tools.
 
-- The *Environment Side* is the one providing the OpenAI Gym interface to the robot
+- The *Environment Side* is the one providing the Gymnasium interface to the robot
   and implementing the different environments.
 
 The *Robot Server Side* and the *Environment Side* can run on the same PC or on different PCs
@@ -69,7 +77,7 @@ connected via network.
 
 <!-- omit in toc -->
 ## Environment Side
-**Requirements:** Python >= 3.6
+**Requirements:** Python >= 3.8
 
 You can perform a minimal install of robo-gym with:
 
