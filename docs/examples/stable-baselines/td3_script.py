@@ -14,7 +14,7 @@ env = ExceptionHandling(env)
 
 # choose and run appropriate algorithm provided by stable-baselines
 model = TD3(MlpPolicy, env, verbose=1)
-model.learn(total_timesteps=15000)
+model.learn(total_timesteps=2000)
 
 # save model
 model.save('td3_mir_basic')

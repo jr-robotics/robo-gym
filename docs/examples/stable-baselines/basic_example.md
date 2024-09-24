@@ -18,7 +18,7 @@ start-server-manager
 ## 2. Example of simulation training using the MiR100 base environment
 Here is a quick example running TD3 in the MiR100 base environment
 
-(_Python >=3.5_ / _robo-gym_ virtual environment)
+(_Python >=3.8_ / _robo-gym_ virtual environment)
 ```python
 import gymnasium as gym
 
@@ -53,7 +53,7 @@ env = ExceptionHandling(env)
 # run the environment 10 times using the trained model
 num_episodes = 10
 for episode in range(num_episodes):
-    obs = env.reset()
+    obs, _ = env.reset()
     done = False
     while not done:
         action, _states = model.predict(obs)
