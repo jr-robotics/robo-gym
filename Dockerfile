@@ -1,5 +1,5 @@
 ARG PYTHON_VER
-FROM python:$PYTHON_VER
+FROM python:$PYTHON_VER-bullseye
 RUN apt-get -y update && apt-get install -y unzip libglu1-mesa-dev libgl1-mesa-dev libosmesa6-dev xvfb patchelf ffmpeg
 RUN pip install pytest pytest-rerunfailures
 ARG CACHEBUST=1
