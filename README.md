@@ -32,7 +32,7 @@ A [paper](https://arxiv.org/abs/2007.02753) describing robo-gym has been accepte
 * On the server side, ROS distros before noetic will not be supported anymore.
 * Installation guides and other documentation may be inconsistent and not up to date.
 * Version-agnostic references to robo-gym repositories from old commits (e.g., git clone commands in Dockerfiles) may need adjustment to retrieve a compatible version.
-* Temporarily, robo-gym's packages on PyPI may not be updated. Install from source instead (`pip install -e .`) if required.
+* Temporarily, our internal CI for robo-gym is partially disabled, which may lead to reduced coverage of automated tests and delays in updates on PyPI. Install from source instead (`pip install -e .`) if required.
 
 [See the News section](#news)
 
@@ -303,7 +303,6 @@ If you have general questions or ideas that you would like to share please [star
 ```
 # News
 [back to top](#robo-gym)
-
 - 2024-09-06 (v2.0.0)
   * Added support for gymnasium, dropped support for gym
   * Added support for Python up to 3.11
