@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from __future__ import annotations
 import copy
 import numpy as np
 import gymnasium as gym

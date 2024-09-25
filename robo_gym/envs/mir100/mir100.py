@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+from __future__ import annotations
 import sys, time, math, copy
 from typing import Any
 
@@ -420,7 +420,7 @@ class NoObstacleNavigationMir100(Mir100Env):
 
         return reward, done, info
 
-class NoObstacleNavigationMir100Sim(NoObstacleNavigationMir100, Simulation):
+class NoObstacleNavigationMir100Sim(Simulation, NoObstacleNavigationMir100):
     cmd = "roslaunch mir100_robot_server sim_robot_server.launch"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
@@ -639,7 +639,7 @@ class ObstacleAvoidanceMir100(Mir100Env):
 
         self.sim_obstacles = [[x_0, y_0, yaw_0],[x_1, y_1, yaw_1],[x_2, y_2, yaw_2]]
 
-class ObstacleAvoidanceMir100Sim(ObstacleAvoidanceMir100, Simulation):
+class ObstacleAvoidanceMir100Sim(Simulation, ObstacleAvoidanceMir100):
     cmd = "roslaunch mir100_robot_server sim_robot_server.launch world_name:=lab_6x8.world"
     def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
         Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)

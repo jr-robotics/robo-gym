@@ -6,6 +6,7 @@ The goal is for the robot to stay within a predefined minimum distance to the mo
 When feasible the robot should continue to the original configuration, 
 otherwise wait for the obstacle to move away before proceeding
 """
+from __future__ import annotations
 import numpy as np
 from typing import Tuple
 from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
