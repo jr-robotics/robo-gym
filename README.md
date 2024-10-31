@@ -284,6 +284,8 @@ If you encounter troubles running robo-gym please take a look at the [existing i
 # Contributing
 [back to top](#robo-gym)
 
+- [f4rh4ng](https://github.com/f4rh4ng): Contributed to the development of the initial Panda robot integration.
+
 New environments and new robots and sensors implementations are welcome!
 
 More details and guides on how to contribute will be added soon!
