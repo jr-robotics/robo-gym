@@ -139,17 +139,17 @@ class BasicAvoidanceUR(URBaseAvoidanceEnv):
 
         return reward, done, info
 
-    def step(self, action) -> Tuple[np.array, float, bool, dict]:
+    def step(self, action) -> Tuple[np.array, float, bool, bool, dict]:
         if type(action) == list: action = np.array(action)
 
         action = action.astype(np.float32)
-        
-        state, reward, done, info = super().step(action)
+
+        state, reward, done, truncated, info = super().step(action)
 
         self.prev_action = self.add_fixed_joints(action)
 
-        return state, reward, done, info
-    
+        return state, reward, done, truncated, info
+
 class BasicAvoidanceURSim(BasicAvoidanceUR, Simulation):
     cmd = "roslaunch ur_robot_server ur_robot_server.launch \
         world_name:=tabletop_sphere50.world \
