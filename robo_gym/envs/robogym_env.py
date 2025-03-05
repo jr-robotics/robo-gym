@@ -30,7 +30,6 @@ class RoboGymEnv(gym.Env):
     KW_OBSERVATION_NODES = "observation_nodes"
 
     def __init__(self, **kwargs):
-        # TODO
         self._config = kwargs
 
         # client will be obtained lazily
@@ -60,11 +59,11 @@ class RoboGymEnv(gym.Env):
         self._last_rs_state_dict: dict[str, float] = {}
 
     def _setup_nodes(self):
-        self._action_node.setup(**self.get_action_node_setup_kwargs())
-        self._reward_node.setup(**self.get_reward_node_setup_kwargs())
+        self._action_node.setup(self, **self.get_action_node_setup_kwargs())
+        self._reward_node.setup(self, **self.get_reward_node_setup_kwargs())
         for index in range(len(self._observation_nodes)):
             self._observation_nodes[index].setup(
-                **self.get_obs_node_setup_kwargs(index)
+                self, **self.get_obs_node_setup_kwargs(index)
             )
 
     def _reset_episode_fields(self):
@@ -282,13 +281,20 @@ class RoboGymEnv(gym.Env):
             return None
         return self._config[key]
 
+    @property
+    def elapsed_steps(self):
+        return self._elapsed_steps
+
 
 class EnvNode(ABC):
 
     def __init__(self, **kwargs):
         self._config = kwargs
+        self.env: RoboGymEnv | None = None
 
-    def setup(self, **kwargs):
+    def setup(self, env: RoboGymEnv, **kwargs):
+        # TODO ugly coupling, try to eliminate
+        self.env = env
         self._config.update(kwargs)
 
     def get_reset_state_part_float(self) -> dict[str, float]:
@@ -333,6 +339,8 @@ class ObservationNode(EnvNode):
 
 class RewardNode(EnvNode):
 
+    KW_MAX_EPISODE_STEPS = "max_episode_steps"
+
     @abstractmethod
     def get_reward(
         self,
@@ -342,3 +350,7 @@ class RewardNode(EnvNode):
         **kwargs,
     ) -> Tuple[float, bool, dict]:
         pass
+
+    @property
+    def max_episode_steps(self) -> int | None:
+        return self._config.get(RewardNode.KW_MAX_EPISODE_STEPS)

@@ -7,7 +7,8 @@ from utils.manipulator_model import ManipulatorModel
 class ManipulatorBaseEnv(RoboGymEnv):
 
     def __init__(self, **kwargs):
-        # action mode
+        # not too nice - repeated in super init
+        self._config = kwargs
 
         self._robot_model: ManipulatorModel | None = kwargs.get(
             RoboGymEnv.KW_ROBOT_MODEL_OBJECT
@@ -16,15 +17,35 @@ class ManipulatorBaseEnv(RoboGymEnv):
         # env nodes
         action_node: ActionNode | None = kwargs.get(RoboGymEnv.KW_ACTION_NODE)
         if not action_node:
-            action_node = ManipulatorActionNode(**kwargs)
+            action_node = ManipulatorActionNode(**self.get_action_node_setup_kwargs())
         kwargs[RoboGymEnv.KW_ACTION_NODE] = action_node
 
-        # TODO first observation node (for the robot)
-        # TODO reward node corresponding to reward calc from old UR base env
+        obs_node: ObservationNode | None = None
+        obs_nodes: list[ObservationNode] | None = kwargs.get(
+            RoboGymEnv.KW_OBSERVATION_NODES
+        )
+        if obs_nodes is None:
+            obs_nodes = []
+            kwargs[RoboGymEnv.KW_OBSERVATION_NODES] = obs_nodes
+        for current_node in obs_nodes:
+            if isinstance(current_node, ManipulatorObservationNode):
+                obs_node = current_node
+                break
+        if not obs_node:
+            obs_node = ManipulatorObservationNode(**self.get_obs_node_setup_kwargs(0))
+            obs_nodes.insert(0, obs_node)
+
+        reward_node: RewardNode | None = kwargs.get(RoboGymEnv.KW_REWARD_NODE)
+        if not reward_node:
+            reward_node = ManipulatorRewardNode(**self.get_reward_node_setup_kwargs())
+        kwargs[RoboGymEnv.KW_REWARD_NODE] = reward_node
+
         super().__init__(**kwargs)
 
 
 class ManipulatorActionNode(ActionNode):
+    # TODO
+    # consider other action modes - current impl corresponds to ABS_POS only
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -102,3 +123,35 @@ class ManipulatorObservationNode(ObservationNode):
 
     def get_reset_state_part_order(self) -> int:
         return super().get_reset_state_part_order()
+
+
+class ManipulatorRewardNode(RewardNode):
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def setup(self, **kwargs):
+        super().setup(**kwargs)
+
+    def get_reward(
+        self,
+        rs_state_array: NDArray,
+        rs_state_dict: dict[str, float],
+        env_action: NDArray,
+        **kwargs,
+    ) -> Tuple[float, bool, dict]:
+
+        done = False
+        info = {}
+
+        # Check if robot is in collision
+        collision = rs_state_dict["in_collision"] == 1
+        if collision:
+            done = True
+            info["final_status"] = "collision"
+
+        elif self.env.elapsed_steps >= self.max_episode_steps:
+            done = True
+            info["final_status"] = "success"
+
+        return 0, done, info
