@@ -26,7 +26,7 @@ def signal_handler(the_signal, frame):
 
 def str_to_bool(str_val) -> bool:
     str_val = str_val.strip().lower()
-    return str_val not in ["0", "false", "no", "n"]
+    return str_val not in ["", "0", "false", "no", "n"]
 
 
 def main():

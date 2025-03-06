@@ -296,6 +296,15 @@ class RoboGymEnv(gym.Env):
     def elapsed_steps(self):
         return self._elapsed_steps
 
+    @staticmethod
+    def set_default(
+        kwargs: dict[str, Any], key: str, default_value: Any
+    ) -> dict[str, Any]:
+        if key not in kwargs:
+            kwargs[key] = default_value
+        # return value is redundant, since we manipulate the input dict
+        return kwargs
+
 
 class EnvNode(ABC):
 

@@ -1,4 +1,6 @@
-from robo_gym.envs.base.robogym_env import RewardNode
+from typing import Any
+
+from robo_gym.envs.base.robogym_env import RoboGymEnv, RewardNode
 from robo_gym.envs.manipulator.manipulator_base import (
     ManipulatorBaseEnv,
     ManipulatorActionNode,
@@ -11,41 +13,45 @@ class URBaseEnv2(ManipulatorBaseEnv):
     KW_UR_MODEL_KEY = "ur_model"
 
     def __init__(self, **kwargs):
-        # not too nice - repeated in super init
-        self._config = kwargs
+
+        URBaseEnv2.set_robot_defaults(kwargs)
+
+        super().__init__(**kwargs)
+
+    @staticmethod
+    def set_robot_defaults(kwargs: dict[str, Any]):
 
         # prepare UR model depending on ur_model and set it in the kwargs
-        robot_model = UR(model_key=self.ur_model_key)
-        kwargs[self.KW_ROBOT_MODEL_OBJECT] = robot_model
+        ur_model: UR | None = kwargs.get(RoboGymEnv.KW_ROBOT_MODEL_OBJECT)
+        if ur_model is None:
+            ur_model = UR(model_key=kwargs.get(URBaseEnv2.KW_UR_MODEL_KEY))
+            kwargs[RoboGymEnv.KW_ROBOT_MODEL_OBJECT] = ur_model
 
         # default action rate
-        if self.KW_ACTION_RATE not in kwargs:
-            kwargs[self.KW_ACTION_RATE] = 20.0
+        RoboGymEnv.set_default(kwargs, RoboGymEnv.KW_ACTION_RATE, 20.0)
+
+        # default max episode steps
+        RoboGymEnv.set_default(kwargs, RewardNode.KW_MAX_EPISODE_STEPS, 300)
 
         # default fixed joints: last joint
         prefix_fix = ManipulatorActionNode.KW_PREFIX_FIX_JOINT
-        last_joint_name = robot_model.joint_names[-1]
+        last_joint_name = ur_model.joint_names[-1]
         kw_fix_last_joint = prefix_fix + last_joint_name
-        if kw_fix_last_joint not in kwargs:
-            kwargs[kw_fix_last_joint] = True
-
-        # default max episode steps
-        if RewardNode.KW_MAX_EPISODE_STEPS not in kwargs:
-            kwargs[RewardNode.KW_MAX_EPISODE_STEPS] = 300
+        RoboGymEnv.set_default(kwargs, kw_fix_last_joint, True)
 
         # default joint positions
-        if ManipulatorBaseEnv.KW_JOINT_POSITIONS not in kwargs:
-            kwargs[ManipulatorBaseEnv.KW_JOINT_POSITIONS] = [
+        RoboGymEnv.set_default(
+            kwargs,
+            ManipulatorBaseEnv.KW_JOINT_POSITIONS,
+            [
                 0.0,
                 -2.5,
                 1.5,
                 0.0,
                 -1.4,
                 0.0,
-            ]
-
-        # super initializer will also set robot_model as self._robot_model
-        super().__init__(**kwargs)
+            ],
+        )
 
     def get_launch_cmd(self) -> str:
         # TODO make string composition more dynamic
