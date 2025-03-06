@@ -52,7 +52,10 @@ class ManipulatorActionNode(ActionNode):
         self._robot_model: ManipulatorModel | None = kwargs.get(
             RoboGymEnv.KW_ROBOT_MODEL_OBJECT
         )
-        self._joint_names = kwargs.get("joint_names")
+        assert self._robot_model is not None
+        self._joint_names: list[str] = (
+            self._robot_model.joint_names
+        )  # kwargs.get("joint_names")
         self._fixed_joint_names: list[str] = []
         self._controlled_joint_names: list[str] = []
         for joint_name in self._joint_names:
@@ -93,36 +96,71 @@ class ManipulatorActionNode(ActionNode):
 
 
 class ManipulatorObservationNode(ObservationNode):
-    # TODO implement methods
+    KW_JOINT_POSITION_TOLERANCE_NORMALIZED = "joint_position_tolerance_normalized"
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self._robot_model: ManipulatorModel | None = kwargs.get(
+            RoboGymEnv.KW_ROBOT_MODEL_OBJECT
+        )
+        assert self._robot_model is not None
+        self._joint_names: list[str] = (
+            self._robot_model.joint_names
+        )  # kwargs.get("joint_names")
 
     def setup(self, **kwargs):
         super().setup(**kwargs)
 
     def get_observation_space_part(self) -> gym.spaces.Box:
-        pass
+        # Joint position range tolerance
+        num_joints = len(self._robot_model.joint_names)
+        pos_tolerance = np.full(num_joints, self.joint_position_tolerance_normalized)
+
+        # Joint positions range used to determine if there is an error in the sensor readings
+        max_joint_positions = np.add(np.full(num_joints, 1.0), pos_tolerance)
+        min_joint_positions = np.subtract(np.full(num_joints, -1.0), pos_tolerance)
+        # Joint velocities range
+        max_joint_velocities = np.array([np.inf] * num_joints)
+        min_joint_velocities = -np.array([np.inf] * num_joints)
+        # Definition of environment observation_space
+        max_obs = np.concatenate((max_joint_positions, max_joint_velocities))
+        min_obs = np.concatenate((min_joint_positions, min_joint_velocities))
+
+        return gym.spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
 
     def rs_state_to_observation_part(
         self, rs_state_array: NDArray, rs_state_dict: dict[str, float], **kwargs
     ) -> NDArray:
-        pass
+        # from old impl, but why are only the joint positions normalized?
+        joint_positions = []
+        joint_positions_keys = [
+            joint_name + "_position" for joint_name in self._joint_names
+        ]
+        for position in joint_positions_keys:
+            joint_positions.append(rs_state_dict[position])
+        joint_positions = np.array(joint_positions)
+        # Normalize joint position values
+        joint_positions = self.ur.normalize_joint_values(joints=joint_positions)
 
-    def get_reset_state_part_float(self) -> dict[str, float]:
-        return super().get_reset_state_part_float()
+        # Joint Velocities
+        joint_velocities = []
+        joint_velocities_keys = [
+            joint_name + "_velocity" for joint_name in self._joint_names
+        ]
+        for velocity in joint_velocities_keys:
+            joint_velocities.append(rs_state_dict[velocity])
+        joint_velocities = np.array(joint_velocities)
 
-    def get_reset_state_part_str(self) -> dict[str, str]:
-        return super().get_reset_state_part_str()
+        # Compose environment state
+        state = np.concatenate((joint_positions, joint_velocities))
 
-    def get_reset_state_part_state_dict(self) -> dict[str, float]:
-        return super().get_reset_state_part_state_dict()
+        return state.astype(np.float32)
 
-    def get_reset_state_part_state_array_values(self) -> NDArray:
-        return super().get_reset_state_part_state_array_values()
-
-    def get_reset_state_part_order(self) -> int:
-        return super().get_reset_state_part_order()
+    @property
+    def joint_position_tolerance_normalized(self) -> float:
+        return self._config.get(
+            ManipulatorObservationNode.KW_JOINT_POSITION_TOLERANCE_NORMALIZED, 0.1
+        )
 
 
 class ManipulatorRewardNode(RewardNode):
