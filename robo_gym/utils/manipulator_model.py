@@ -2,10 +2,8 @@
 from __future__ import annotations
 
 import numpy as np
-from babel.messages.pofile import denormalize
 from numpy.typing import NDArray
 import yaml
-import os
 import copy
 
 
@@ -50,6 +48,10 @@ class ManipulatorModel:
             self.joint_names = override_joint_names
         else:
             self.joint_names = p.get("joint_names")
+        if "remote_joint_names" in p:
+            self.remote_joint_names = p["remote_joint_names"]
+        else:
+            self.remote_joint_names = self.joint_namess
 
         # Initialize joint limits attributes
         self.max_joint_positions = np.zeros(len(self.joint_names))

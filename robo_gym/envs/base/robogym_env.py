@@ -9,9 +9,9 @@ from gymnasium.core import ObsType, ActType
 from numpy.typing import NDArray
 
 import robo_gym_server_modules.robot_server.client as rs_client
+from robo_gym.utils.exceptions import RobotServerError
 from robo_gym.utils.managed_rs_client import ManagedClient
 from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
-from utils.exceptions import RobotServerError
 
 
 class RoboGymEnv(gym.Env):
@@ -22,6 +22,8 @@ class RoboGymEnv(gym.Env):
     KW_REAL_ROBOT = "real_robot"
     KW_ACTION_RATE = "action_rate"
     KW_GUI_FLAG = "gui"
+    KW_GAZEBO_GUI_FLAG = "gazebo_gui"
+    KW_RVIZ_GUI_FLAG = "rviz_gui"
     KW_ROBOT_MODEL_KEY = "robot_model"
     KW_ROBOT_MODEL_OBJECT = "robot_model_object"
 
@@ -48,7 +50,7 @@ class RoboGymEnv(gym.Env):
         self._setup_nodes()
 
         self.action_space: gym.spaces.Box = self._get_action_space_no_cache()
-        self._observation_space = self._get_observation_space_no_cache()
+        self.observation_space = self._get_observation_space_no_cache()
 
         self._elapsed_steps = 0
         self._episodes_count = 0
@@ -106,7 +108,16 @@ class RoboGymEnv(gym.Env):
 
     def get_all_nodes(self) -> list[EnvNode]:
         result = [self._action_node, self._reward_node]
-        result.append(self._observation_nodes)
+        result.extend(self._observation_nodes)
+        return result
+
+    def get_all_nodes_sorted(self) -> list[EnvNode]:
+        result = [self._action_node, self._reward_node]
+
+        def my_sort_key(obs_node: ObservationNode):
+            return obs_node.get_reset_state_part_order()
+
+        result.extend(sorted(self._observation_nodes, key=my_sort_key))
         return result
 
     @property
@@ -116,6 +127,10 @@ class RoboGymEnv(gym.Env):
                 self._client = rs_client.Client(self.rs_address)
             elif self.server_manager_host:
                 # TODO implement support for old "ExceptionHandling" wrapper
+                if self.real_robot:
+                    raise Exception(
+                        "Config determines to use real robot with server manager - cannot work!"
+                    )
                 self._client = ManagedClient(
                     server_manager_host=self.server_manager_host,
                     server_manager_port=self.server_manager_port,
@@ -205,11 +220,7 @@ class RoboGymEnv(gym.Env):
         # MiR: only the state array is used; the server takes it apart based on hardcoded positions
         # UR: param dicts and state dict are used; server would support using state array instead of state dict
 
-        def my_sort_key(my_node: EnvNode) -> int:
-            return my_node.get_reset_state_part_order()
-
-        nodes = self.get_all_nodes()
-        nodes = sorted(nodes, key=my_sort_key)
+        nodes = self.get_all_nodes_sorted()
 
         rs_state_string_params: dict[str, str] = {}
         rs_state_float_params: dict[str, float] = {}
@@ -224,7 +235,7 @@ class RoboGymEnv(gym.Env):
             rs_state_string_params.update(node_string_params)
             rs_state_float_params.update(node_float_params)
             rs_state_dict.update(node_state_dict)
-            rs_state_array = np.concatenate(rs_state_array, node_state_array)
+            rs_state_array = np.concatenate((rs_state_array, node_state_array))
 
         state_msg = robot_server_pb2.State(
             state=rs_state_array,

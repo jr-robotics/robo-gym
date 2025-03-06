@@ -1,10 +1,26 @@
 from __future__ import annotations
 
-from envs.robogym_env import *
-from utils.manipulator_model import ManipulatorModel
+from typing import Tuple
+
+import gymnasium as gym
+import numpy as np
+from numpy.typing import NDArray
+
+from robo_gym.envs.base.robogym_env import (
+    RoboGymEnv,
+    ActionNode,
+    ObservationNode,
+    RewardNode,
+)
+from robo_gym.utils.manipulator_model import ManipulatorModel
 
 
 class ManipulatorBaseEnv(RoboGymEnv):
+
+    KW_RS_JOINT_NAMES = "rs_joint_names"
+    KW_JOINT_POSITIONS = "joint_position"
+    RS_STATE_KEY_SUFFIX_JOINT_POSITION = "_position"
+    RS_STATE_KEY_SUFFIX_JOINT_VELOCITY = "_velocity"
 
     def __init__(self, **kwargs):
         # not too nice - repeated in super init
@@ -13,6 +29,9 @@ class ManipulatorBaseEnv(RoboGymEnv):
         self._robot_model: ManipulatorModel | None = kwargs.get(
             RoboGymEnv.KW_ROBOT_MODEL_OBJECT
         )
+        if self.KW_JOINT_POSITIONS in kwargs:
+            # TODO check values
+            self._robot_model.joint_positions = kwargs[self.KW_JOINT_POSITIONS]
 
         # env nodes
         action_node: ActionNode | None = kwargs.get(RoboGymEnv.KW_ACTION_NODE)
@@ -47,26 +66,23 @@ class ManipulatorActionNode(ActionNode):
     # TODO
     # consider other action modes - current impl corresponds to ABS_POS only
 
+    KW_PREFIX_FIX_JOINT = "fix_"
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._robot_model: ManipulatorModel | None = kwargs.get(
             RoboGymEnv.KW_ROBOT_MODEL_OBJECT
         )
         assert self._robot_model is not None
-        self._joint_names: list[str] = (
-            self._robot_model.joint_names
-        )  # kwargs.get("joint_names")
+        self._joint_names: list[str] = self._robot_model.joint_names
         self._fixed_joint_names: list[str] = []
         self._controlled_joint_names: list[str] = []
         for joint_name in self._joint_names:
-            fix_arg_name = "fix_" + joint_name
+            fix_arg_name = self.KW_PREFIX_FIX_JOINT + joint_name
             if kwargs.get(fix_arg_name, False):
                 self._fixed_joint_names.append(joint_name)
             else:
                 self._controlled_joint_names.append(joint_name)
-
-    def setup(self, **kwargs):
-        super().setup(**kwargs)
 
     def get_action_space(self) -> gym.spaces.Box:
         length = len(self._controlled_joint_names)
@@ -91,7 +107,22 @@ class ManipulatorActionNode(ActionNode):
                 normalized_full_action[joint_index] = env_action[source_index]
                 source_index += 1
 
-        result = self._robot_model.denormalize_joint_values(normalized_full_action)
+        denormalized_full_action = self._robot_model.denormalize_joint_values(
+            normalized_full_action
+        )
+        result = self._robot_model._ur_joint_list_to_ros_joint_list(
+            denormalized_full_action
+        )
+        return result
+
+    def get_reset_state_part_state_dict(self) -> dict[str, float]:
+        result: dict[str, float] = {}
+        for joint_index in range(len(self._joint_names)):
+            joint_name = self._robot_model.remote_joint_names[joint_index]
+            state_key = (
+                joint_name + ManipulatorBaseEnv.RS_STATE_KEY_SUFFIX_JOINT_POSITION
+            )
+            result[state_key] = self._robot_model.joint_positions[joint_index]
         return result
 
 
@@ -107,9 +138,6 @@ class ManipulatorObservationNode(ObservationNode):
         self._joint_names: list[str] = (
             self._robot_model.joint_names
         )  # kwargs.get("joint_names")
-
-    def setup(self, **kwargs):
-        super().setup(**kwargs)
 
     def get_observation_space_part(self) -> gym.spaces.Box:
         # Joint position range tolerance
@@ -133,19 +161,24 @@ class ManipulatorObservationNode(ObservationNode):
     ) -> NDArray:
         # from old impl, but why are only the joint positions normalized?
         joint_positions = []
+
         joint_positions_keys = [
-            joint_name + "_position" for joint_name in self._joint_names
+            joint_name + ManipulatorBaseEnv.RS_STATE_KEY_SUFFIX_JOINT_POSITION
+            for joint_name in self._robot_model.remote_joint_names
         ]
         for position in joint_positions_keys:
             joint_positions.append(rs_state_dict[position])
         joint_positions = np.array(joint_positions)
         # Normalize joint position values
-        joint_positions = self.ur.normalize_joint_values(joints=joint_positions)
+        joint_positions = self._robot_model.normalize_joint_values(
+            joints=joint_positions
+        )
 
         # Joint Velocities
         joint_velocities = []
         joint_velocities_keys = [
-            joint_name + "_velocity" for joint_name in self._joint_names
+            joint_name + ManipulatorBaseEnv.RS_STATE_KEY_SUFFIX_JOINT_VELOCITY
+            for joint_name in self._robot_model.remote_joint_names
         ]
         for velocity in joint_velocities_keys:
             joint_velocities.append(rs_state_dict[velocity])
@@ -168,9 +201,6 @@ class ManipulatorRewardNode(RewardNode):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def setup(self, **kwargs):
-        super().setup(**kwargs)
-
     def get_reward(
         self,
         rs_state_array: NDArray,
@@ -188,7 +218,10 @@ class ManipulatorRewardNode(RewardNode):
             done = True
             info["final_status"] = "collision"
 
-        elif self.env.elapsed_steps >= self.max_episode_steps:
+        elif (
+            self.max_episode_steps is not None
+            and self.env.elapsed_steps >= self.max_episode_steps
+        ):
             done = True
             info["final_status"] = "success"
 

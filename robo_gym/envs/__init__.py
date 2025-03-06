@@ -27,4 +27,4 @@ from robo_gym.envs.ur.ur_avoidance_raad import (
     AvoidanceRaad2022TestURRob,
 )
 
-from robo_gym.envs.ur.ur_base import URBaseEnv2, EmptyEnvironmentUR2
+from robo_gym.envs.ur.ur_base import EmptyEnvironment2URSim, EmptyEnvironment2URRob

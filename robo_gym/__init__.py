@@ -86,6 +86,11 @@ register(
 )
 
 register(
-    id="EmptyEnvironmentUR2-v0",
-    entry_point="robo_gym.envs:EmptyEnvironmentUR2",
+    id="EmptyEnvironment2URSim-v0",
+    entry_point="robo_gym.envs:EmptyEnvironment2URSim",
+)
+
+register(
+    id="EmptyEnvironment2URRob-v0",
+    entry_point="robo_gym.envs:EmptyEnvironment2URRob",
 )
