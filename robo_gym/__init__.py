@@ -85,6 +85,7 @@ register(
     entry_point="robo_gym.envs:AvoidanceRaad2022TestURRob",
 )
 
+# TODO register the following as v1 or v2 of the corresponding v0 ones above instead?
 register(
     id="EmptyEnvironment2URSim-v0",
     entry_point="robo_gym.envs:EmptyEnvironment2URSim",
@@ -93,4 +94,14 @@ register(
 register(
     id="EmptyEnvironment2URRob-v0",
     entry_point="robo_gym.envs:EmptyEnvironment2URRob",
+)
+
+register(
+    id="EndEffectorPositioning2URSim-v0",
+    entry_point="robo_gym.envs:EndEffectorPositioning2URSim",
+)
+
+register(
+    id="EndEffectorPositioning2URRob-v0",
+    entry_point="robo_gym.envs:EndEffectorPositioning2URRob",
 )

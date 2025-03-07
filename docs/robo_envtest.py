@@ -95,11 +95,23 @@ def main():
         ) or env_class_name.endswith(robot_type)
 
     kwargs = {"gazebo_gui": gazebo_gui, "rviz_gui": rviz_gui}
+
+    action_mode = "abs_pos"
+    is_avoidance = env_class_name.find("Avoidance")
+
     if is_robot_type[ROBOT_TYPE_UR]:
         kwargs["ur_model"] = ur_model
     if is_robot_type[ROBOT_TYPE_PANDA]:
-        kwargs["action_mode"] = args.action_mode
+        action_mode = args.action_mode
+        kwargs["action_mode"] = action_mode
         kwargs["action_cycle_rate"] = 25
+
+    # Where in the observations do the joint position start?
+    joint_pos_obs_offset = 0
+    if robot_type != ROBOT_TYPE_MIR100 and (
+        env_class_name.find("EndEffectorPositioning") > -1 or is_avoidance > -1
+    ):
+        joint_pos_obs_offset += 3  # target polar coordinates
 
     if rs_address:
         env = gym.make(env_name, rs_address=rs_address, gui=gui, **kwargs)
@@ -134,7 +146,9 @@ def main():
                 param = math.sin((episode_time_count / period) * math.tau)
 
             if is_robot_type[ROBOT_TYPE_UR]:
-                normalized_joint_positions = observation[0:5]
+                normalized_joint_positions = observation[
+                    0 + joint_pos_obs_offset : 5 + joint_pos_obs_offset
+                ]
                 delta_action = (
                     np.array([param * 0.02, 0.0, 0.0, 0.0, 0.0], dtype=np.float32)
                     * direction
@@ -149,7 +163,9 @@ def main():
                     raise Exception("Fix the action math")
             elif is_robot_type[ROBOT_TYPE_PANDA]:
                 if args.action_mode == "abs_pos":
-                    normalized_joint_positions = observation[0:6]
+                    normalized_joint_positions = observation[
+                        0 + joint_pos_obs_offset : 6 + joint_pos_obs_offset
+                    ]
                     action = normalized_joint_positions
                     # assume that joint 0 has starting position 0, otherwise needs a different solution for the start
                     #

@@ -2,6 +2,20 @@
 #
 #  - UR5 User Manual, Universal Robots, UR5/CB3
 #    https://s3-eu-west-1.amazonaws.com/ur-support-site/77419/99202_UR5_User_Manual_en_Global.pdf
+joint_names:
+  - shoulder_pan
+  - shoulder_lift
+  - elbow_joint
+  - wrist_1
+  - wrist_2
+  - wrist_3
+remote_joint_names:
+  - base_joint
+  - shoulder_joint
+  - elbow_joint
+  - wrist_1_joint
+  - wrist_2_joint
+  - wrist_3_joint
 workspace_area:
   # Values for the recommended workspace area
   r: 0.750

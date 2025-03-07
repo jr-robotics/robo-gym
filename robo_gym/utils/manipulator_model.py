@@ -159,7 +159,7 @@ class ManipulatorModel:
 
     # TODO: use seed
     # TODO: provide version that returns 6D pose, we need that for reach tasks
-    def get_random_workspace_pose(self) -> NDArray:
+    def get_random_workspace_pose(self, seed: int | None = None) -> NDArray:
         """Get pose of a random point in the robot workspace.
 
         Returns:
@@ -196,8 +196,22 @@ class ManipulatorModel:
 
         return pose
 
+    def get_random_offset_joint_positions(
+        self, joint_positions: NDArray, random_offset: NDArray, seed: int | None = None
+    ):
+        joint_positions_low = joint_positions - random_offset
+        joint_positions_high = joint_positions + random_offset
+        # FIXME this does not use the seed
+        joint_positions = np.random.default_rng().uniform(
+            low=joint_positions_low, high=joint_positions_high
+        )
+
     def _ros_joint_list_to_ur_joint_list(self, ros_thetas: NDArray) -> NDArray:
         return ros_thetas
 
     def _ur_joint_list_to_ros_joint_list(self, thetas: NDArray) -> NDArray:
         return thetas
+
+    @property
+    def joint_count(self) -> int:
+        return len(self.joint_names)

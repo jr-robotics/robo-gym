@@ -125,6 +125,10 @@ class ManipulatorActionNode(ActionNode):
             result[state_key] = self._robot_model.joint_positions[joint_index]
         return result
 
+    @property
+    def robot_model(self):
+        return self._robot_model
+
 
 class ManipulatorObservationNode(ObservationNode):
     KW_JOINT_POSITION_TOLERANCE_NORMALIZED = "joint_position_tolerance_normalized"

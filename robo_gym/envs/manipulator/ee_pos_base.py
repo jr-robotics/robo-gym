@@ -1,7 +1,10 @@
-from typing import Tuple
+from __future__ import annotations
+
+from typing import Tuple, Any, SupportsFloat
 
 import gymnasium as gym
 import numpy as np
+from gymnasium.core import ObsType, ActType
 from numpy._typing import NDArray
 from scipy.spatial.transform import Rotation as R
 
@@ -11,28 +14,126 @@ from robo_gym.envs.manipulator.manipulator_base import (
     ManipulatorObservationNode,
     ManipulatorRewardNode,
 )
+from robo_gym.envs.base.robogym_env import RoboGymEnv, ObservationNode, RewardNode
+from robo_gym.utils import utils
+from robo_gym.utils.manipulator_model import ManipulatorModel
 
 
 class ManipulatorEePosEnv(ManipulatorBaseEnv):
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        # TODO
-
-
-class ManipulatorEePosActionNode(ManipulatorActionNode):
+    KW_EE_TARGET_POSE = "ee_target_pose"
+    KW_CONTINUE_ON_SUCCESS = "continue_on_success"
+    KW_RANDOMIZE_START = "randomize_start"
+    KW_RANDOM_JOINT_OFFSET = "random_joint_offset"
 
     def __init__(self, **kwargs):
+        # not too nice - repeated in super init
+        self._config = kwargs
+
+        self._robot_model: ManipulatorModel | None = kwargs.get(
+            RoboGymEnv.KW_ROBOT_MODEL_OBJECT
+        )
+        if self.KW_JOINT_POSITIONS in kwargs:
+            # TODO check values
+            self._robot_model.joint_positions = kwargs[self.KW_JOINT_POSITIONS]
+
+        # duplicates a few lines of super initializer buth with different observation node subclass, would be nice to generalize
+        obs_node: ObservationNode | None = None
+        obs_nodes: list[ObservationNode] | None = kwargs.get(
+            RoboGymEnv.KW_OBSERVATION_NODES
+        )
+        if obs_nodes is None:
+            obs_nodes = []
+            kwargs[RoboGymEnv.KW_OBSERVATION_NODES] = obs_nodes
+        for current_node in obs_nodes:
+            if isinstance(current_node, ManipulatorEePosObservationNode):
+                obs_node = current_node
+                break
+        if not obs_node:
+            obs_node = ManipulatorEePosObservationNode(
+                **self.get_obs_node_setup_kwargs(0)
+            )
+            obs_nodes.insert(0, obs_node)
+
+        # Note: to rebuild legacy observation, subclass may add a LastActionObservationNode to the observation nodes
+        reward_node: RewardNode | None = kwargs.get(RoboGymEnv.KW_REWARD_NODE)
+        if not reward_node:
+            reward_node = ManipulatorEePosRewardNode(
+                **self.get_reward_node_setup_kwargs()
+            )
+        kwargs[RoboGymEnv.KW_REWARD_NODE] = reward_node
+
         super().__init__(**kwargs)
 
-    def env_action_to_rs_action(self, env_action: NDArray, **kwargs) -> NDArray:
-        return super().env_action_to_rs_action(env_action, **kwargs)
+        self.last_position = np.zeros(self.get_robot_model().joint_count)
+        self.successful_ending = False
 
-    def get_action_space(self) -> gym.spaces.Box:
-        return super().get_action_space()
+    def reset(
+        self, *, seed: int | None = None, options: dict[str, Any] | None = None
+    ) -> tuple[ObsType, dict[str, Any]]:
 
-    def get_reset_state_part_state_dict(self) -> dict[str, float]:
-        return super().get_reset_state_part_state_dict()
+        robot_model = self.get_robot_model()
+        joint_positions = np.array(self._config.get(self.KW_JOINT_POSITIONS))
+
+        if self._config.get(self.KW_CONTINUE_ON_SUCCESS) and self.successful_ending:
+            joint_positions = self.last_position
+        elif self._config.get(self.KW_RANDOMIZE_START):
+            random_offset = self._config.get(self.KW_RANDOM_JOINT_OFFSET)
+            if len(random_offset) == robot_model.joint_count:
+                np_random_offset = np.array(random_offset)
+                joint_positions = robot_model.get_random_offset_joint_positions(
+                    joint_positions, np_random_offset, seed
+                )
+
+        # joint positions from robot model will put it into state for new rs state to set by the Action Node
+        self._robot_model.joint_positions = joint_positions
+
+        self.successful_ending = False
+
+        # initialize joint positions:
+        # if randomize start: configured joint positions + random offset
+        # if success and continue on success: to last positions
+
+        assert isinstance(self._reward_node, ManipulatorEePosRewardNode)
+        # initialize ee target:
+        # from configured ee target pose if any
+        new_ee_target = self._config.get(self.KW_EE_TARGET_POSE)
+        # else random
+        if new_ee_target is None:
+            new_ee_target = robot_model.get_random_workspace_pose(seed=seed)
+        # reward node will put it into params for new rs state to set
+
+        self._reward_node.set_ee_target(new_ee_target)
+
+        obs, info = super().reset(seed=seed, options=options)
+        return obs, info
+
+    def step(
+        self, action: ActType
+    ) -> tuple[ObsType, SupportsFloat, bool, bool, dict[str, Any]]:
+        obs, reward, terminated, truncated, info = super().step(action)
+
+        if terminated:
+            if info["final_status"] == "success":
+                # store last position for later
+                assert isinstance(self._action_node, ManipulatorActionNode)
+                robot_model = self.get_robot_model()
+
+                joint_positions = []
+                joint_positions_keys = [
+                    joint_name + ManipulatorBaseEnv.RS_STATE_KEY_SUFFIX_JOINT_POSITION
+                    for joint_name in robot_model.remote_joint_names
+                ]
+
+                for position in joint_positions_keys:
+                    joint_positions.append(self._last_rs_state_dict[position])
+                joint_positions = np.array(joint_positions)
+                self.last_position = joint_positions
+        return obs, reward, terminated, truncated, info
+
+    def get_robot_model(self) -> ManipulatorModel:
+        assert isinstance(self._action_node, ManipulatorActionNode)
+        return self._action_node.robot_model
 
 
 class ManipulatorEePosObservationNode(ManipulatorObservationNode):
@@ -41,7 +142,29 @@ class ManipulatorEePosObservationNode(ManipulatorObservationNode):
         super().__init__(**kwargs)
 
     def get_observation_space_part(self) -> gym.spaces.Box:
-        return super().get_observation_space_part()
+        super_result = super().get_observation_space_part()
+
+        # Target coordinates range
+        target_range = np.full(3, np.inf)
+
+        # Cartesian coords of the target location
+        max_target_coord = np.array([np.inf] * 3)
+        min_target_coord = -np.array([np.inf] * 3)
+
+        # Cartesian coords of the end effector
+        max_ee_coord = np.array([np.inf] * 3)
+        min_ee_coord = -np.array([np.inf] * 3)
+
+        # Definition of environment observation_space part
+        max_obs = np.concatenate(
+            (target_range, super_result.high, max_target_coord, max_ee_coord)
+        )
+        min_obs = np.concatenate(
+            (-target_range, super_result.low, min_target_coord, min_ee_coord)
+        )
+
+        # vs legacy: action is added by separate LastActionObservationNode
+        return gym.spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
 
     def rs_state_to_observation_part(
         self, rs_state_array: NDArray, rs_state_dict: dict[str, float], **kwargs
@@ -94,14 +217,19 @@ class ManipulatorEePosObservationNode(ManipulatorObservationNode):
         )
         target_polar = utils.cartesian_to_polar_3d(target_coord_ee_frame)
 
+        # ordering is not great - adds before and after superclass result
+
         # Compose environment state
+        # previous action is added by a separate LastActionObservationNode
+        # BUT legacy also included fixed joints here, although they are not part of the action
+        # (thus each fixed joint leads to 1 less place in the observation here, which is more consistent)
         state = np.concatenate(
             (
                 target_polar,
                 super_result,
                 target_coord,
                 ee_to_ref_frame_translation,
-                self.previous_action,
+                # self.previous_action,
             )
         )
 
@@ -110,18 +238,83 @@ class ManipulatorEePosObservationNode(ManipulatorObservationNode):
 
 class ManipulatorEePosRewardNode(ManipulatorRewardNode):
 
+    DEFAULT_DISTANCE_THRESHOLD = 0.1
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self._ee_target: list[float] | None = None
+
+    def set_ee_target(self, new_target: list[float]):
+        self._ee_target = new_target
+
+    def get_ee_target(self) -> list[float]:
+        return self._ee_target
+
+    def get_reset_state_part_str(self) -> dict[str, str]:
+        return {"object_0_function": "fixed_position"}
+
+    def get_reset_state_part_float(self) -> dict[str, float]:
+        return {
+            "object_0_x": self._ee_target[0],
+            "object_0_y": self._ee_target[1],
+            "object_0_z": self._ee_target[2],
+        }
 
     def get_reward(
         self,
         rs_state_array: NDArray,
         rs_state_dict: dict[str, float],
         env_action: NDArray,
-        **kwargs
+        **kwargs,
     ) -> Tuple[float, bool, dict]:
-        result: Tuple[float, bool, dict] = super().get_reward(
-            rs_state_array, rs_state_dict, env_action, **kwargs
+        # TODO adapt and improve code taken from legacy more; replace hardcoded numbers; integrate call to same method in superclass
+        rs_state = rs_state_dict
+        reward = 0.0
+        done = False
+        info = {}
+
+        # Reward weight for reaching the goal position
+        g_w = 2
+        # Reward weight for collision (ground, table or self)
+        c_w = -1
+        # Reward weight according to the distance to the goal
+        d_w = -0.005
+
+        # Calculate distance to the target
+        target_coord = np.array(
+            [
+                rs_state["object_0_to_ref_translation_x"],
+                rs_state["object_0_to_ref_translation_y"],
+                rs_state["object_0_to_ref_translation_z"],
+            ]
         )
-        # TODO
-        return result
+        ee_coord = np.array(
+            [
+                rs_state["ee_to_ref_translation_x"],
+                rs_state["ee_to_ref_translation_y"],
+                rs_state["ee_to_ref_translation_z"],
+            ]
+        )
+        euclidean_dist_3d = np.linalg.norm(target_coord - ee_coord)
+
+        # Reward base
+        reward += d_w * euclidean_dist_3d
+
+        if euclidean_dist_3d <= self.DEFAULT_DISTANCE_THRESHOLD:
+            reward = g_w * 1
+            done = True
+            info["final_status"] = "success"
+            info["target_coord"] = target_coord
+
+        if rs_state["in_collision"]:
+            reward = c_w * 1
+            done = True
+            info["final_status"] = "collision"
+            info["target_coord"] = target_coord
+
+        elif self.env.elapsed_steps >= self.max_episode_steps:
+            done = True
+            info["final_status"] = "max_steps_exceeded"
+            info["target_coord"] = target_coord
+
+        return reward, done, info

@@ -28,3 +28,7 @@ from robo_gym.envs.ur.ur_avoidance_raad import (
 )
 
 from robo_gym.envs.ur.ur_base import EmptyEnvironment2URSim, EmptyEnvironment2URRob
+from robo_gym.envs.ur.ur_ee_pos import (
+    EndEffectorPositioning2URSim,
+    EndEffectorPositioning2URRob,
+)

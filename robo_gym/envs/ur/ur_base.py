@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Any
 
 from robo_gym.envs.base.robogym_env import RoboGymEnv, RewardNode

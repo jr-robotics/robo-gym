@@ -305,6 +305,10 @@ class RoboGymEnv(gym.Env):
         # return value is redundant, since we manipulate the input dict
         return kwargs
 
+    @property
+    def last_env_action(self):
+        return self._last_env_action
+
 
 class EnvNode(ABC):
 
@@ -334,6 +338,12 @@ class EnvNode(ABC):
 
 
 class ActionNode(EnvNode):
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def setup(self, env: RoboGymEnv, **kwargs):
+        super().setup(env, **kwargs)
 
     @abstractmethod
     def get_action_space(self) -> gym.spaces.Box:
@@ -374,3 +384,14 @@ class RewardNode(EnvNode):
     @property
     def max_episode_steps(self) -> int | None:
         return self._config.get(RewardNode.KW_MAX_EPISODE_STEPS)
+
+
+class LastActionObservationNode(ObservationNode):
+
+    def get_observation_space_part(self) -> gym.spaces.Box:
+        return self.env.action_space
+
+    def rs_state_to_observation_part(
+        self, rs_state_array: NDArray, rs_state_dict: dict[str, float], **kwargs
+    ) -> NDArray:
+        return self.env.last_env_action
