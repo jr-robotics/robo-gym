@@ -95,6 +95,7 @@ def main():
         ) or env_class_name.endswith(robot_type)
 
     kwargs = {"gazebo_gui": gazebo_gui, "rviz_gui": rviz_gui}
+    kwargs["rs_state_to_info"] = True
 
     action_mode = "abs_pos"
     is_avoidance = env_class_name.find("Avoidance")
@@ -121,7 +122,7 @@ def main():
 
     env = TimeLimit(env, episode_timesteps)
 
-    env.reset()
+    observation, info = env.reset()
     time.sleep(1)
     time_count = 0
     period = episode_timesteps / 2

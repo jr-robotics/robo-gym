@@ -213,8 +213,8 @@ class ManipulatorRewardNode(RewardNode):
         **kwargs,
     ) -> Tuple[float, bool, dict]:
 
+        info = self.env.get_default_info()
         done = False
-        info = {}
 
         # Check if robot is in collision
         collision = rs_state_dict["in_collision"] == 1
@@ -229,4 +229,4 @@ class ManipulatorRewardNode(RewardNode):
             done = True
             info["final_status"] = "success"
 
-        return 0, done, info
+        return 0.0, done, info

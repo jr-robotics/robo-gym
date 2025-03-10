@@ -267,11 +267,13 @@ class ManipulatorEePosRewardNode(ManipulatorRewardNode):
         env_action: NDArray,
         **kwargs,
     ) -> Tuple[float, bool, dict]:
-        # TODO adapt and improve code taken from legacy more; replace hardcoded numbers; integrate call to same method in superclass
+
+        info = self.env.get_default_info()
+
+        # TODO adapt and improve code taken from legacy more; replace hardcoded numbers
         rs_state = rs_state_dict
         reward = 0.0
         done = False
-        info = {}
 
         # Reward weight for reaching the goal position
         g_w = 2

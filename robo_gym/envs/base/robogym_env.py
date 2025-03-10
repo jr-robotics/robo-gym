@@ -26,10 +26,13 @@ class RoboGymEnv(gym.Env):
     KW_RVIZ_GUI_FLAG = "rviz_gui"
     KW_ROBOT_MODEL_KEY = "robot_model"
     KW_ROBOT_MODEL_OBJECT = "robot_model_object"
+    KW_RS_STATE_TO_INFO = "rs_state_to_info"
 
     KW_ACTION_NODE = "action_node"
     KW_REWARD_NODE = "reward_node"
     KW_OBSERVATION_NODES = "observation_nodes"
+
+    INFO_KW_RS_STATE = "rs_state"
 
     def __init__(self, **kwargs):
         self._config = kwargs
@@ -251,8 +254,14 @@ class RoboGymEnv(gym.Env):
         if not self.client.set_state_msg(state_msg):
             raise RobotServerError("set_state")
 
-    def _get_reset_info(self):
-        return {}
+    def get_default_info(self) -> dict:
+        info = {}
+        if self._config.get(self.KW_RS_STATE_TO_INFO, False):
+            info[self.INFO_KW_RS_STATE] = self._last_rs_state_dict
+        return info
+
+    def _get_reset_info(self) -> dict:
+        return self.get_default_info()
 
     def reset(
         self, *, seed: int | None = None, options: dict[str, Any] | None = None
@@ -371,7 +380,6 @@ class RewardNode(EnvNode):
 
     KW_MAX_EPISODE_STEPS = "max_episode_steps"
 
-    @abstractmethod
     def get_reward(
         self,
         rs_state_array: NDArray,
@@ -379,7 +387,9 @@ class RewardNode(EnvNode):
         env_action: NDArray,
         **kwargs,
     ) -> Tuple[float, bool, dict]:
-        pass
+
+        info = self.env.get_default_info()
+        return 0.0, False, info
 
     @property
     def max_episode_steps(self) -> int | None:
