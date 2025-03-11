@@ -72,27 +72,28 @@ class ManipulatorEePosEnv(ManipulatorBaseEnv):
         self, *, seed: int | None = None, options: dict[str, Any] | None = None
     ) -> tuple[ObsType, dict[str, Any]]:
 
-        robot_model = self.get_robot_model()
-        joint_positions = np.array(self._config.get(self.KW_JOINT_POSITIONS))
+        obs, info = super().reset(seed=seed, options=options)
+        return obs, info
 
+    def _prepare_state(self):
+        robot_model = self.get_robot_model()
+
+        # initial joint positions, default: from config
+        joint_positions = np.array(self._config.get(self.KW_JOINT_POSITIONS))
         if self._config.get(self.KW_CONTINUE_ON_SUCCESS) and self.successful_ending:
+            # if success and continue on success: to last positions
             joint_positions = self.last_position
         elif self._config.get(self.KW_RANDOMIZE_START):
+            # if randomize start: configured joint positions + random offset
             random_offset = self._config.get(self.KW_RANDOM_JOINT_OFFSET)
             if len(random_offset) == robot_model.joint_count:
                 np_random_offset = np.array(random_offset)
                 joint_positions = robot_model.get_random_offset_joint_positions(
                     joint_positions, np_random_offset, np_random=self.np_random
                 )
-
         # joint positions from robot model will put it into state for new rs state to set by the Action Node
         self._robot_model.joint_positions = joint_positions
-
         self.successful_ending = False
-
-        # initialize joint positions:
-        # if randomize start: configured joint positions + random offset
-        # if success and continue on success: to last positions
 
         assert isinstance(self._reward_node, ManipulatorEePosRewardNode)
         # initialize ee target:
@@ -104,11 +105,7 @@ class ManipulatorEePosEnv(ManipulatorBaseEnv):
                 np_random=self.np_random
             )
         # reward node will put it into params for new rs state to set
-
         self._reward_node.set_ee_target(new_ee_target)
-
-        obs, info = super().reset(seed=seed, options=options)
-        return obs, info
 
     def step(
         self, action: ActType

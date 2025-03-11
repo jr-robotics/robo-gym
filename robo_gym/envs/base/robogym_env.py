@@ -15,6 +15,9 @@ from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_p
 
 
 class RoboGymEnv(gym.Env):
+    """
+    Base class for robo-gym environments, linked to a robot server that wraps a simulated or real robot.
+    """
 
     KW_RS_ADDRESS = "rs_address"
     KW_SERVER_MANAGER_HOST = "ip"
@@ -64,6 +67,10 @@ class RoboGymEnv(gym.Env):
         self._last_rs_state_dict: dict[str, float] = {}
 
     def _setup_nodes(self):
+        """
+        Calls the setup method for each environment node
+        Returns: nothing
+        """
         self._action_node.setup(self, **self.get_action_node_setup_kwargs())
         self._reward_node.setup(self, **self.get_reward_node_setup_kwargs())
         for index in range(len(self._observation_nodes)):
@@ -72,15 +79,30 @@ class RoboGymEnv(gym.Env):
             )
 
     def _reset_episode_fields(self):
+        """
+        Resets episode-related fields
+        Returns: nothing
+
+        """
         self._elapsed_steps = 0
         self._last_env_action = np.zeros_like(self.action_space.high)
         self._last_rs_state_array = np.array([], dtype=np.float32)
         self._last_rs_state_dict = {}
 
     def _get_action_space_no_cache(self) -> gym.spaces.Box:
+        """
+        Gets the action space returned by the action node.
+        Returns: the action space returned by the action node
+
+        """
         return self._action_node.get_action_space()
 
     def _get_observation_space_no_cache(self) -> gym.spaces.Box:
+        """
+        Gets the observation space returned by the observation nodes.
+        Returns: the observation space obtained from concatenating the box spaces returned by the observation nodes
+
+        """
         space_parts = [
             node.get_observation_space_part() for node in self._observation_nodes
         ]
@@ -92,6 +114,11 @@ class RoboGymEnv(gym.Env):
         return result
 
     def get_action_node_setup_kwargs(self):
+        """
+        Get arguments for calling setup on the action node. Defaults to own config. Override to provide different arguments.
+        Returns: own config dict
+
+        """
         return self._config
 
     def get_action_node_dyn_kwargs(self):
@@ -255,17 +282,37 @@ class RoboGymEnv(gym.Env):
             raise RobotServerError("set_state")
 
     def get_default_info(self) -> dict:
+        """
+        base values for the info dict
+        Returns:
+
+        """
         info = {}
         if self._config.get(self.KW_RS_STATE_TO_INFO, False):
             info[self.INFO_KW_RS_STATE] = self._last_rs_state_dict
         return info
 
     def _get_reset_info(self) -> dict:
+        """
+        the info dict to be returned by reset
+        Returns: result of get_default_info
+
+        """
         return self.get_default_info()
+
+    def _prepare_state(self):
+        """
+        Called after setting new seed and before setting new state on robot server.
+        Subclass should override this to perform any episode preparation depending on RNG.
+        """
+        pass
 
     def reset(
         self, *, seed: int | None = None, options: dict[str, Any] | None = None
     ) -> tuple[ObsType, dict[str, Any]]:
+
+        super().reset(seed=seed, options=options)
+        # consider RNG (self.np_random) as ready for the new episode
 
         # TODO integrate arg check as introduced for Panda
 
@@ -274,6 +321,8 @@ class RoboGymEnv(gym.Env):
             self._setup_nodes()
             self._reset_episode_fields()
         self._episodes_count += 1
+
+        self._prepare_state()
 
         # TODO reconsider if any methods called below here should be set up to receive (more) args in subclasses
         self._set_initial_server_state()
