@@ -157,7 +157,6 @@ class ManipulatorModel:
             #    result[i] = joints[i] / abs(self.max_joint_positions[i])
         return result
 
-    # TODO: use seed
     # TODO: provide version that returns 6D pose, we need that for reach tasks
     def get_random_workspace_pose(
         self, np_random: np.random.Generator | None = None
@@ -170,7 +169,7 @@ class ManipulatorModel:
         """
 
         if np_random is None:
-            np_random = np.random.Generator
+            np_random = np.random.default_rng()
 
         pose = np.zeros(6)
 
@@ -208,7 +207,7 @@ class ManipulatorModel:
     ):
 
         if np_random is None:
-            np_random = np.random.Generator
+            np_random = np.random.default_rng()
 
         joint_positions_low = joint_positions - random_offset
         joint_positions_high = joint_positions + random_offset
@@ -216,6 +215,7 @@ class ManipulatorModel:
         joint_positions = np_random.uniform(
             low=joint_positions_low, high=joint_positions_high
         )
+        return joint_positions
 
     def _ros_joint_list_to_ur_joint_list(self, ros_thetas: NDArray) -> NDArray:
         return ros_thetas
