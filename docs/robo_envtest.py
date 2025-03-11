@@ -8,6 +8,7 @@ import signal
 import argparse
 from gymnasium.wrappers import TimeLimit
 import robo_gym
+from envs.base.robogym_env import RoboGymEnv
 from robo_gym.wrappers.exception_handling import ExceptionHandling
 
 ROBOT_TYPE_MIR100 = "Mir100"
@@ -94,14 +95,14 @@ def main():
             robot_type
         ) or env_class_name.endswith(robot_type)
 
-    kwargs = {"gazebo_gui": gazebo_gui, "rviz_gui": rviz_gui}
-    kwargs["rs_state_to_info"] = True
+    kwargs = {"gazebo_gui": gazebo_gui, "rviz_gui": rviz_gui, "rs_state_to_info": True}
 
     action_mode = "abs_pos"
     is_avoidance = env_class_name.find("Avoidance")
 
     if is_robot_type[ROBOT_TYPE_UR]:
         kwargs["ur_model"] = ur_model
+        kwargs["randomize_start"] = False
     if is_robot_type[ROBOT_TYPE_PANDA]:
         action_mode = args.action_mode
         kwargs["action_mode"] = action_mode
