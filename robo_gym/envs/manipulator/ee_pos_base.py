@@ -76,6 +76,8 @@ class ManipulatorEePosEnv(ManipulatorBaseEnv):
         return obs, info
 
     def _prepare_state(self):
+        super()._prepare_state()
+
         robot_model = self.get_robot_model()
 
         # initial joint positions, default: from config
