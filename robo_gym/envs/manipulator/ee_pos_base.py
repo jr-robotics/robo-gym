@@ -82,7 +82,7 @@ class ManipulatorEePosEnv(ManipulatorBaseEnv):
             if len(random_offset) == robot_model.joint_count:
                 np_random_offset = np.array(random_offset)
                 joint_positions = robot_model.get_random_offset_joint_positions(
-                    joint_positions, np_random_offset, seed
+                    joint_positions, np_random_offset, np_random=self.np_random
                 )
 
         # joint positions from robot model will put it into state for new rs state to set by the Action Node
@@ -100,7 +100,9 @@ class ManipulatorEePosEnv(ManipulatorBaseEnv):
         new_ee_target = self._config.get(self.KW_EE_TARGET_POSE)
         # else random
         if new_ee_target is None:
-            new_ee_target = robot_model.get_random_workspace_pose(seed=seed)
+            new_ee_target = robot_model.get_random_workspace_pose(
+                np_random=self.np_random
+            )
         # reward node will put it into params for new rs state to set
 
         self._reward_node.set_ee_target(new_ee_target)

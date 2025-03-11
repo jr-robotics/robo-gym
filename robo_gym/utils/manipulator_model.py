@@ -159,13 +159,19 @@ class ManipulatorModel:
 
     # TODO: use seed
     # TODO: provide version that returns 6D pose, we need that for reach tasks
-    def get_random_workspace_pose(self, seed: int | None = None) -> NDArray:
+    def get_random_workspace_pose(
+        self, np_random: np.random.Generator | None = None
+    ) -> NDArray:
         """Get pose of a random point in the robot workspace.
 
         Returns:
             np.array: [x,y,z,alpha,theta,gamma] pose.
 
         """
+
+        if np_random is None:
+            np_random = np.random.Generator
+
         pose = np.zeros(6)
 
         singularity_area = True
@@ -175,11 +181,9 @@ class ManipulatorModel:
             # Generate random uniform sample in semisphere taking advantage of the
             # sampling rule
 
-            phi = np.random.default_rng().uniform(low=0.0, high=2 * np.pi)
-            costheta = np.random.default_rng().uniform(
-                low=0.0, high=1.0
-            )  # [-1.0,1.0] for a sphere
-            u = np.random.default_rng().uniform(low=0.0, high=1.0)
+            phi = np_random.uniform(low=0.0, high=2 * np.pi)
+            costheta = np_random.uniform(low=0.0, high=1.0)  # [-1.0,1.0] for a sphere
+            u = np_random.uniform(low=0.0, high=1.0)
 
             theta = np.arccos(costheta)
             r = self.ws_r * np.cbrt(u)
@@ -197,12 +201,19 @@ class ManipulatorModel:
         return pose
 
     def get_random_offset_joint_positions(
-        self, joint_positions: NDArray, random_offset: NDArray, seed: int | None = None
+        self,
+        joint_positions: NDArray,
+        random_offset: NDArray,
+        np_random: np.random.Generator | None = None,
     ):
+
+        if np_random is None:
+            np_random = np.random.Generator
+
         joint_positions_low = joint_positions - random_offset
         joint_positions_high = joint_positions + random_offset
-        # FIXME this does not use the seed
-        joint_positions = np.random.default_rng().uniform(
+
+        joint_positions = np_random.uniform(
             low=joint_positions_low, high=joint_positions_high
         )
 
