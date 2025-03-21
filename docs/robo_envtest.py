@@ -9,7 +9,6 @@ import argparse
 from gymnasium.wrappers import TimeLimit
 import robo_gym
 from envs.base.robogym_env import RoboGymEnv
-from robo_gym.wrappers.exception_handling import ExceptionHandling
 
 ROBOT_TYPE_MIR100 = "Mir100"
 ROBOT_TYPE_UR = "UR"
@@ -119,7 +118,6 @@ def main():
         env = gym.make(env_name, rs_address=rs_address, gui=gui, **kwargs)
     else:
         env = gym.make(env_name, ip=target_machine_ip, gui=gui, **kwargs)
-        # env = ExceptionHandling(env)
 
     env = TimeLimit(env, episode_timesteps)
 

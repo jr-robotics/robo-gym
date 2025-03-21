@@ -42,9 +42,9 @@ class RoboGymEnv(gym.Env):
 
         # client will be obtained lazily
         # 3 cases:
-        # - new sim RS via server manager (only case that should support "ExceptionHandling", TODO later)
+        # - new sim RS via server manager
         # - existing real RS
-        # - existing sim RS (new case!) - cannot be used with old "ExceptionHandling" wrapper
+        # - existing sim RS (new case!)
         self._client: rs_client.Client | None = None
 
         self._action_node: ActionNode = kwargs.get(self.KW_ACTION_NODE)
@@ -156,7 +156,6 @@ class RoboGymEnv(gym.Env):
             if self.rs_address:
                 self._client = rs_client.Client(self.rs_address)
             elif self.server_manager_host:
-                # TODO implement support for old "ExceptionHandling" wrapper
                 if self.real_robot:
                     raise Exception(
                         "Config determines to use real robot with server manager - cannot work!"

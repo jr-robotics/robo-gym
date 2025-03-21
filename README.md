@@ -151,30 +151,6 @@ The Simulation wrapper provides some extra functionalities to the Simulated Envi
 - `env.kill_sim()` kill the simulation 
 
 <!-- omit in toc -->
-### Exception Handling Wrapper
-
-The Exception Handling Wrapper comes in handy when training on simulated environments.
-The wrapper implements reaction strategies to common exceptions raised during training.
-If one of the know exceptions is raised it tries to restart the Robot Server and the Simulation
-to recover the system. If the exceptions happen during the reset of the environment the Robot Server
-is simply restarted in the background, whereas, if exceptions happen during the execution of an
-environment step the environment returns:
-
-```python
-return self.env.observation_space.sample(), 0, True, {"Exception":True, "ExceptionType": <Exception_type>}
-```
-Adding the wrapper to any simulated environment is very easy:
-
-```python
-import gymnasium as gym
-import robo_gym
-from robo_gym.wrappers.exception_handling import ExceptionHandling
-
-env = gym.make('EnvironmentNameSim-v0', ip='<server_manager_address>')
-env = ExceptionHandling(env)
-```
-
-<!-- omit in toc -->
 ## Real Robot Environments
 
 When making a real robot environment the Robot Server needs to be started manually, see [here](https://github.com/jr-robotics/robo-gym-robot-servers#how-to-use) how to do that.  
@@ -207,13 +183,11 @@ For information on creating your own environments, see [Creating your own Enviro
 ```python
 import gymnasium as gym
 import robo_gym
-from robo_gym.wrappers.exception_handling import ExceptionHandling
 
 target_machine_ip = '127.0.0.1' # or other machine 'xxx.xxx.xxx.xxx'
 
 # initialize environment
 env = gym.make('NoObstacleNavigationMir100Sim-v0', ip=target_machine_ip, gui=True)
-env = ExceptionHandling(env)
 
 num_episodes = 10
 
@@ -324,7 +298,6 @@ If you have general questions or ideas that you would like to share please [star
   + The robo-gym paper has been accepted for IROS 2020 !
 - 2020-06-02 (v0.1.7)
   + improved documentation
-  + added exception handling feature to simulated environments
 
 - 2020-04-27 (v0.1.1)
   + added Simplified Installation option for Robot Server Side
