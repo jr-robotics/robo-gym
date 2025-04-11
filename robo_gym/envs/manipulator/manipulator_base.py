@@ -39,20 +39,14 @@ class ManipulatorBaseEnv(RoboGymEnv):
             action_node = ManipulatorActionNode(**self.get_action_node_setup_kwargs())
         kwargs[RoboGymEnv.KW_ACTION_NODE] = action_node
 
-        obs_node: ObservationNode | None = None
-        obs_nodes: list[ObservationNode] | None = kwargs.get(
-            RoboGymEnv.KW_OBSERVATION_NODES
+        RoboGymEnv.assure_instance_of_type_in_list(
+            kwargs,
+            RoboGymEnv.KW_OBSERVATION_NODES,
+            ManipulatorObservationNode,
+            True,
+            self.create_main_observation_node,
+            {},
         )
-        if obs_nodes is None:
-            obs_nodes = []
-            kwargs[RoboGymEnv.KW_OBSERVATION_NODES] = obs_nodes
-        for current_node in obs_nodes:
-            if isinstance(current_node, ManipulatorObservationNode):
-                obs_node = current_node
-                break
-        if not obs_node:
-            obs_node = ManipulatorObservationNode(**self.get_obs_node_setup_kwargs(0))
-            obs_nodes.insert(0, obs_node)
 
         reward_node: RewardNode | None = kwargs.get(RoboGymEnv.KW_REWARD_NODE)
         if not reward_node:
@@ -60,6 +54,9 @@ class ManipulatorBaseEnv(RoboGymEnv):
         kwargs[RoboGymEnv.KW_REWARD_NODE] = reward_node
 
         super().__init__(**kwargs)
+
+    def create_main_observation_node(self, node_index: int = 0, **kwargs):
+        return ManipulatorObservationNode(**self.get_obs_node_setup_kwargs(node_index))
 
 
 class ManipulatorActionNode(ActionNode):

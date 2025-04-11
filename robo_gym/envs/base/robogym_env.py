@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, SupportsFloat, Tuple
+from typing import Any, SupportsFloat, Tuple, Callable
+from types import UnionType
 
 import gymnasium as gym
 import numpy as np
@@ -149,6 +150,9 @@ class RoboGymEnv(gym.Env):
 
         result.extend(sorted(self._observation_nodes, key=my_sort_key))
         return result
+
+    def create_main_observation_node(self, node_index: int = 0, **kwargs):
+        return ObservationNode(**self.get_obs_node_setup_kwargs(node_index))
 
     @property
     def client(self) -> rs_client.Client | None:
@@ -361,6 +365,33 @@ class RoboGymEnv(gym.Env):
             kwargs[key] = default_value
         # return value is redundant, since we manipulate the input dict
         return kwargs
+
+    @staticmethod
+    def assure_instance_of_type_in_list(
+        kwargs: dict[str, Any],
+        key: str,
+        the_type: type | UnionType,
+        insert_as_head: bool,
+        initializer: Callable,
+        initializer_args: dict[str, Any],
+    ) -> object:
+        the_list = kwargs.get(key)
+        if the_list is None:
+            the_list = []
+        elif not isinstance(the_list, list):
+            raise Exception("Expected list in kw args at key '" + key + "'")
+
+        for existing_element in the_list:
+            if isinstance(existing_element, the_type):
+                return existing_element
+
+        the_instance = initializer(initializer_args)
+        if insert_as_head:
+            the_list.insert(0, the_instance)
+        else:
+            the_list.append(the_instance)
+        kwargs[key] = the_list
+        return the_instance
 
     @property
     def last_env_action(self):
