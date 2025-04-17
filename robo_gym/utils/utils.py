@@ -2,7 +2,9 @@
 
 import math
 import numpy as np
+from numpy.typing import NDArray
 from scipy.spatial.transform import Rotation as R
+
 
 def normalize_angle_rad(a):
     """Normalize angle (in radians) to +-pi
@@ -17,7 +19,8 @@ def normalize_angle_rad(a):
 
     return (a + math.pi) % (2 * math.pi) - math.pi
 
-def point_inside_circle(x,y,center_x,center_y,radius):
+
+def point_inside_circle(x, y, center_x, center_y, radius):
     """Check if a point is inside a circle.
 
     Args:
@@ -34,9 +37,9 @@ def point_inside_circle(x,y,center_x,center_y,radius):
 
     dx = abs(x - center_x)
     dy = abs(y - center_y)
-    if dx>radius:
+    if dx > radius:
         return False
-    if dy>radius:
+    if dy > radius:
         return False
     if dx + dy <= radius:
         return True
@@ -45,7 +48,8 @@ def point_inside_circle(x,y,center_x,center_y,radius):
     else:
         return False
 
-def rotate_point(x,y,theta):
+
+def rotate_point(x, y, theta):
     """Rotate a point around the origin by an angle theta.
 
     Args:
@@ -64,7 +68,8 @@ def rotate_point(x,y,theta):
     y_r = x * math.sin(theta) + y * math.cos(theta)
     return [x_r, y_r]
 
-def cartesian_to_polar_2d(x_target, y_target, x_origin = 0, y_origin = 0):
+
+def cartesian_to_polar_2d(x_target, y_target, x_origin=0, y_origin=0):
     """Transform 2D cartesian coordinates to 2D polar coordinates.
 
     Args:
@@ -80,10 +85,11 @@ def cartesian_to_polar_2d(x_target, y_target, x_origin = 0, y_origin = 0):
 
     delta_x = x_target - x_origin
     delta_y = y_target - y_origin
-    polar_r = np.sqrt(delta_x**2+delta_y**2)
-    polar_theta = np.arctan2(delta_y,delta_x)
+    polar_r = np.sqrt(delta_x**2 + delta_y**2)
+    polar_theta = np.arctan2(delta_y, delta_x)
 
     return polar_r, polar_theta
+
 
 def cartesian_to_polar_3d(cartesian_coordinates):
     """Transform 3D cartesian coordinates to 3D polar coordinates.
@@ -99,13 +105,14 @@ def cartesian_to_polar_3d(cartesian_coordinates):
     x = cartesian_coordinates[0]
     y = cartesian_coordinates[1]
     z = cartesian_coordinates[2]
-    r =  np.sqrt(x**2+y**2+z**2)
-    #? phi is defined in [-pi, +pi]
-    phi = np.arctan2(y,x)
-    #? theta is defined in [0, +pi]
-    theta = np.arccos(z/r)
+    r = np.sqrt(x**2 + y**2 + z**2)
+    # ? phi is defined in [-pi, +pi]
+    phi = np.arctan2(y, x)
+    # ? theta is defined in [0, +pi]
+    theta = np.arccos(z / r)
 
-    return [r,theta,phi]
+    return [r, theta, phi]
+
 
 def downsample_list_to_len(data, output_len):
     """Downsample a list of values to a specific length.
@@ -122,7 +129,7 @@ def downsample_list_to_len(data, output_len):
     assert output_len > 0
     assert output_len <= len(data)
 
-    temp = np.linspace(0, len(data)-1, num=output_len)
+    temp = np.linspace(0, len(data) - 1, num=output_len)
     temp = [int(round(x)) for x in temp]
 
     assert len(temp) == len(set(temp))
@@ -133,6 +140,7 @@ def downsample_list_to_len(data, output_len):
 
     return ds_data
 
+
 def change_reference_frame(point, translation, quaternion):
     """Transform a point from one reference frame to another, given
         the translation vector between the two frames and the quaternion
@@ -140,17 +148,17 @@ def change_reference_frame(point, translation, quaternion):
 
     Args:
         point (array_like,shape(3,) or shape(N,3)): x,y,z coordinates of the point in the original frame
-        translation (array_like,shape(3,)): translation vector from the original frame to the new frame 
+        translation (array_like,shape(3,)): translation vector from the original frame to the new frame
         quaternion (array_like,shape(4,)): quaternion from the original frame to the new frame
 
     Returns:
         ndarray,shape(3,): x,y,z coordinates of the point in the new frame.
-        
+
     """
 
-    #point = [1,2,3]
-    #point = np.array([1,2,3])
-    #point = np.array([[11,12,13],[21,22,23]]) # point.shape = (2,3) # point (11,12,13)  and point (21,22,23)
+    # point = [1,2,3]
+    # point = np.array([1,2,3])
+    # point = np.array([[11,12,13],[21,22,23]]) # point.shape = (2,3) # point (11,12,13)  and point (21,22,23)
 
     # Apply rotation
     r = R.from_quat(quaternion)
@@ -159,3 +167,41 @@ def change_reference_frame(point, translation, quaternion):
     translated_point = np.add(rotated_point, np.array(translation))
 
     return translated_point
+
+
+def quat_from_euler_xyz(roll: float, pitch: float, yaw: float) -> NDArray:
+    rot = R.from_euler(seq="xyz", angles=[roll, pitch, yaw])
+    return rot.as_quat(False)
+
+
+def quat_from_euler_xyz_isaac(roll: float, pitch: float, yaw: float) -> NDArray:
+    # simplified, based on from Isaac Lab implementation (for comparison)
+
+    cy = math.cos(yaw * 0.5)
+    sy = math.sin(yaw * 0.5)
+    cr = math.cos(roll * 0.5)
+    sr = math.sin(roll * 0.5)
+    cp = math.cos(pitch * 0.5)
+    sp = math.sin(pitch * 0.5)
+    # compute quaternion
+    qw = cy * cr * cp + sy * sr * sp
+    qx = cy * sr * cp - sy * cr * sp
+    qy = cy * cr * sp + sy * sr * cp
+    qz = sy * cr * cp - cy * sr * sp
+
+    return np.array([qx, qy, qz, qw])
+
+
+def pose_quat_from_pose_rpy(pose_rpy: NDArray) -> NDArray:
+    quat = quat_from_euler_xyz(pose_rpy[3], pose_rpy[4], pose_rpy[5])
+    result = np.array(
+        [pose_rpy[0], pose_rpy[1], pose_rpy[2], quat[0], quat[1], quat[2], quat[3]]
+    )
+    return result
+
+
+def rotation_error_magnitude(q1: NDArray, q2: NDArray) -> float:
+    r1 = R.from_quat(q1)
+    r2 = R.from_quat(q2)
+    r_diff = r1 * (r2.inv())
+    return r_diff.magnitude()
