@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from typing import Tuple, Any, SupportsFloat
 
 import gymnasium as gym
@@ -22,6 +23,10 @@ from robo_gym.utils.manipulator_model import ManipulatorModel
 class ManipulatorEePosEnv(ManipulatorBaseEnv):
 
     KW_EE_TARGET_POSE = "ee_target_pose"
+    KW_EE_ROTATION_MATTERS = "ee_rotation_matters"
+    KW_EE_ROTATION_ROLL_RANGE = "ee_rotation_roll_range"
+    KW_EE_ROTATION_PITCH_RANGE = "ee_rotation_pitch_range"
+    KW_EE_ROTATION_YAW_RANGE = "ee_rotation_yaw_range"
     KW_CONTINUE_ON_SUCCESS = "continue_on_success"
     KW_RANDOMIZE_START = "randomize_start"
     KW_RANDOM_JOINT_OFFSET = "random_joint_offset"
@@ -99,8 +104,26 @@ class ManipulatorEePosEnv(ManipulatorBaseEnv):
         new_ee_target = self._config.get(self.KW_EE_TARGET_POSE)
         # else random
         if new_ee_target is None:
+
+            roll_range = None
+            if self.KW_EE_ROTATION_ROLL_RANGE in self._config:
+                roll_range = np.array(self._config.get(self.KW_EE_ROTATION_ROLL_RANGE))
+
+            pitch_range = None
+            if self.KW_EE_ROTATION_PITCH_RANGE in self._config:
+                pitch_range = np.array(
+                    self._config.get(self.KW_EE_ROTATION_PITCH_RANGE)
+                )
+
+            yaw_range = None
+            if self.KW_EE_ROTATION_YAW_RANGE in self._config:
+                yaw_range = np.array(self._config.get(self.KW_EE_ROTATION_YAW_RANGE))
+
             new_ee_target = robot_model.get_random_workspace_pose(
-                np_random=self.np_random
+                np_random=self.np_random,
+                roll_range=roll_range,
+                pitch_range=pitch_range,
+                yaw_range=yaw_range,
             )
         # reward node will put it into params for new rs state to set
         self._reward_node.set_ee_target(new_ee_target)
@@ -216,6 +239,11 @@ class ManipulatorEePosObservationNode(ManipulatorObservationNode):
 
         # ordering is not great - adds before and after superclass result
 
+        rotation_for_state = []
+        if self._config.get(ManipulatorEePosEnv.KW_EE_ROTATION_MATTERS):
+            rotation_for_state = ee_to_ref_frame_quaternion
+        rotation_for_state = np.array(rotation_for_state)
+
         # Compose environment state
         # previous action is added by a separate LastActionObservationNode
         # BUT legacy also included fixed joints here, although they are not part of the action
@@ -226,6 +254,7 @@ class ManipulatorEePosObservationNode(ManipulatorObservationNode):
                 super_result,
                 target_coord,
                 ee_to_ref_frame_translation,
+                rotation_for_state,
                 # self.previous_action,
             )
         )
@@ -235,7 +264,9 @@ class ManipulatorEePosObservationNode(ManipulatorObservationNode):
 
 class ManipulatorEePosRewardNode(ManipulatorRewardNode):
 
+    # TODO configurable
     DEFAULT_DISTANCE_THRESHOLD = 0.1
+    DEFAULT_ROTATION_THRESHOLD = 0.1
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -243,6 +274,12 @@ class ManipulatorEePosRewardNode(ManipulatorRewardNode):
 
     def set_ee_target(self, new_target: list[float]):
         self._ee_target = new_target
+        while len(self._ee_target) < 6:
+            self._ee_target.append(0.0)
+        # Store as 3 floats for translation and 4 floats for rotation quaternion.
+        # We might already have received 7 floats; else interpret as translation and rpy here
+        if len(self._ee_target) != 7:
+            self._ee_target = utils.pose_quat_from_pose_rpy(np.array(self._ee_target))
 
     def get_ee_target(self) -> list[float]:
         return self._ee_target
@@ -279,6 +316,10 @@ class ManipulatorEePosRewardNode(ManipulatorRewardNode):
         # Reward weight according to the distance to the goal
         d_w = -0.005
 
+        # Reward weight according to the rotation difference to the goal
+        # TODO configurable
+        rotation_weight = -0.05
+
         # Calculate distance to the target
         target_coord = np.array(
             [
@@ -299,21 +340,40 @@ class ManipulatorEePosRewardNode(ManipulatorRewardNode):
         # Reward base
         reward += d_w * euclidean_dist_3d
 
-        if euclidean_dist_3d <= self.DEFAULT_DISTANCE_THRESHOLD:
+        target_rot_quat = []
+        rotation_success = True
+        rotation_matters = self._config.get(ManipulatorEePosEnv.KW_EE_ROTATION_MATTERS)
+        if rotation_matters:
+            ee_rot_quat = np.array(
+                [
+                    rs_state["ee_to_ref_rotation_x"],
+                    rs_state["ee_to_ref_rotation_y"],
+                    rs_state["ee_to_ref_rotation_z"],
+                    rs_state["ee_to_ref_rotation_w"],
+                ]
+            )
+            target_rot_quat = self._ee_target[3:7]
+            rot_diff = utils.rotation_error_magnitude(ee_rot_quat, target_rot_quat)
+            rot_reward = rotation_weight * rot_diff
+            reward += rot_reward
+            rotation_success = rot_diff < self.DEFAULT_ROTATION_THRESHOLD
+
+        if rotation_success and euclidean_dist_3d <= self.DEFAULT_DISTANCE_THRESHOLD:
             reward = g_w * 1
             done = True
-            info["final_status"] = "success"
-            info["target_coord"] = target_coord
 
         if rs_state["in_collision"]:
             reward = c_w * 1
             done = True
             info["final_status"] = "collision"
-            info["target_coord"] = target_coord
 
         elif self.env.elapsed_steps >= self.max_episode_steps:
             done = True
             info["final_status"] = "max_steps_exceeded"
+
+        if done:
             info["target_coord"] = target_coord
+            if rotation_matters:
+                info["target_rot"] = target_rot_quat
 
         return reward, done, info

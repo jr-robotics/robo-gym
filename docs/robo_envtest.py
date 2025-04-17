@@ -97,7 +97,8 @@ def main():
     kwargs = {"gazebo_gui": gazebo_gui, "rviz_gui": rviz_gui, "rs_state_to_info": True}
 
     action_mode = "abs_pos"
-    is_avoidance = env_class_name.find("Avoidance")
+    is_avoidance = env_class_name.find("Avoidance") > -1
+    is_ee_pos = env_class_name.find("EndEffectorPositioning") > -1
 
     if is_robot_type[ROBOT_TYPE_UR]:
         kwargs["ur_model"] = ur_model
@@ -109,10 +110,19 @@ def main():
 
     # Where in the observations do the joint position start?
     joint_pos_obs_offset = 0
-    if robot_type != ROBOT_TYPE_MIR100 and (
-        env_class_name.find("EndEffectorPositioning") > -1 or is_avoidance > -1
-    ):
+    if robot_type != ROBOT_TYPE_MIR100 and (is_ee_pos or is_avoidance):
         joint_pos_obs_offset += 3  # target polar coordinates
+
+    # TODO temporary test for reach task
+    if is_ee_pos:
+        kwargs.update(
+            {
+                "ee_rotation_roll_range": [-0.0, 0.0],
+                "ee_rotation_pitch_range": [math.pi / 2, math.pi / 2],
+                "ee_rotation_yaw_range": [-3.14, 3.14],
+                "ee_rotation_matters": True,
+            }
+        )
 
     if rs_address:
         env = gym.make(env_name, rs_address=rs_address, gui=gui, **kwargs)
