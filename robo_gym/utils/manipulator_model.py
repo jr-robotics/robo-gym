@@ -157,9 +157,12 @@ class ManipulatorModel:
             #    result[i] = joints[i] / abs(self.max_joint_positions[i])
         return result
 
-    # TODO: provide version that returns 6D pose, we need that for reach tasks
     def get_random_workspace_pose(
-        self, np_random: np.random.Generator | None = None
+        self,
+        np_random: np.random.Generator | None = None,
+        roll_range: NDArray | None = None,
+        pitch_range: NDArray | None = None,
+        yaw_range: NDArray | None = None,
     ) -> NDArray:
         """Get pose of a random point in the robot workspace.
 
@@ -195,9 +198,23 @@ class ManipulatorModel:
             if (x**2 + y**2) > self.ws_min_r**2:
                 singularity_area = False
 
-        pose[0:3] = [x, y, z]
+        roll = ManipulatorModel.get_uniform_from_range(np_random, roll_range, 0.0)
+        pitch = ManipulatorModel.get_uniform_from_range(np_random, pitch_range, 0.0)
+        yaw = ManipulatorModel.get_uniform_from_range(np_random, yaw_range, 0.0)
+
+        pose[0:6] = [x, y, z, roll, pitch, yaw]
 
         return pose
+
+    @staticmethod
+    def get_uniform_from_range(
+        np_random: np.random.Generator,
+        range: NDArray | None,
+        default_value: float = 0.0,
+    ) -> float:
+        if range is None:
+            return default_value
+        return np_random.uniform(low=range[0], high=range[1])
 
     def get_random_offset_joint_positions(
         self,
