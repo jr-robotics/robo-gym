@@ -32,3 +32,4 @@ from robo_gym.envs.ur.ur_ee_pos import (
     EndEffectorPositioning2URSim,
     EndEffectorPositioning2URRob,
 )
+from robo_gym.envs.ur.ur_isaac_reach import IsaacReachURSim, IsaacReachURRob

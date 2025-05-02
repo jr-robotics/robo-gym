@@ -1,18 +1,21 @@
 #!/usr/bin/env python3
 from __future__ import annotations
+
 import copy
-import numpy as np
-import gymnasium as gym
 from typing import Tuple, Any
+
+import gymnasium as gym
+import numpy as np
+
+import robo_gym_server_modules.robot_server.client as rs_client
+from robo_gym.envs.simulation_wrapper import Simulation
 from robo_gym.utils import ur_utils
 from robo_gym.utils.exceptions import (
     InvalidStateError,
     RobotServerError,
     InvalidActionError,
 )
-import robo_gym_server_modules.robot_server.client as rs_client
 from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
-from robo_gym.envs.simulation_wrapper import Simulation
 
 # base, shoulder, elbow, wrist_1, wrist_2, wrist_3
 JOINT_POSITIONS = [0.0, -2.5, 1.5, 0.0, -1.4, 0.0]

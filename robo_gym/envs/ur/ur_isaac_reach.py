@@ -1,18 +1,22 @@
 from __future__ import annotations
 
 from robo_gym.envs.base.robogym_env import (
-    RoboGymEnv,
-    ObservationNode,
     LastActionObservationNode,
 )
-from robo_gym.envs.manipulator.ee_pos_base import ManipulatorEePosEnv
+from robo_gym.envs.manipulator.isaac_reach import *
 from robo_gym.envs.ur.ur_base import URBaseEnv2
 
+from robo_gym.utils.ur_utils import UR
 
-class EndEffectorPositioningUR2(ManipulatorEePosEnv):
+
+class IsaacReachUR(IsaacReachEnv):
     def __init__(self, **kwargs):
         # not too nice - repeated in super init
         self._config = kwargs
+
+        RoboGymEnv.set_default(kwargs, URBaseEnv2.KW_UR_MODEL_KEY, "ur10")
+        # TODO need matching initialization of target position range
+        IsaacReachUR.set_robot_defaults(kwargs)
 
         obs_nodes: list[ObservationNode] | None = kwargs.get(
             RoboGymEnv.KW_OBSERVATION_NODES
@@ -22,20 +26,33 @@ class EndEffectorPositioningUR2(ManipulatorEePosEnv):
             obs_nodes = [LastActionObservationNode(**self.get_obs_node_setup_kwargs(1))]
             kwargs[RoboGymEnv.KW_OBSERVATION_NODES] = obs_nodes
 
-        # TODO allow restriction of joints
+        super().__init__(**kwargs)
 
-        URBaseEnv2.set_robot_defaults(kwargs)
-        RoboGymEnv.set_default(kwargs, RoboGymEnv.KW_ACTION_RATE, 10.0)
+    @staticmethod
+    def set_robot_defaults(kwargs: dict[str, Any]):
+
+        # prepare UR model depending on ur_model and set it in the kwargs
+        ur_model: UR | None = kwargs.get(RoboGymEnv.KW_ROBOT_MODEL_OBJECT)
+        if ur_model is None:
+            ur_model = UR(model_key=kwargs.get(URBaseEnv2.KW_UR_MODEL_KEY))
+            kwargs[RoboGymEnv.KW_ROBOT_MODEL_OBJECT] = ur_model
+
+        # default action rate
+        RoboGymEnv.set_default(kwargs, RoboGymEnv.KW_ACTION_RATE, 60.0)
+
+        # default max episode steps
+        RoboGymEnv.set_default(kwargs, RewardNode.KW_MAX_EPISODE_STEPS, 600)
+
+        # default joint positions
         RoboGymEnv.set_default(
             kwargs,
-            ManipulatorEePosEnv.KW_RANDOM_JOINT_OFFSET,
-            [1.5, 0.25, 0.5, 1.0, 0.4, 3.14],
+            ManipulatorBaseEnv.KW_JOINT_POSITIONS,
+            [0, -1.7120, 1.7120, 0, 0, 0],
         )
-
-        super().__init__(**kwargs)
 
     def get_launch_cmd(self) -> str:
         # TODO make string composition more dynamic
+        # TODO duplicated from EndEffectorPositioningUR2
         return f"roslaunch ur_robot_server ur_robot_server.launch \
             rviz_gui:={self._config.get(self.KW_RVIZ_GUI_FLAG, True)} \
             gazebo_gui:={self._config.get(self.KW_GAZEBO_GUI_FLAG, True)} \
@@ -55,14 +72,14 @@ class EndEffectorPositioningUR2(ManipulatorEePosEnv):
         return self._config.get(URBaseEnv2.KW_UR_MODEL_KEY)
 
 
-class EndEffectorPositioning2URSim(EndEffectorPositioningUR2):
+class IsaacReachURSim(IsaacReachUR):
 
     def __init__(self, **kwargs):
         kwargs[self.KW_REAL_ROBOT] = False
         super().__init__(**kwargs)
 
 
-class EndEffectorPositioning2URRob(EndEffectorPositioningUR2):
+class IsaacReachURRob(IsaacReachUR):
 
     def __init__(self, **kwargs):
         kwargs[self.KW_REAL_ROBOT] = True

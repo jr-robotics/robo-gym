@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import math
 from typing import Tuple, Any, SupportsFloat
 
 import gymnasium as gym
@@ -9,13 +8,13 @@ from gymnasium.core import ObsType, ActType
 from numpy._typing import NDArray
 from scipy.spatial.transform import Rotation as R
 
+from robo_gym.envs.base.robogym_env import RoboGymEnv, RewardNode
 from robo_gym.envs.manipulator.manipulator_base import (
     ManipulatorBaseEnv,
     ManipulatorActionNode,
     ManipulatorObservationNode,
     ManipulatorRewardNode,
 )
-from robo_gym.envs.base.robogym_env import RoboGymEnv, ObservationNode, RewardNode
 from robo_gym.utils import utils
 from robo_gym.utils.manipulator_model import ManipulatorModel
 
@@ -168,23 +167,40 @@ class ManipulatorEePosObservationNode(ManipulatorObservationNode):
         target_range = np.full(3, np.inf)
 
         # Cartesian coords of the target location
-        max_target_coord = np.array([np.inf] * 3)
-        min_target_coord = -np.array([np.inf] * 3)
+        max_target_pose = np.array([np.inf] * 3)
+        min_target_pose = -np.array([np.inf] * 3)
 
         # Cartesian coords of the end effector
-        max_ee_coord = np.array([np.inf] * 3)
-        min_ee_coord = -np.array([np.inf] * 3)
+        max_ee_pose = np.array([np.inf] * 3)
+        min_ee_pose = -np.array([np.inf] * 3)
+
+        if self._config.get(ManipulatorEePosEnv.KW_EE_ROTATION_MATTERS):
+            quaternion_max = np.array([1.0] * 4)
+            quaternion_min = -1 * quaternion_max
+
+            max_ee_pose = np.concatenate((max_ee_pose, quaternion_max))
+            min_ee_pose = np.concatenate((min_ee_pose, quaternion_min))
+
+            max_target_pose = np.concatenate((max_target_pose, quaternion_max))
+            min_target_pose = np.concatenate((min_target_pose, quaternion_min))
 
         # Definition of environment observation_space part
         max_obs = np.concatenate(
-            (target_range, super_result.high, max_target_coord, max_ee_coord)
+            (target_range, super_result.high, max_target_pose, max_ee_pose)
         )
         min_obs = np.concatenate(
-            (-target_range, super_result.low, min_target_coord, min_ee_coord)
+            (-target_range, super_result.low, min_target_pose, min_ee_pose)
         )
 
         # vs legacy: action is added by separate LastActionObservationNode
         return gym.spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
+
+    def get_target_pose(self) -> list[float]:
+        target_pose = []  # this default return value isn't great
+        reward_node = self.env._reward_node
+        if isinstance(reward_node, ManipulatorEePosRewardNode):
+            target_pose = reward_node.get_ee_target()
+        return target_pose
 
     def rs_state_to_observation_part(
         self, rs_state_array: NDArray, rs_state_dict: dict[str, float], **kwargs
@@ -197,13 +213,9 @@ class ManipulatorEePosObservationNode(ManipulatorObservationNode):
         # Target polar coordinates
         # Transform cartesian coordinates of target to polar coordinates
         # with respect to the end effector frame
-        target_coord = np.array(
-            [
-                rs_state["object_0_to_ref_translation_x"],
-                rs_state["object_0_to_ref_translation_y"],
-                rs_state["object_0_to_ref_translation_z"],
-            ]
-        )
+
+        target_pose = self.get_target_pose()
+        target_coord = target_pose[0:3]
 
         ee_to_ref_frame_translation = np.array(
             [
@@ -239,10 +251,12 @@ class ManipulatorEePosObservationNode(ManipulatorObservationNode):
 
         # ordering is not great - adds before and after superclass result
 
-        rotation_for_state = []
+        ee_rotation_for_state = []
+        target_rotation_for_state = []
         if self._config.get(ManipulatorEePosEnv.KW_EE_ROTATION_MATTERS):
-            rotation_for_state = ee_to_ref_frame_quaternion
-        rotation_for_state = np.array(rotation_for_state)
+            ee_rotation_for_state = ee_to_ref_frame_quaternion
+            target_rotation_for_state = target_pose[4:7]
+        ee_rotation_for_state = np.array(ee_rotation_for_state)
 
         # Compose environment state
         # previous action is added by a separate LastActionObservationNode
@@ -253,8 +267,9 @@ class ManipulatorEePosObservationNode(ManipulatorObservationNode):
                 target_polar,
                 super_result,
                 target_coord,
+                target_rotation_for_state,
                 ee_to_ref_frame_translation,
-                rotation_for_state,
+                ee_rotation_for_state,
                 # self.previous_action,
             )
         )
@@ -361,8 +376,9 @@ class ManipulatorEePosRewardNode(ManipulatorRewardNode):
         if rotation_success and euclidean_dist_3d <= self.DEFAULT_DISTANCE_THRESHOLD:
             reward = g_w * 1
             done = True
+            info["final_status"] = "success"
 
-        if rs_state["in_collision"]:
+        if rs_state.get("in_collision", False):
             reward = c_w * 1
             done = True
             info["final_status"] = "collision"

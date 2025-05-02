@@ -161,21 +161,21 @@ class ManipulatorObservationNode(ObservationNode):
         self, rs_state_array: NDArray, rs_state_dict: dict[str, float], **kwargs
     ) -> NDArray:
         # from old impl, but why are only the joint positions normalized?
-        joint_positions = []
-
-        joint_positions_keys = [
-            joint_name + ManipulatorBaseEnv.RS_STATE_KEY_SUFFIX_JOINT_POSITION
-            for joint_name in self._robot_model.remote_joint_names
-        ]
-        for position in joint_positions_keys:
-            joint_positions.append(rs_state_dict[position])
-        joint_positions = np.array(joint_positions)
-        # Normalize joint position values
-        joint_positions = self._robot_model.normalize_joint_values(
-            joints=joint_positions
+        joint_positions = self.extract_normalized_joint_positions_from_rs_state_dict(
+            rs_state_dict
         )
 
         # Joint Velocities
+        joint_velocities = self.extract_joint_velocities_from_rs_state_dict(
+            rs_state_dict
+        )
+
+        # Compose environment state
+        state = np.concatenate((joint_positions, joint_velocities))
+
+        return state.astype(np.float32)
+
+    def extract_joint_velocities_from_rs_state_dict(self, rs_state_dict):
         joint_velocities = []
         joint_velocities_keys = [
             joint_name + ManipulatorBaseEnv.RS_STATE_KEY_SUFFIX_JOINT_VELOCITY
@@ -184,11 +184,26 @@ class ManipulatorObservationNode(ObservationNode):
         for velocity in joint_velocities_keys:
             joint_velocities.append(rs_state_dict[velocity])
         joint_velocities = np.array(joint_velocities)
+        return joint_velocities
 
-        # Compose environment state
-        state = np.concatenate((joint_positions, joint_velocities))
+    def extract_normalized_joint_positions_from_rs_state_dict(self, rs_state_dict):
+        joint_positions = self.extract_joint_positions_from_rs_state_dict(rs_state_dict)
+        # Normalize joint position values
+        joint_positions = self._robot_model.normalize_joint_values(
+            joints=joint_positions
+        )
+        return joint_positions
 
-        return state.astype(np.float32)
+    def extract_joint_positions_from_rs_state_dict(self, rs_state_dict):
+        joint_positions = []
+        joint_positions_keys = [
+            joint_name + ManipulatorBaseEnv.RS_STATE_KEY_SUFFIX_JOINT_POSITION
+            for joint_name in self._robot_model.remote_joint_names
+        ]
+        for position in joint_positions_keys:
+            joint_positions.append(rs_state_dict[position])
+        joint_positions = np.array(joint_positions)
+        return joint_positions
 
     @property
     def joint_position_tolerance_normalized(self) -> float:
