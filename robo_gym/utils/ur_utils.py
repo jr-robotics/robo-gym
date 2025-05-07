@@ -42,7 +42,7 @@ class UR(ManipulatorModel):
             [thetas[2], thetas[1], thetas[0], thetas[3], thetas[4], thetas[5]]
         )
 
-    def _ros_joint_list_to_ur_joint_list(self, ros_thetas):
+    def reorder_joints_from_rs(self, ros_thetas):
         """Transform joint angles list from ROS indexing to standard indexing.
 
         Rearrange a list containing the joints values from the joint indexes used
@@ -59,7 +59,7 @@ class UR(ManipulatorModel):
 
         return self._swap_base_and_elbow(ros_thetas)
 
-    def _ur_joint_list_to_ros_joint_list(self, thetas):
+    def reorder_joints_for_rs(self, thetas):
         """Transform joint angles list from standard indexing to ROS indexing.
 
         Rearrange a list containing the joints values from the standard joint indexing

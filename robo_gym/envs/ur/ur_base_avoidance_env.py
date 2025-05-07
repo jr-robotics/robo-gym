@@ -374,7 +374,7 @@ class URBaseAvoidanceEnv(URBaseEnv):
 
         joint_positions = self._get_joint_positions_as_array() + action
 
-        rs_action = self.ur._ur_joint_list_to_ros_joint_list(joint_positions)
+        rs_action = self.ur.reorder_joints_for_rs(joint_positions)
 
         return rs_action
 

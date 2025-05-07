@@ -107,7 +107,7 @@ class ManipulatorActionNode(ActionNode):
         denormalized_full_action = self._robot_model.denormalize_joint_values(
             normalized_full_action
         )
-        result = self._robot_model._ur_joint_list_to_ros_joint_list(
+        result = self._robot_model.reorder_joints_for_rs(
             denormalized_full_action
         )
         return result

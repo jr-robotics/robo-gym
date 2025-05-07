@@ -477,7 +477,7 @@ class EndEffectorPositioningUR(URBaseEnv):
             rs_action = np.multiply(rs_action, self.abs_joint_pos_range)
             rs_action[3] = wrist1
             # Convert action indexing from ur to ros
-            rs_action = self.ur._ur_joint_list_to_ros_joint_list(rs_action)
+            rs_action = self.ur.reorder_joints_for_rs(rs_action)
         else:
             rs_action = super().env_action_to_rs_action(rs_action)
 

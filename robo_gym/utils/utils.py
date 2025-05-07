@@ -171,7 +171,26 @@ def change_reference_frame(point, translation, quaternion):
 
 def quat_from_euler_xyz(roll: float, pitch: float, yaw: float) -> NDArray:
     rot = R.from_euler(seq="xyz", angles=[roll, pitch, yaw])
-    return rot.as_quat(False)
+    return rot.as_quat(canonical=True)
+
+
+def quat_from_euler_zyx(roll: float, pitch: float, yaw: float) -> NDArray:
+    rot = R.from_euler(seq="zyx", angles=[roll, pitch, yaw])
+    return rot.as_quat(canonical=True)
+
+
+def quat_mul(q1: NDArray, q2: NDArray) -> NDArray:
+    r1 = R.from_quat(q1)
+    r2 = R.from_quat(q2)
+    # TODO verify that this does what we want
+    r_result = r1 * r2
+    return r_result.as_quat(canonical=True)
+
+
+def quat_inv(q: NDArray) -> NDArray:
+    r = R.from_quat(q)
+    r_inv = r.inv()
+    return r_inv.as_quat(canonical=True)
 
 
 def quat_from_euler_xyz_isaac(roll: float, pitch: float, yaw: float) -> NDArray:

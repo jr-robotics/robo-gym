@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from typing import Tuple, Any, SupportsFloat
 
 import gymnasium as gym
@@ -280,8 +281,11 @@ class ManipulatorEePosObservationNode(ManipulatorObservationNode):
 class ManipulatorEePosRewardNode(ManipulatorRewardNode):
 
     # TODO configurable
-    DEFAULT_DISTANCE_THRESHOLD = 0.1
-    DEFAULT_ROTATION_THRESHOLD = 0.1
+    # For UR10, these values are achievable with policies trained with Isaac Reach default settings and using an example pose from there.
+    # Visual impression is that we should be able to make them lower if we could get rid of the robot jitter in Isaac
+    # Rotation deviation still seems high, but maybe it's good enough
+    DEFAULT_DISTANCE_THRESHOLD = 0.03
+    DEFAULT_ROTATION_THRESHOLD = 0.4
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -355,11 +359,11 @@ class ManipulatorEePosRewardNode(ManipulatorRewardNode):
         # Reward base
         reward += d_w * euclidean_dist_3d
 
-        target_rot_quat = []
+        quat_target = []
         rotation_success = True
         rotation_matters = self._config.get(ManipulatorEePosEnv.KW_EE_ROTATION_MATTERS)
         if rotation_matters:
-            ee_rot_quat = np.array(
+            quat_ee = np.array(
                 [
                     rs_state["ee_to_ref_rotation_x"],
                     rs_state["ee_to_ref_rotation_y"],
@@ -367,8 +371,18 @@ class ManipulatorEePosRewardNode(ManipulatorRewardNode):
                     rs_state["ee_to_ref_rotation_w"],
                 ]
             )
-            target_rot_quat = self._ee_target[3:7]
-            rot_diff = utils.rotation_error_magnitude(ee_rot_quat, target_rot_quat)
+            quat_target = self._ee_target[3:7]
+
+            # TODO: add capability to modify the ee rotation for evaluation
+            # Compensate for Isaac using a different ee rotation from ours
+            # From my analysis the following could be correct but apparently isn't
+            # (rotate by -90° around Y, then 180° around X)
+            # When solved, implement in a generic way, default: mod = 0, for Isaac compat configure the found values
+
+            # modifier_quat = utils.quat_from_euler_zyx(math.pi, -math.pi / 2, 0)
+            # ee_rot_quat2 = utils.quat_mul(ee_rot_quat, modifier_quat)
+
+            rot_diff = utils.rotation_error_magnitude(quat_ee, quat_target)
             rot_reward = rotation_weight * rot_diff
             reward += rot_reward
             rotation_success = rot_diff < self.DEFAULT_ROTATION_THRESHOLD
@@ -390,6 +404,6 @@ class ManipulatorEePosRewardNode(ManipulatorRewardNode):
         if done:
             info["target_coord"] = target_coord
             if rotation_matters:
-                info["target_rot"] = target_rot_quat
+                info["target_rot"] = quat_target
 
         return reward, done, info

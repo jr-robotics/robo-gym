@@ -234,10 +234,10 @@ class ManipulatorModel:
         )
         return joint_positions
 
-    def _ros_joint_list_to_ur_joint_list(self, ros_thetas: NDArray) -> NDArray:
+    def reorder_joints_from_rs(self, ros_thetas: NDArray) -> NDArray:
         return ros_thetas
 
-    def _ur_joint_list_to_ros_joint_list(self, thetas: NDArray) -> NDArray:
+    def reorder_joints_for_rs(self, thetas: NDArray) -> NDArray:
         return thetas
 
     @property

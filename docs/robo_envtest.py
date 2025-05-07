@@ -10,7 +10,8 @@ import robo_gym
 
 import gymnasium as gym
 import numpy as np
-import torch
+
+# import torch
 from gymnasium.wrappers import TimeLimit
 from numpy.typing import NDArray
 
@@ -141,7 +142,6 @@ def main():
 
     env = TimeLimit(env, episode_timesteps)
 
-    observation, info = env.reset()
     time.sleep(1)
     time_count = 0
     period = episode_timesteps / 2
@@ -260,9 +260,10 @@ class IsaacPolicyWrapper:
     # TODO may also need to do something with the env yaml file
 
     def __init__(self, policy_file_path: str):
-        with open(policy_file_path, "rb") as f:
-            file = io.BytesIO(f.read())
-        self.policy = torch.jit.load(file)
+        pass
+        # with open(policy_file_path, "rb") as f:
+        #    file = io.BytesIO(f.read())
+        # self.policy = torch.jit.load(file)
 
     def compute_action(self, obs: NDArray) -> NDArray:
         """
@@ -274,10 +275,11 @@ class IsaacPolicyWrapper:
         Returns:
             np.ndarray: The action.
         """
-        with torch.no_grad():
-            obs = torch.from_numpy(obs).view(1, -1).float()
-            action = self.policy(obs).detach().view(-1).numpy()
-        return action
+        return np.zeros(6)
+        # with torch.no_grad():
+        #    obs = torch.from_numpy(obs).view(1, -1).float()
+        #    action = self.policy(obs).detach().view(-1).numpy()
+        # return action
 
 
 if __name__ == "__main__":

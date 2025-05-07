@@ -224,7 +224,7 @@ class URBaseEnv(gym.Env):
         # Scale action
         rs_action = np.multiply(rs_action, self.abs_joint_pos_range)
         # Convert action indexing from ur to ros
-        rs_action = self.ur._ur_joint_list_to_ros_joint_list(rs_action)
+        rs_action = self.ur.reorder_joints_for_rs(rs_action)
 
         return rs_action
 

@@ -183,6 +183,13 @@ def test_quat_from_rpy():
     assert np.allclose(a=quat_scipy, b=quat_isaac, atol=0.000001)
 
 
+def test_quat_from_rpy2():
+    q1 = utils.quat_from_euler_xyz(0, -math.pi / 2, 0)
+    q2 = utils.quat_from_euler_xyz(math.pi, 0, 0)
+    q12 = q1 * q2
+    quat = [q12[0], q12[1], q12[2], q12[3]]
+
+
 def test_rot_diff():
     r1 = utils.quat_from_euler_xyz(0.0, 0.0, 0.0)
     r2 = utils.quat_from_euler_xyz(0.0, 0.2, 0.0)
@@ -199,3 +206,13 @@ def test_rot_diff():
     assert diff_1_2 < diff_1_3
     assert diff_1_2 < diff_2_3
     assert diff_2_3 < diff_1_3
+
+
+def test_rot_inv():
+    q1 = np.array([0.693359, -0.138306, 0.693359, 0.138306])
+    q1_inv = utils.quat_inv(q1)
+    q_mult = utils.quat_mul(q1, q1_inv)
+    assert math.isclose(q_mult[0], 0, abs_tol=0.000001)
+    assert math.isclose(q_mult[1], 0, abs_tol=0.000001)
+    assert math.isclose(q_mult[2], 0, abs_tol=0.000001)
+    assert math.isclose(q_mult[3], 1, abs_tol=0.000001)

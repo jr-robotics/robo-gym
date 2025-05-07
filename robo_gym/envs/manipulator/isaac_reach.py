@@ -46,10 +46,14 @@ class IsaacReachObservationNode(ManipulatorEePosObservationNode):
             np.array([self.joint_position_tolerance_normalized] * num_joints)
         )
         max_joint_positions = (
-            self._robot_model.get_max_joint_positions() + tolerance_abs
+            self._robot_model.get_max_joint_positions()
+            + tolerance_abs
+            - self._robot_model.joint_positions
         )
         min_joint_positions = (
-            self._robot_model.get_min_joint_positions() - tolerance_abs
+            self._robot_model.get_min_joint_positions()
+            - tolerance_abs
+            - self._robot_model.joint_positions
         )
 
         # velocities
@@ -73,7 +77,10 @@ class IsaacReachObservationNode(ManipulatorEePosObservationNode):
         self, rs_state_array: NDArray, rs_state_dict: dict[str, float], **kwargs
     ) -> NDArray:
         # previous action is added by a separate LastActionObservationNode
-        joint_positions = self.extract_joint_positions_from_rs_state_dict(rs_state_dict)
+        joint_positions = (
+            self.extract_joint_positions_from_rs_state_dict(rs_state_dict)
+            - self._robot_model.joint_positions
+        )
         joint_velocities = self.extract_joint_velocities_from_rs_state_dict(
             rs_state_dict
         )
@@ -92,8 +99,8 @@ class IsaacReachActionNode(ManipulatorActionNode):
         return self._robot_model.joint_positions
 
     def env_action_to_rs_action(self, env_action: NDArray, **kwargs) -> NDArray:
-        rs_action = self._robot_model.joint_positions + env_action * self.scale
-        rs_action = self.robot_model._ur_joint_list_to_ros_joint_list(rs_action)
+        rs_action = self.robot_model.joint_positions + env_action * self.scale
+        rs_action = self.robot_model.reorder_joints_for_rs(rs_action)
         return rs_action
 
     def get_action_space(self) -> gym.spaces.Box:

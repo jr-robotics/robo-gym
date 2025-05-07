@@ -38,7 +38,7 @@ class IsaacReachUR(IsaacReachEnv):
             kwargs[RoboGymEnv.KW_ROBOT_MODEL_OBJECT] = ur_model
 
         # default action rate
-        RoboGymEnv.set_default(kwargs, RoboGymEnv.KW_ACTION_RATE, 60.0)
+        RoboGymEnv.set_default(kwargs, RoboGymEnv.KW_ACTION_RATE, 30.0)
 
         # default max episode steps
         RoboGymEnv.set_default(kwargs, RewardNode.KW_MAX_EPISODE_STEPS, 600)
@@ -56,8 +56,9 @@ class IsaacReachUR(IsaacReachEnv):
         return f"roslaunch ur_robot_server ur_robot_server.launch \
             rviz_gui:={self._config.get(self.KW_RVIZ_GUI_FLAG, True)} \
             gazebo_gui:={self._config.get(self.KW_GAZEBO_GUI_FLAG, True)} \
-            world_name:=tabletop_sphere50_no_collision.world \
+            world_name:=isaactabletop_sphere50_no_collision.world \
             reference_frame:=base_link \
+            ee_frame:=tool1 \
             max_velocity_scale_factor:=0.1 \
             action_cycle_rate:={self.action_rate} \
             objects_controller:=true \
@@ -65,6 +66,7 @@ class IsaacReachUR(IsaacReachEnv):
             n_objects:=1.0 \
             object_0_model_name:=sphere50_no_collision \
             object_0_frame:=target \
+            z:=0.0 \
             ur_model:={self.ur_model_key}"
 
     @property
