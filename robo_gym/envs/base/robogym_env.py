@@ -37,6 +37,12 @@ class RoboGymEnv(gym.Env):
     KW_OBSERVATION_NODES = "observation_nodes"
 
     INFO_KW_RS_STATE = "rs_state"
+    INFO_KW_FINAL_STATUS = "final_status"
+    FINAL_STATUS_SUCCESS = "success"
+    FINAL_STATUS_COLLISION = "collision"
+
+    # max_steps_exceeded should be replaced by proper truncated mechanism
+    FINAL_STATUS_MAX_STEPS_EXCEEDED = "max_steps_exceeded"
 
     def __init__(self, **kwargs):
         self._config = kwargs

@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
+from __future__ import annotations
 
 import math
 import numpy as np
 from numpy.typing import NDArray
+from pybullet_utils.gazebo_world_parser import is_float
 from scipy.spatial.transform import Rotation as R
 
 
@@ -169,28 +171,43 @@ def change_reference_frame(point, translation, quaternion):
     return translated_point
 
 
-def quat_from_euler_xyz(roll: float, pitch: float, yaw: float) -> NDArray:
-    rot = R.from_euler(seq="xyz", angles=[roll, pitch, yaw])
-    return rot.as_quat(canonical=True)
+def quat_from_euler(
+    roll: float, pitch: float, yaw: float, seq="zyz", quat_unique: bool = False
+) -> NDArray:
+    rot = R.from_euler(seq=seq, angles=[roll, pitch, yaw])
+    return rot.as_quat(canonical=quat_unique)
 
 
-def quat_from_euler_zyx(roll: float, pitch: float, yaw: float) -> NDArray:
-    rot = R.from_euler(seq="zyx", angles=[roll, pitch, yaw])
-    return rot.as_quat(canonical=True)
+def quat_from_euler_xyz(
+    roll: float, pitch: float, yaw: float, quat_unique: bool = False
+) -> NDArray:
+    return quat_from_euler(roll, pitch, yaw, "xyz", quat_unique)
 
 
-def quat_mul(q1: NDArray, q2: NDArray) -> NDArray:
+def quat_from_euler_zyx(
+    roll: float, pitch: float, yaw: float, quat_unique: bool = False
+) -> NDArray:
+    return quat_from_euler(roll, pitch, yaw, "zyx", quat_unique)
+
+
+def euler_from_quat(q: NDArray, seq="zyz") -> NDArray:
+    rot = R.from_quat(q)
+    rpy = rot.as_euler(seq=seq, degrees=False)
+    return rpy
+
+
+def quat_mul(q1: NDArray, q2: NDArray, quat_unique: bool = False) -> NDArray:
     r1 = R.from_quat(q1)
     r2 = R.from_quat(q2)
     # TODO verify that this does what we want
     r_result = r1 * r2
-    return r_result.as_quat(canonical=True)
+    return r_result.as_quat(canonical=quat_unique)
 
 
-def quat_inv(q: NDArray) -> NDArray:
+def quat_inv(q: NDArray, quat_unique: bool = False) -> NDArray:
     r = R.from_quat(q)
     r_inv = r.inv()
-    return r_inv.as_quat(canonical=True)
+    return r_inv.as_quat(canonical=quat_unique)
 
 
 def quat_from_euler_xyz_isaac(roll: float, pitch: float, yaw: float) -> NDArray:
@@ -211,10 +228,120 @@ def quat_from_euler_xyz_isaac(roll: float, pitch: float, yaw: float) -> NDArray:
     return np.array([qx, qy, qz, qw])
 
 
-def pose_quat_from_pose_rpy(pose_rpy: NDArray) -> NDArray:
-    quat = quat_from_euler_xyz(pose_rpy[3], pose_rpy[4], pose_rpy[5])
+def euler_xyz_from_quat_isaac(
+    quat: NDArray,
+) -> NDArray:
+    """Convert rotation given as quaternions to Euler angles in radians.
+
+    Note:
+        The euler angles are assumed in XYZ convention.
+
+    Args:
+        quat: The quaternion orientation in (x, y, z, w).
+
+    Returns:
+        A tuple containing roll-pitch-yaw.
+
+    Reference:
+        https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
+    """
+    q_x, q_y, q_z, q_w = quat[0], quat[1], quat[2], quat[3]
+    # roll (x-axis rotation)
+    sin_roll = 2.0 * (q_w * q_x + q_y * q_z)
+    cos_roll = 1 - 2 * (q_x * q_x + q_y * q_y)
+    roll = math.atan2(sin_roll, cos_roll)
+
+    # pitch (y-axis rotation)
+    sin_pitch = 2.0 * (q_w * q_y - q_z * q_x)
+    pitch = (
+        math.copysign(math.pi / 2.0, sin_pitch)
+        if math.abs(sin_pitch) >= 1
+        else math.asin(sin_pitch)
+    )
+
+    # yaw (z-axis rotation)
+    sin_yaw = 2.0 * (q_w * q_z + q_x * q_y)
+    cos_yaw = 1 - 2 * (q_y * q_y + q_z * q_z)
+    yaw = math.atan2(sin_yaw, cos_yaw)
+
+    return np.array(
+        [
+            roll % (2 * math.pi),
+            pitch % (2 * math.pi),
+            yaw % (2 * math.pi),
+        ]
+    )
+
+
+def get_config_range(data: dict, key: str) -> NDArray:
+    result = data.get(key)
+    if result is not None:
+        if is_float(result):
+            return np.array([result, result])
+        result = np.array(result).reshape([2])
+        if result[1] < result[0]:
+            result[1] = result[0]
+    return result
+
+
+def get_uniform_from_range(
+    np_random: np.random.Generator,
+    range: NDArray | None,
+    default_value: float = 0.0,
+) -> float:
+    if range is None:
+        return default_value
+    return np_random.uniform(low=range[0], high=range[1])
+
+
+# Isaac random pose generation to be rewritten for our use
+def create_random_bounding_box_pose_quat(
+    pos_x_range: NDArray,
+    pos_y_range: NDArray,
+    pos_z_range: NDArray,
+    np_random: np.random.Generator | None = None,
+    roll_range: NDArray | None = None,
+    pitch_range: NDArray | None = None,
+    yaw_range: NDArray | None = None,
+    seq="xyz",
+    quat_unique: bool = False,
+) -> NDArray:
+
+    if np_random is None:
+        np_random = np.random.default_rng()
+    # sample new pose targets
+    # -- position
+    x = np_random.uniform(low=pos_x_range[0], high=pos_x_range[1])
+    y = np_random.uniform(low=pos_y_range[0], high=pos_y_range[1])
+    z = np_random.uniform(low=pos_z_range[0], high=pos_z_range[1])
+
+    # -- orientation
+    roll = get_uniform_from_range(np_random, roll_range, 0.0)
+    pitch = get_uniform_from_range(np_random, pitch_range, 0.0)
+    yaw = get_uniform_from_range(np_random, yaw_range, 0.0)
+
+    quat = quat_from_euler(roll, pitch, yaw, seq)
+    if quat_unique and quat[3] < 0:
+        quat = -quat
+    result = np.array([x, y, z, quat[0], quat[1], quat[2], quat[3]])
+    return result
+
+
+def pose_quat_from_pose_rpy(
+    pose_rpy: NDArray, seq="xyz", quat_unique: bool = False
+) -> NDArray:
+    quat = quat_from_euler(pose_rpy[3], pose_rpy[4], pose_rpy[5], seq, quat_unique)
     result = np.array(
         [pose_rpy[0], pose_rpy[1], pose_rpy[2], quat[0], quat[1], quat[2], quat[3]]
+    )
+    return result
+
+
+def pose_rpy_from_pose_quat(pose_quat: NDArray, seq="xyz") -> NDArray:
+    quat = pose_quat[3:6]
+    rpy = euler_from_quat(quat, seq)
+    result = np.array(
+        [pose_quat[0], pose_quat[1], pose_quat[2], rpy[0], rpy[1], rpy[2]]
     )
     return result
 

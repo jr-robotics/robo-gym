@@ -183,6 +183,54 @@ def test_quat_from_rpy():
     assert np.allclose(a=quat_scipy, b=quat_isaac, atol=0.000001)
 
 
+def test_quat_to_rpy():
+    # side purpose is to evaluate whether we agree with Isaac on the meaning of rpy or if we need to adapt
+
+    # Isaac quaternions, already changed to our usual order xyzw:
+    quat1 = [
+        -0.138306,
+        0.693359,
+        0.138306,
+        0.693359,
+    ]
+    quat2 = [
+        0.588379,
+        0.392334,
+        -0.588379,
+        0.392334,
+    ]
+    quat3 = [
+        0.634277,
+        0.3125,
+        -0.634277,
+        0.3125,
+    ]
+    quat4 = [
+        -0.121277,
+        0.696777,
+        0.121277,
+        0.696777,
+    ]
+    # They all come from such a range configuration:
+    # roll: !!python / tuple
+    # - 0.0
+    # - 0.0
+    # pitch: !!python / tuple
+    # - 1.5707963267948966
+    # - 1.5707963267948966
+    # yaw: !!python / tuple
+    # - -3.14
+    # - 3.14
+    # seq = "zyz" looks right but doesn't make sense?
+    # seq = "yxz"
+    seq = "xyz"
+    rpy1 = utils.euler_from_quat(np.array(quat1), seq)
+    rpy2 = utils.euler_from_quat(np.array(quat2), seq)
+    rpy3 = utils.euler_from_quat(np.array(quat3), seq)
+    rpy4 = utils.euler_from_quat(np.array(quat4), seq)
+    foo = "bar"
+
+
 def test_quat_from_rpy2():
     q1 = utils.quat_from_euler_xyz(0, -math.pi / 2, 0)
     q2 = utils.quat_from_euler_xyz(math.pi, 0, 0)

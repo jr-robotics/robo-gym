@@ -43,11 +43,20 @@ class IsaacReachUR(IsaacReachEnv):
         # default max episode steps
         RoboGymEnv.set_default(kwargs, RewardNode.KW_MAX_EPISODE_STEPS, 600)
 
+        RoboGymEnv.set_default(
+            kwargs, ManipulatorEePosEnv.KW_CONTINUE_EXCEPT_COLLISION, True
+        )
         # default joint positions
         RoboGymEnv.set_default(
             kwargs,
             ManipulatorBaseEnv.KW_JOINT_POSITIONS,
             [0, -1.7120, 1.7120, 0, 0, 0],
+        )
+
+        RoboGymEnv.set_default(
+            kwargs,
+            ManipulatorEePosEnv.KW_EE_ROTATION_PITCH_RANGE,
+            math.pi / 2,  # would be just math.pi for Franka
         )
 
     def get_launch_cmd(self) -> str:

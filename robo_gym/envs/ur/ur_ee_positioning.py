@@ -458,7 +458,7 @@ class EndEffectorPositioningUR(URBaseEnv):
             np.array: [x,y,z,alpha,theta,gamma] pose.
 
         """
-        return self.ur.get_random_workspace_pose()
+        return self.ur.get_random_workspace_pose_rpy()
 
     def env_action_to_rs_action(self, action) -> np.array:
         """Convert environment action to Robot Server action"""

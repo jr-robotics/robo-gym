@@ -9,10 +9,10 @@ class TestUrUtils:
     def test_random_workspace_pose(self):
         ur = UR(model_key="ur10")
 
-        pose = ur.get_random_workspace_pose()
+        pose = ur.get_random_workspace_pose_rpy()
         assert 6 == len(pose)
 
-        pose = ur.get_random_workspace_pose(np_random=np.random.default_rng())
+        pose = ur.get_random_workspace_pose_rpy(np_random=np.random.default_rng())
         assert 6 == len(pose)
 
     def test_random_offset_joint_positions(self):

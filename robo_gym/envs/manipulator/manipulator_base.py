@@ -107,9 +107,7 @@ class ManipulatorActionNode(ActionNode):
         denormalized_full_action = self._robot_model.denormalize_joint_values(
             normalized_full_action
         )
-        result = self._robot_model.reorder_joints_for_rs(
-            denormalized_full_action
-        )
+        result = self._robot_model.reorder_joints_for_rs(denormalized_full_action)
         return result
 
     def get_reset_state_part_state_dict(self) -> dict[str, float]:
@@ -232,13 +230,13 @@ class ManipulatorRewardNode(RewardNode):
         collision = rs_state_dict["in_collision"] == 1
         if collision:
             done = True
-            info["final_status"] = "collision"
+            info[RoboGymEnv.INFO_KW_FINAL_STATUS] = RoboGymEnv.FINAL_STATUS_COLLISION
 
         elif (
             self.max_episode_steps is not None
             and self.env.elapsed_steps >= self.max_episode_steps
         ):
             done = True
-            info["final_status"] = "success"
+            info[RoboGymEnv.INFO_KW_FINAL_STATUS] = RoboGymEnv.FINAL_STATUS_SUCCESS
 
         return 0.0, done, info

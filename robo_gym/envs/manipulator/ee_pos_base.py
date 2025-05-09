@@ -23,13 +23,20 @@ from robo_gym.utils.manipulator_model import ManipulatorModel
 class ManipulatorEePosEnv(ManipulatorBaseEnv):
 
     KW_EE_TARGET_POSE = "ee_target_pose"
+    KW_EE_TARGET_VOLUME_BOUNDING_BOX = "ee_target_volume_bounding_box"
     KW_EE_DISTANCE_THRESHOLD = "ee_distance_threshold"
     KW_EE_ROTATION_THRESHOLD = "ee_rotation_threshold"
     KW_EE_ROTATION_MATTERS = "ee_rotation_matters"
     KW_EE_ROTATION_ROLL_RANGE = "ee_rotation_roll_range"
     KW_EE_ROTATION_PITCH_RANGE = "ee_rotation_pitch_range"
     KW_EE_ROTATION_YAW_RANGE = "ee_rotation_yaw_range"
+    KW_EE_ROTATION_QUAT_UNIQUE = "ee_rotation_quat_unique"
+    KW_EE_ROTATION_RPY_SEQ = "ee_rotation_rpy_seq"
+    KW_EE_POSITION_X_RANGE = "ee_rotation_pos_x_range"
+    KW_EE_POSITION_Y_RANGE = "ee_rotation_pos_y_range"
+    KW_EE_POSITION_Z_RANGE = "ee_rotation_pos_z_range"
     KW_CONTINUE_ON_SUCCESS = "continue_on_success"
+    KW_CONTINUE_EXCEPT_COLLISION = "continue_except_collision"
     KW_RANDOMIZE_START = "randomize_start"
     KW_RANDOM_JOINT_OFFSET = "random_joint_offset"
 
@@ -85,7 +92,10 @@ class ManipulatorEePosEnv(ManipulatorBaseEnv):
 
         # initial joint positions, default: from config
         joint_positions = np.array(self._config.get(self.KW_JOINT_POSITIONS))
-        if self._config.get(self.KW_CONTINUE_ON_SUCCESS) and self.successful_ending:
+        if (
+            self._config.get(self.KW_CONTINUE_ON_SUCCESS)
+            or self._config.get(self.KW_CONTINUE_EXCEPT_COLLISION)
+        ) and self.successful_ending:
             # if success and continue on success: to last positions
             joint_positions = self.last_position
         elif self._config.get(self.KW_RANDOMIZE_START):
@@ -107,26 +117,51 @@ class ManipulatorEePosEnv(ManipulatorBaseEnv):
         # else random
         if new_ee_target is None:
 
-            roll_range = None
-            if self.KW_EE_ROTATION_ROLL_RANGE in self._config:
-                roll_range = np.array(self._config.get(self.KW_EE_ROTATION_ROLL_RANGE))
+            roll_range = utils.get_config_range(
+                self._config, self.KW_EE_ROTATION_ROLL_RANGE
+            )
+            pitch_range = utils.get_config_range(
+                self._config, self.KW_EE_ROTATION_PITCH_RANGE
+            )
+            yaw_range = utils.get_config_range(
+                self._config, self.KW_EE_ROTATION_YAW_RANGE
+            )
 
-            pitch_range = None
-            if self.KW_EE_ROTATION_PITCH_RANGE in self._config:
-                pitch_range = np.array(
-                    self._config.get(self.KW_EE_ROTATION_PITCH_RANGE)
+            quat_unique = self._config.get(self.KW_EE_ROTATION_QUAT_UNIQUE, False)
+            rpy_seq = self._config.get(self.KW_EE_ROTATION_RPY_SEQ, "xyz")
+
+            if self._config.get(self.KW_EE_TARGET_VOLUME_BOUNDING_BOX, False):
+                pos_x_range = utils.get_config_range(
+                    self._config, self.KW_EE_POSITION_X_RANGE
+                )
+                pos_y_range = utils.get_config_range(
+                    self._config, self.KW_EE_POSITION_Y_RANGE
+                )
+                pos_z_range = utils.get_config_range(
+                    self._config, self.KW_EE_POSITION_Z_RANGE
                 )
 
-            yaw_range = None
-            if self.KW_EE_ROTATION_YAW_RANGE in self._config:
-                yaw_range = np.array(self._config.get(self.KW_EE_ROTATION_YAW_RANGE))
+                new_ee_target = utils.create_random_bounding_box_pose_quat(
+                    pos_x_range,
+                    pos_y_range,
+                    pos_z_range,
+                    np_random=self.np_random,
+                    roll_range=roll_range,
+                    pitch_range=pitch_range,
+                    yaw_range=yaw_range,
+                    quat_unique=quat_unique,
+                    seq=rpy_seq,
+                )
 
-            new_ee_target = robot_model.get_random_workspace_pose(
-                np_random=self.np_random,
-                roll_range=roll_range,
-                pitch_range=pitch_range,
-                yaw_range=yaw_range,
-            )
+            else:
+                new_ee_target = robot_model.get_random_workspace_pose_quat(
+                    np_random=self.np_random,
+                    roll_range=roll_range,
+                    pitch_range=pitch_range,
+                    yaw_range=yaw_range,
+                    quat_unique=quat_unique,
+                    seq=rpy_seq,
+                )
         # reward node will put it into params for new rs state to set
         self._reward_node.set_ee_target(new_ee_target)
 
@@ -135,22 +170,30 @@ class ManipulatorEePosEnv(ManipulatorBaseEnv):
     ) -> tuple[ObsType, SupportsFloat, bool, bool, dict[str, Any]]:
         obs, reward, terminated, truncated, info = super().step(action)
 
-        if terminated:
-            if info["final_status"] == "success":
-                # store last position for later
-                assert isinstance(self._action_node, ManipulatorActionNode)
-                robot_model = self.get_robot_model()
+        final_status = info.get(self.INFO_KW_FINAL_STATUS)
+        if (
+            terminated
+            and final_status == self.FINAL_STATUS_SUCCESS
+            or self._config.get(self.KW_CONTINUE_EXCEPT_COLLISION)
+            and final_status != self.FINAL_STATUS_COLLISION
+        ):
+            # store last position for later
+            assert isinstance(self._action_node, ManipulatorActionNode)
+            robot_model = self.get_robot_model()
 
-                joint_positions = []
-                joint_positions_keys = [
-                    joint_name + ManipulatorBaseEnv.RS_STATE_KEY_SUFFIX_JOINT_POSITION
-                    for joint_name in robot_model.remote_joint_names
-                ]
+            joint_positions = []
+            joint_positions_keys = [
+                joint_name + ManipulatorBaseEnv.RS_STATE_KEY_SUFFIX_JOINT_POSITION
+                for joint_name in robot_model.remote_joint_names
+            ]
 
-                for position in joint_positions_keys:
-                    joint_positions.append(self._last_rs_state_dict[position])
-                joint_positions = np.array(joint_positions)
-                self.last_position = joint_positions
+            for position in joint_positions_keys:
+                joint_positions.append(self._last_rs_state_dict[position])
+            joint_positions = np.array(joint_positions)
+            self.last_position = joint_positions
+            # TODO extend this mechanism to also work if truncated from outside
+            # may need to change the logic for going to stored joint positions
+            self.successful_ending = True
         return obs, reward, terminated, truncated, info
 
     def get_robot_model(self) -> ManipulatorModel:
@@ -285,6 +328,11 @@ class ManipulatorEePosRewardNode(ManipulatorRewardNode):
     DEFAULT_DISTANCE_THRESHOLD = 0.1
     DEFAULT_ROTATION_THRESHOLD = 0.1
 
+    INFO_KW_TRANSLATION_DISTANCE = "translation_distance"
+    INFO_KW_ROTATION_DISTANCE = "rotation_distance"
+    INFO_KW_TARGET_COORD = "target_coord"
+    INFO_KW_TARGET_ROT = "target_rot"
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._ee_target: list[float] | None = None
@@ -385,6 +433,8 @@ class ManipulatorEePosRewardNode(ManipulatorRewardNode):
             self.DEFAULT_ROTATION_THRESHOLD,
         )
 
+        info[self.INFO_KW_TRANSLATION_DISTANCE] = euclidean_dist_3d
+
         if rotation_matters:
             quat_ee = np.array(
                 [
@@ -400,24 +450,27 @@ class ManipulatorEePosRewardNode(ManipulatorRewardNode):
             rot_reward = rotation_weight * rot_diff
             reward += rot_reward
             rotation_success = rot_diff < rotation_threshold
+            info[self.INFO_KW_ROTATION_DISTANCE] = rot_diff
 
         if rotation_success and euclidean_dist_3d <= distance_threshold:
             reward = g_w * 1
             done = True
-            info["final_status"] = "success"
+            info[RoboGymEnv.INFO_KW_FINAL_STATUS] = RoboGymEnv.FINAL_STATUS_SUCCESS
 
         if rs_state.get("in_collision", False):
             reward = c_w * 1
             done = True
-            info["final_status"] = "collision"
+            info[RoboGymEnv.INFO_KW_FINAL_STATUS] = RoboGymEnv.FINAL_STATUS_COLLISION
 
         elif self.env.elapsed_steps >= self.max_episode_steps:
             done = True
-            info["final_status"] = "max_steps_exceeded"
+            info[RoboGymEnv.INFO_KW_FINAL_STATUS] = (
+                RoboGymEnv.FINAL_STATUS_MAX_STEPS_EXCEEDED
+            )
 
         if done:
-            info["target_coord"] = target_coord
+            info[self.INFO_KW_TARGET_COORD] = target_coord
             if rotation_matters:
-                info["target_rot"] = quat_target
+                info[self.INFO_KW_TARGET_ROT] = quat_target
 
         return reward, done, info

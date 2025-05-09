@@ -26,7 +26,23 @@ class IsaacReachEnv(ManipulatorEePosEnv):
             kwargs, ManipulatorEePosEnv.KW_EE_DISTANCE_THRESHOLD, 0.03
         )
 
-        RoboGymEnv.set_default(kwargs, ManipulatorEePosEnv.KW_EE_ROTATION_MATTERS, True)
+        RoboGymEnv.set_default(
+            kwargs, ManipulatorEePosEnv.KW_EE_TARGET_VOLUME_BOUNDING_BOX, True
+        )
+        RoboGymEnv.set_default(
+            kwargs, ManipulatorEePosEnv.KW_EE_POSITION_X_RANGE, [0.35, 0.65]
+        )
+        RoboGymEnv.set_default(
+            kwargs, ManipulatorEePosEnv.KW_EE_POSITION_Y_RANGE, [-0.2, 0.2]
+        )
+        RoboGymEnv.set_default(
+            kwargs, ManipulatorEePosEnv.KW_EE_POSITION_Z_RANGE, [0.15, 0.5]
+        )
+        RoboGymEnv.set_default(kwargs, ManipulatorEePosEnv.KW_EE_ROTATION_ROLL_RANGE, 0)
+
+        RoboGymEnv.set_default(
+            kwargs, ManipulatorEePosEnv.KW_EE_ROTATION_YAW_RANGE, [-math.pi, math.pi]
+        )
 
         RoboGymEnv.set_default(kwargs, IsaacReachEnv.KW_ISAAC_SCALE, 0.5)
 
@@ -37,6 +53,8 @@ class IsaacReachEnv(ManipulatorEePosEnv):
         kwargs[RoboGymEnv.KW_ACTION_NODE] = action_node
 
         super().__init__(**kwargs)
+        # robot model joint positions were set from the joint_positions kw by super().__init__
+        self.default_joint_positions = self._robot_model.joint_positions
 
     def create_main_observation_node(self, node_index: int = 0, **kwargs):
         return IsaacReachObservationNode(**self.get_obs_node_setup_kwargs(node_index))
@@ -44,8 +62,11 @@ class IsaacReachEnv(ManipulatorEePosEnv):
 
 class IsaacReachObservationNode(ManipulatorEePosObservationNode):
 
-    # def __init__(self, **kwargs):
-    #    super().__init__(**kwargs)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.default_joint_positions = np.array(
+            self._config.get(ManipulatorBaseEnv.KW_JOINT_POSITIONS)
+        )
 
     def get_observation_space_part(self) -> gym.spaces.Box:
         num_joints = len(self._robot_model.joint_names)
@@ -57,12 +78,12 @@ class IsaacReachObservationNode(ManipulatorEePosObservationNode):
         max_joint_positions = (
             self._robot_model.get_max_joint_positions()
             + tolerance_abs
-            - self._robot_model.joint_positions
+            - self.default_joint_positions
         )
         min_joint_positions = (
             self._robot_model.get_min_joint_positions()
             - tolerance_abs
-            - self._robot_model.joint_positions
+            - self.default_joint_positions
         )
 
         # velocities
@@ -88,7 +109,7 @@ class IsaacReachObservationNode(ManipulatorEePosObservationNode):
         # previous action is added by a separate LastActionObservationNode
         joint_positions = (
             self.extract_joint_positions_from_rs_state_dict(rs_state_dict)
-            - self._robot_model.joint_positions
+            - self.default_joint_positions
         )
         joint_velocities = self.extract_joint_velocities_from_rs_state_dict(
             rs_state_dict
@@ -103,12 +124,12 @@ class IsaacReachActionNode(ManipulatorActionNode):
     def __init__(self, **kwargs):
         self.scale = kwargs.get(IsaacReachEnv.KW_ISAAC_SCALE, 0.5)
         super().__init__(**kwargs)
-
-    def get_default_joint_positions(self) -> NDArray:
-        return self._robot_model.joint_positions
+        self.default_joint_positions = np.array(
+            self._config.get(ManipulatorBaseEnv.KW_JOINT_POSITIONS)
+        )
 
     def env_action_to_rs_action(self, env_action: NDArray, **kwargs) -> NDArray:
-        rs_action = self.robot_model.joint_positions + env_action * self.scale
+        rs_action = self.default_joint_positions + env_action * self.scale
         rs_action = self.robot_model.reorder_joints_for_rs(rs_action)
         return rs_action
 
@@ -116,12 +137,8 @@ class IsaacReachActionNode(ManipulatorActionNode):
         max_joint_positions = self._robot_model.get_max_joint_positions()
         min_joint_positions = self._robot_model.get_min_joint_positions()
 
-        action_max = (
-            max_joint_positions - self._robot_model.joint_positions
-        ) / self.scale
-        action_min = (
-            min_joint_positions - self._robot_model.joint_positions
-        ) / self.scale
+        action_max = (max_joint_positions - self.default_joint_positions) / self.scale
+        action_min = (min_joint_positions - self.default_joint_positions) / self.scale
 
         action_space = gym.spaces.Box(high=action_max, low=action_min)
         return action_space

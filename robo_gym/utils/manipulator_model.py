@@ -5,6 +5,7 @@ import numpy as np
 from numpy.typing import NDArray
 import yaml
 import copy
+from robo_gym.utils import utils
 
 
 class ManipulatorModel:
@@ -157,7 +158,7 @@ class ManipulatorModel:
             #    result[i] = joints[i] / abs(self.max_joint_positions[i])
         return result
 
-    def get_random_workspace_pose(
+    def get_random_workspace_pose_rpy(
         self,
         np_random: np.random.Generator | None = None,
         roll_range: NDArray | None = None,
@@ -198,23 +199,28 @@ class ManipulatorModel:
             if (x**2 + y**2) > self.ws_min_r**2:
                 singularity_area = False
 
-        roll = ManipulatorModel.get_uniform_from_range(np_random, roll_range, 0.0)
-        pitch = ManipulatorModel.get_uniform_from_range(np_random, pitch_range, 0.0)
-        yaw = ManipulatorModel.get_uniform_from_range(np_random, yaw_range, 0.0)
+        roll = utils.get_uniform_from_range(np_random, roll_range, 0.0)
+        pitch = utils.get_uniform_from_range(np_random, pitch_range, 0.0)
+        yaw = utils.get_uniform_from_range(np_random, yaw_range, 0.0)
 
         pose[0:6] = [x, y, z, roll, pitch, yaw]
 
         return pose
 
-    @staticmethod
-    def get_uniform_from_range(
-        np_random: np.random.Generator,
-        range: NDArray | None,
-        default_value: float = 0.0,
-    ) -> float:
-        if range is None:
-            return default_value
-        return np_random.uniform(low=range[0], high=range[1])
+    def get_random_workspace_pose_quat(
+        self,
+        np_random: np.random.Generator | None = None,
+        roll_range: NDArray | None = None,
+        pitch_range: NDArray | None = None,
+        yaw_range: NDArray | None = None,
+        seq="xyz",
+        quat_unique: bool = False,
+    ) -> NDArray:
+        pose_rpy = self.get_random_workspace_pose_rpy(
+            np_random, roll_range, pitch_range, yaw_range
+        )
+        pose_quat = utils.quat_from_euler(pose_rpy[4], pose_rpy[5], pose_rpy[6], seq, quat_unique)
+        return pose_quat
 
     def get_random_offset_joint_positions(
         self,

@@ -125,17 +125,6 @@ def main():
     if robot_type != ROBOT_TYPE_MIR100 and (is_ee_pos or is_avoidance):
         joint_pos_obs_offset += 3  # target polar coordinates
 
-    # TODO temporary test for reach task
-    if is_ee_pos:
-        kwargs.update(
-            {
-                "ee_rotation_roll_range": [-0.0, 0.0],
-                "ee_rotation_pitch_range": [math.pi / 2, math.pi / 2],
-                "ee_rotation_yaw_range": [-3.14, 3.14],
-                "ee_rotation_matters": True,
-            }
-        )
-
     ## target samples from isaac
     ## mind that Isaac uses wxyz notation for quaternions, but we use xyzw
     # [(0.509736, -0.101527, 0.462884)]
@@ -184,7 +173,7 @@ def main():
     # [(0.541175, 0.0330651, 0.34642)]
     # [(0.696777, -0.121277, 0.696777, 0.121277)]
 
-    if True:
+    if False:
         kwargs[ManipulatorEePosEnv.KW_EE_TARGET_POSE] = [
             0.541175,
             0.0330651,
@@ -294,6 +283,8 @@ def main():
                         reward,
                     )
                 )
+                print_info(info)
+
             elif all_done:
                 print(
                     "Shutting down - Episode {} not finished.\nTime steps: {}\nTerminated: {}\nTruncated: {}\nFinal status: {}\nReward: {}\n".format(
@@ -305,6 +296,7 @@ def main():
                         reward,
                     )
                 )
+                print_info(info)
                 env.close()
 
     # redundant - killing simulation upon object cleanup anyway
@@ -313,6 +305,11 @@ def main():
     #        env.unwrapped.kill_sim()
     #    except:
     #        pass
+
+
+def print_info(info):
+    for key in sorted(info):
+        print("- " + key + ": " + str(info[key]))
 
 
 class IsaacPolicyWrapper:
