@@ -23,6 +23,8 @@ from robo_gym.utils.manipulator_model import ManipulatorModel
 class ManipulatorEePosEnv(ManipulatorBaseEnv):
 
     KW_EE_TARGET_POSE = "ee_target_pose"
+    KW_EE_DISTANCE_THRESHOLD = "ee_distance_threshold"
+    KW_EE_ROTATION_THRESHOLD = "ee_rotation_threshold"
     KW_EE_ROTATION_MATTERS = "ee_rotation_matters"
     KW_EE_ROTATION_ROLL_RANGE = "ee_rotation_roll_range"
     KW_EE_ROTATION_PITCH_RANGE = "ee_rotation_pitch_range"
@@ -280,12 +282,8 @@ class ManipulatorEePosObservationNode(ManipulatorObservationNode):
 
 class ManipulatorEePosRewardNode(ManipulatorRewardNode):
 
-    # TODO configurable
-    # For UR10, these values are achievable with policies trained with Isaac Reach default settings and using an example pose from there.
-    # Visual impression is that we should be able to make them lower if we could get rid of the robot jitter in Isaac
-    # Rotation deviation still seems high, but maybe it's good enough
-    DEFAULT_DISTANCE_THRESHOLD = 0.03
-    DEFAULT_ROTATION_THRESHOLD = 0.4
+    DEFAULT_DISTANCE_THRESHOLD = 0.1
+    DEFAULT_ROTATION_THRESHOLD = 0.1
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -312,6 +310,19 @@ class ManipulatorEePosRewardNode(ManipulatorRewardNode):
             "object_0_y": self._ee_target[1],
             "object_0_z": self._ee_target[2],
         }
+
+    def calculate_quaternion_distance(self, quat1: NDArray, quat2: NDArray) -> float:
+        """
+        Get the distance between two rotation quaternions.
+        Subclasses may want to use different implementations.
+
+        Parameters:
+            quat1: a quaternion
+            quat2: another quaternion
+        Returns:
+            float: the distance between the two quaternions
+        """
+        return utils.rotation_error_magnitude(quat1, quat2)
 
     def get_reward(
         self,
@@ -361,7 +372,19 @@ class ManipulatorEePosRewardNode(ManipulatorRewardNode):
 
         quat_target = []
         rotation_success = True
-        rotation_matters = self._config.get(ManipulatorEePosEnv.KW_EE_ROTATION_MATTERS)
+        rotation_matters = self._config.get(
+            ManipulatorEePosEnv.KW_EE_ROTATION_MATTERS, False
+        )
+
+        distance_threshold = self._config.get(
+            ManipulatorEePosEnv.KW_EE_DISTANCE_THRESHOLD,
+            self.DEFAULT_DISTANCE_THRESHOLD,
+        )
+        rotation_threshold = self._config.get(
+            ManipulatorEePosEnv.KW_EE_ROTATION_THRESHOLD,
+            self.DEFAULT_ROTATION_THRESHOLD,
+        )
+
         if rotation_matters:
             quat_ee = np.array(
                 [
@@ -373,21 +396,12 @@ class ManipulatorEePosRewardNode(ManipulatorRewardNode):
             )
             quat_target = self._ee_target[3:7]
 
-            # TODO: add capability to modify the ee rotation for evaluation
-            # Compensate for Isaac using a different ee rotation from ours
-            # From my analysis the following could be correct but apparently isn't
-            # (rotate by -90° around Y, then 180° around X)
-            # When solved, implement in a generic way, default: mod = 0, for Isaac compat configure the found values
-
-            # modifier_quat = utils.quat_from_euler_zyx(math.pi, -math.pi / 2, 0)
-            # ee_rot_quat2 = utils.quat_mul(ee_rot_quat, modifier_quat)
-
-            rot_diff = utils.rotation_error_magnitude(quat_ee, quat_target)
+            rot_diff = self.calculate_quaternion_distance(quat_ee, quat_target)
             rot_reward = rotation_weight * rot_diff
             reward += rot_reward
-            rotation_success = rot_diff < self.DEFAULT_ROTATION_THRESHOLD
+            rotation_success = rot_diff < rotation_threshold
 
-        if rotation_success and euclidean_dist_3d <= self.DEFAULT_DISTANCE_THRESHOLD:
+        if rotation_success and euclidean_dist_3d <= distance_threshold:
             reward = g_w * 1
             done = True
             info["final_status"] = "success"

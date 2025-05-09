@@ -19,6 +19,15 @@ class IsaacReachEnv(ManipulatorEePosEnv):
         self._config = kwargs
 
         RoboGymEnv.set_default(kwargs, ManipulatorEePosEnv.KW_EE_ROTATION_MATTERS, True)
+        RoboGymEnv.set_default(
+            kwargs, ManipulatorEePosEnv.KW_EE_ROTATION_THRESHOLD, 0.4
+        )
+        RoboGymEnv.set_default(
+            kwargs, ManipulatorEePosEnv.KW_EE_DISTANCE_THRESHOLD, 0.03
+        )
+
+        RoboGymEnv.set_default(kwargs, ManipulatorEePosEnv.KW_EE_ROTATION_MATTERS, True)
+
         RoboGymEnv.set_default(kwargs, IsaacReachEnv.KW_ISAAC_SCALE, 0.5)
 
         # env nodes
