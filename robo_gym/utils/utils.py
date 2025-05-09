@@ -190,7 +190,7 @@ def quat_from_euler_zyx(
     return quat_from_euler(roll, pitch, yaw, "zyx", quat_unique)
 
 
-def euler_from_quat(q: NDArray, seq="zyz") -> NDArray:
+def euler_from_quat(q: NDArray, seq="xyz") -> NDArray:
     rot = R.from_quat(q)
     rpy = rot.as_euler(seq=seq, degrees=False)
     return rpy
@@ -255,7 +255,7 @@ def euler_xyz_from_quat_isaac(
     sin_pitch = 2.0 * (q_w * q_y - q_z * q_x)
     pitch = (
         math.copysign(math.pi / 2.0, sin_pitch)
-        if math.abs(sin_pitch) >= 1
+        if abs(sin_pitch) >= 1
         else math.asin(sin_pitch)
     )
 
@@ -320,9 +320,11 @@ def create_random_bounding_box_pose_quat(
     pitch = get_uniform_from_range(np_random, pitch_range, 0.0)
     yaw = get_uniform_from_range(np_random, yaw_range, 0.0)
 
-    quat = quat_from_euler(roll, pitch, yaw, seq)
+    # quat = quat_from_euler(roll, pitch, yaw, seq)
+    quat = quat_from_euler_xyz_isaac(roll, pitch, yaw)
     if quat_unique and quat[3] < 0:
         quat = -quat
+
     result = np.array([x, y, z, quat[0], quat[1], quat[2], quat[3]])
     return result
 
@@ -351,3 +353,30 @@ def rotation_error_magnitude(q1: NDArray, q2: NDArray) -> float:
     r2 = R.from_quat(q2)
     r_diff = r1 * (r2.inv())
     return r_diff.magnitude()
+
+
+# our representation: xyzw
+# Isaac representation: wxyz (not in the Isaac methods here, they are already converted)
+# but important for providing Isaac-like observations
+def quat_xyzw_from_wxyz(q: NDArray) -> NDArray:
+    # w = q[0]
+    return np.array([q[1], q[2], q[3], q[0]])
+
+
+def quat_wxyz_from_xyzw(q: NDArray) -> NDArray:
+    # w = q[3]
+    return np.array([q[3], q[0], q[1], q[2]])
+
+
+def pose_quat_xyzw_from_wxyz(pose: NDArray) -> NDArray:
+    pos = pose[0:3]
+    q = pose[3:7]
+    result = np.concatenate((pos, quat_xyzw_from_wxyz(q)))
+    return result
+
+
+def pose_quat_wxyz_from_xyzw(pose: NDArray) -> NDArray:
+    pos = pose[0:3]
+    q = pose[3:7]
+    result = np.concatenate((pos, quat_wxyz_from_xyzw(q)))
+    return result

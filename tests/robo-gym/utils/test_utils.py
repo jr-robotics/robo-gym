@@ -223,11 +223,73 @@ def test_quat_to_rpy():
     # - 3.14
     # seq = "zyz" looks right but doesn't make sense?
     # seq = "yxz"
-    seq = "xyz"
-    rpy1 = utils.euler_from_quat(np.array(quat1), seq)
-    rpy2 = utils.euler_from_quat(np.array(quat2), seq)
-    rpy3 = utils.euler_from_quat(np.array(quat3), seq)
-    rpy4 = utils.euler_from_quat(np.array(quat4), seq)
+    results = {}
+    for seq in ["zyz", "xyz", "xzy", "yxz", "yzx", "zyx", "zyx"]:
+        seq_result = []
+        # for quat in [quat1, quat2, quat3, quat4]:
+        for quat in [quat1]:
+            rpy2 = utils.euler_from_quat(np.array(quat), seq)
+            quat2 = utils.quat_from_euler(rpy2[0], rpy2[1], rpy2[2], seq, True)
+            rpy = utils.euler_from_quat(np.array(quat2), seq)
+
+            variant_result = math.isclose(rpy[0], 0, abs_tol=0.0001) and math.isclose(
+                rpy[1], math.pi / 2, abs_tol=0.0001
+            )
+            seq_result.append(variant_result)
+        results[seq] = seq_result
+    foo = "bar"
+
+
+def test_quat_to_rpy_isaac():
+    # side purpose is to evaluate whether we agree with Isaac on the meaning of rpy or if we need to adapt
+
+    # Isaac quaternions, already changed to our usual order xyzw:
+    quat1 = [
+        -0.138306,
+        0.693359,
+        0.138306,
+        0.693359,
+    ]
+    quat2 = [
+        0.588379,
+        0.392334,
+        -0.588379,
+        0.392334,
+    ]
+    quat3 = [
+        0.634277,
+        0.3125,
+        -0.634277,
+        0.3125,
+    ]
+    quat4 = [
+        -0.121277,
+        0.696777,
+        0.121277,
+        0.696777,
+    ]
+    # They all come from such a range configuration:
+    # roll: !!python / tuple
+    # - 0.0
+    # - 0.0
+    # pitch: !!python / tuple
+    # - 1.5707963267948966
+    # - 1.5707963267948966
+    # yaw: !!python / tuple
+    # - -3.14
+    # - 3.14
+    # seq = "zyz" looks right but doesn't make sense?
+    # seq = "yxz"
+    results = {}
+    for seq in ["isaac"]:
+        seq_result = []
+        for quat in [quat1, quat2, quat3, quat4]:
+            rpy = utils.euler_xyz_from_quat_isaac(np.array(quat))
+            variant_result = math.isclose(rpy[0], 0, abs_tol=0.0001) and math.isclose(
+                rpy[1], math.pi / 2, abs_tol=0.0001
+            )
+            seq_result.append(variant_result)
+        results[seq] = seq_result
     foo = "bar"
 
 
@@ -236,6 +298,28 @@ def test_quat_from_rpy2():
     q2 = utils.quat_from_euler_xyz(math.pi, 0, 0)
     q12 = q1 * q2
     quat = [q12[0], q12[1], q12[2], q12[3]]
+
+
+def test_quat_from_rpy_vs_isaac():
+    rpy_isaac = (0, math.pi / 2, 0.3495)
+    quat_isaac = utils.quat_from_euler_xyz_isaac(
+        rpy_isaac[0], rpy_isaac[1], rpy_isaac[2]
+    )
+    quat = utils.quat_from_euler_xyz(rpy_isaac[0], rpy_isaac[1], rpy_isaac[2], False)
+    # they are equal, so far so good
+
+    # this is not equal to what we started with:
+    rpy_back_isaac = utils.euler_xyz_from_quat_isaac(quat)
+
+    # zyz gives us consistent rpys for the values we tried from Isaac so far,
+    # but it may be special cases
+    results = {}
+    for seq in ["zyz", "xyz", "xzy", "yxz", "yzx", "zyx", "zyx"]:
+
+        rpy_back = utils.euler_from_quat(quat, seq)
+        results[seq] = rpy_back
+
+    foo = "bar"
 
 
 def test_rot_diff():

@@ -20,10 +20,10 @@ class IsaacReachEnv(ManipulatorEePosEnv):
 
         RoboGymEnv.set_default(kwargs, ManipulatorEePosEnv.KW_EE_ROTATION_MATTERS, True)
         RoboGymEnv.set_default(
-            kwargs, ManipulatorEePosEnv.KW_EE_ROTATION_THRESHOLD, 0.4
+            kwargs, ManipulatorEePosEnv.KW_EE_ROTATION_THRESHOLD, 0.05
         )
         RoboGymEnv.set_default(
-            kwargs, ManipulatorEePosEnv.KW_EE_DISTANCE_THRESHOLD, 0.03
+            kwargs, ManipulatorEePosEnv.KW_EE_DISTANCE_THRESHOLD, 0.02
         )
 
         RoboGymEnv.set_default(
@@ -114,7 +114,7 @@ class IsaacReachObservationNode(ManipulatorEePosObservationNode):
         joint_velocities = self.extract_joint_velocities_from_rs_state_dict(
             rs_state_dict
         )
-        command = np.array(self.get_target_pose())
+        command = utils.pose_quat_wxyz_from_xyzw(np.array(self.get_target_pose()))
         obs = np.concatenate((joint_positions, joint_velocities, command))
         return obs
 
