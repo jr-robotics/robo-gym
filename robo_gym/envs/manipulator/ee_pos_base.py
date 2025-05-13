@@ -328,8 +328,8 @@ class ManipulatorEePosRewardNode(ManipulatorRewardNode):
     DEFAULT_DISTANCE_THRESHOLD = 0.1
     DEFAULT_ROTATION_THRESHOLD = 0.1
 
-    INFO_KW_TRANSLATION_DISTANCE = "translation_distance"
-    INFO_KW_ROTATION_DISTANCE = "rotation_distance"
+    INFO_KW_TRANSLATION_DISTANCE = "dist_coord"
+    INFO_KW_ROTATION_DISTANCE = "dist_rot"
     INFO_KW_TARGET_COORD = "target_coord"
     INFO_KW_TARGET_ROT = "target_rot"
 
