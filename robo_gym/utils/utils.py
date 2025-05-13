@@ -4,7 +4,6 @@ from __future__ import annotations
 import math
 import numpy as np
 from numpy.typing import NDArray
-from pybullet_utils.gazebo_world_parser import is_float
 from scipy.spatial.transform import Rotation as R
 
 
@@ -276,8 +275,13 @@ def euler_xyz_from_quat_isaac(
 def get_config_range(data: dict, key: str) -> NDArray:
     result = data.get(key)
     if result is not None:
-        if is_float(result):
-            return np.array([result, result])
+        try:
+            float_val = float(result)
+            return np.array([float_val, float_val])
+        except ValueError:
+            pass
+        except TypeError:
+            pass
         result = np.array(result).reshape([2])
         if result[1] < result[0]:
             result[1] = result[0]
@@ -294,7 +298,7 @@ def get_uniform_from_range(
     return np_random.uniform(low=range[0], high=range[1])
 
 
-# Isaac random pose generation to be rewritten for our use
+# Isaac random pose generation rewritten for our use
 def create_random_bounding_box_pose_quat(
     pos_x_range: NDArray,
     pos_y_range: NDArray,
