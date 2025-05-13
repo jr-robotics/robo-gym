@@ -468,9 +468,8 @@ class ManipulatorEePosRewardNode(ManipulatorRewardNode):
                 RoboGymEnv.FINAL_STATUS_MAX_STEPS_EXCEEDED
             )
 
-        if done:
-            info[self.INFO_KW_TARGET_COORD] = target_coord
-            if rotation_matters:
-                info[self.INFO_KW_TARGET_ROT] = quat_target
+        info[self.INFO_KW_TARGET_COORD] = target_coord
+        if rotation_matters:
+            info[self.INFO_KW_TARGET_ROT] = quat_target
 
         return reward, done, info
