@@ -11,7 +11,6 @@ import robo_gym
 import gymnasium as gym
 import numpy as np
 
-# import torch
 from gymnasium.wrappers import TimeLimit
 from numpy.typing import NDArray
 
@@ -74,8 +73,6 @@ def main():
         "-u", "--urmodel", help="UR model (ur3, ur5, ur10, ur16)", default=""
     )
 
-    # TODO logic for real/sim distinction and name structure
-
     args = parser.parse_args(sys.argv[1:])
 
     np.set_printoptions(suppress=True)
@@ -124,17 +121,6 @@ def main():
     if robot_type != ROBOT_TYPE_MIR100 and (is_ee_pos or is_avoidance):
         joint_pos_obs_offset += 3  # target polar coordinates
 
-    # TODO temporary test for reach task
-    if is_ee_pos:
-        kwargs.update(
-            {
-                "ee_rotation_roll_range": [-0.0, 0.0],
-                "ee_rotation_pitch_range": [math.pi / 2, math.pi / 2],
-                "ee_rotation_yaw_range": [-3.14, 3.14],
-                "ee_rotation_matters": True,
-            }
-        )
-
     if rs_address:
         env = gym.make(env_name, rs_address=rs_address, gui=gui, **kwargs)
     else:
@@ -163,6 +149,7 @@ def main():
             if policy:
                 action = policy.compute_action(observation)
             else:
+                # generate action with some very simple movement, depending on robot and some env details
                 if not period:
                     param = 1
                 else:
@@ -185,18 +172,17 @@ def main():
                     if not env.action_space.contains(action):
                         raise Exception("Fix the action math")
                 elif is_robot_type[ROBOT_TYPE_PANDA]:
-                    if args.action_mode == "abs_pos":
+                    if action_mode == "abs_pos":
                         normalized_joint_positions = observation[
                             0 + joint_pos_obs_offset : 6 + joint_pos_obs_offset
                         ]
                         action = normalized_joint_positions
                         # assume that joint 0 has starting position 0, otherwise needs a different solution for the start
-                        #
                         action[0] = param * 0.1
                         action = action.astype(dtype=np.float32)
                         if not env.action_space.contains(action):
                             raise Exception("Fix the action math")
-                    elif args.action_mode == "delta_pos":
+                    elif action_mode == "delta_pos":
                         action = np.array(
                             [param * 0.05, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float32
                         )
@@ -234,6 +220,8 @@ def main():
                         reward,
                     )
                 )
+                print_info(info)
+
             elif all_done:
                 print(
                     "Shutting down - Episode {} not finished.\nTime steps: {}\nTerminated: {}\nTruncated: {}\nFinal status: {}\nReward: {}\n".format(
@@ -245,6 +233,7 @@ def main():
                         reward,
                     )
                 )
+                print_info(info)
                 env.close()
 
     # redundant - killing simulation upon object cleanup anyway
@@ -255,15 +244,20 @@ def main():
     #        pass
 
 
+def print_info(info):
+    for key in sorted(info):
+        print("- " + key + ": " + str(info[key]))
+
+
 class IsaacPolicyWrapper:
     # based on https://github.com/louislelay/isaaclab_ur_reach_sim2real
-    # TODO may also need to do something with the env yaml file
 
     def __init__(self, policy_file_path: str):
-        pass
-        # with open(policy_file_path, "rb") as f:
-        #    file = io.BytesIO(f.read())
-        # self.policy = torch.jit.load(file)
+        import torch
+
+        with open(policy_file_path, "rb") as f:
+            file = io.BytesIO(f.read())
+        self.policy = torch.jit.load(file)
 
     def compute_action(self, obs: NDArray) -> NDArray:
         """
@@ -275,11 +269,12 @@ class IsaacPolicyWrapper:
         Returns:
             np.ndarray: The action.
         """
-        return np.zeros(6)
-        # with torch.no_grad():
-        #    obs = torch.from_numpy(obs).view(1, -1).float()
-        #    action = self.policy(obs).detach().view(-1).numpy()
-        # return action
+        import torch
+
+        with torch.no_grad():
+            obs = torch.from_numpy(obs).view(1, -1).float()
+            action = self.policy(obs).detach().view(-1).numpy()
+        return action
 
 
 if __name__ == "__main__":
