@@ -1,14 +1,18 @@
 #!/usr/bin/env python
-import math
-import time
-import numpy as np
-import gymnasium as gym
-import sys
-import signal
 import argparse
-from gymnasium.wrappers import TimeLimit
+import io
+import math
+import signal
+import sys
+import time
+
 import robo_gym
-from envs.base.robogym_env import RoboGymEnv
+
+import gymnasium as gym
+import numpy as np
+
+from gymnasium.wrappers import TimeLimit
+from numpy.typing import NDArray
 
 ROBOT_TYPE_MIR100 = "Mir100"
 ROBOT_TYPE_UR = "UR"
@@ -56,6 +60,9 @@ def main():
     parser.add_argument(
         "-i", "--ip", help="server manager ip address or host name", default="ROBL1003a"
     )
+    parser.add_argument(
+        "-p", "--policy", help="policy trained with rsl rl in Isaac Lab", default=""
+    )
     parser.add_argument("-rs", "--rsaddress", help="robot server address", default="")
     parser.add_argument("-rv", "--rviz_gui", help="RViz enabled", default="true")
     parser.add_argument(
@@ -65,8 +72,6 @@ def main():
     parser.add_argument(
         "-u", "--urmodel", help="UR model (ur3, ur5, ur10, ur16)", default=""
     )
-
-    # TODO logic for real/sim distinction and name structure
 
     args = parser.parse_args(sys.argv[1:])
 
@@ -81,6 +86,9 @@ def main():
     timesteps = int(args.timesteps)
     episode_timesteps = int(args.episode_timesteps)
     ur_model = args.urmodel
+    policy = None
+    if args.policy:
+        policy = IsaacPolicyWrapper(policy_file_path=args.policy)
 
     unversioned_env_name = env_name.split("-")[0]
 
@@ -97,7 +105,8 @@ def main():
     kwargs = {"gazebo_gui": gazebo_gui, "rviz_gui": rviz_gui, "rs_state_to_info": True}
 
     action_mode = "abs_pos"
-    is_avoidance = env_class_name.find("Avoidance")
+    is_avoidance = env_class_name.find("Avoidance") > -1
+    is_ee_pos = env_class_name.find("EndEffectorPositioning") > -1
 
     if is_robot_type[ROBOT_TYPE_UR]:
         kwargs["ur_model"] = ur_model
@@ -109,9 +118,7 @@ def main():
 
     # Where in the observations do the joint position start?
     joint_pos_obs_offset = 0
-    if robot_type != ROBOT_TYPE_MIR100 and (
-        env_class_name.find("EndEffectorPositioning") > -1 or is_avoidance > -1
-    ):
+    if robot_type != ROBOT_TYPE_MIR100 and (is_ee_pos or is_avoidance):
         joint_pos_obs_offset += 3  # target polar coordinates
 
     if rs_address:
@@ -121,7 +128,6 @@ def main():
 
     env = TimeLimit(env, episode_timesteps)
 
-    observation, info = env.reset()
     time.sleep(1)
     time_count = 0
     period = episode_timesteps / 2
@@ -140,54 +146,57 @@ def main():
         done = False
 
         while time_count < timesteps and not (done or all_done):
-            if not period:
-                param = 1
+            if policy:
+                action = policy.compute_action(observation)
             else:
-                param = math.sin((episode_time_count / period) * math.tau)
+                # generate action with some very simple movement, depending on robot and some env details
+                if not period:
+                    param = 1
+                else:
+                    param = math.sin((episode_time_count / period) * math.tau)
 
-            if is_robot_type[ROBOT_TYPE_UR]:
-                normalized_joint_positions = observation[
-                    0 + joint_pos_obs_offset : 5 + joint_pos_obs_offset
-                ]
-                delta_action = (
-                    np.array([param * 0.02, 0.0, 0.0, 0.0, 0.0], dtype=np.float32)
-                    * direction
-                )
-                action = normalized_joint_positions + delta_action
-                action = action.astype(dtype=np.float32)
-                if not env.action_space.contains(action):
-                    direction = -direction
-                    action = normalized_joint_positions  # no move this time
-                    action = action.astype(dtype=np.float32)
-                if not env.action_space.contains(action):
-                    raise Exception("Fix the action math")
-            elif is_robot_type[ROBOT_TYPE_PANDA]:
-                if args.action_mode == "abs_pos":
+                if is_robot_type[ROBOT_TYPE_UR]:
                     normalized_joint_positions = observation[
-                        0 + joint_pos_obs_offset : 6 + joint_pos_obs_offset
+                        0 + joint_pos_obs_offset : 5 + joint_pos_obs_offset
                     ]
-                    action = normalized_joint_positions
-                    # assume that joint 0 has starting position 0, otherwise needs a different solution for the start
-                    #
-                    action[0] = param * 0.1
+                    delta_action = (
+                        np.array([param * 0.02, 0.0, 0.0, 0.0, 0.0], dtype=np.float32)
+                        * direction
+                    )
+                    action = normalized_joint_positions + delta_action
                     action = action.astype(dtype=np.float32)
                     if not env.action_space.contains(action):
+                        direction = -direction
+                        action = normalized_joint_positions  # no move this time
+                        action = action.astype(dtype=np.float32)
+                    if not env.action_space.contains(action):
                         raise Exception("Fix the action math")
-                elif args.action_mode == "delta_pos":
-                    action = np.array(
-                        [param * 0.05, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float32
-                    )
+                elif is_robot_type[ROBOT_TYPE_PANDA]:
+                    if action_mode == "abs_pos":
+                        normalized_joint_positions = observation[
+                            0 + joint_pos_obs_offset : 6 + joint_pos_obs_offset
+                        ]
+                        action = normalized_joint_positions
+                        # assume that joint 0 has starting position 0, otherwise needs a different solution for the start
+                        action[0] = param * 0.1
+                        action = action.astype(dtype=np.float32)
+                        if not env.action_space.contains(action):
+                            raise Exception("Fix the action math")
+                    elif action_mode == "delta_pos":
+                        action = np.array(
+                            [param * 0.05, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float32
+                        )
+                    else:
+                        action = np.array(
+                            [param, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float32
+                        )
+                elif is_robot_type[ROBOT_TYPE_MIR100]:
+                    action = np.array([0.05, 1.0])
                 else:
-                    action = np.array(
-                        [param, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float32
-                    )
-            elif is_robot_type[ROBOT_TYPE_MIR100]:
-                action = np.array([0.05, 1.0])
-            else:
-                if is_real_robot and rs_address:
-                    print("Can't handle unknown real robots")
-                    break
-                action = env.action_space.sample()
+                    if is_real_robot and rs_address:
+                        print("Can't handle unknown real robots")
+                        break
+                    action = env.action_space.sample()
             observation, reward, terminated, truncated, info = env.step(action)
             episode_time_count += 1
             time_count += 1
@@ -211,6 +220,8 @@ def main():
                         reward,
                     )
                 )
+                print_info(info)
+
             elif all_done:
                 print(
                     "Shutting down - Episode {} not finished.\nTime steps: {}\nTerminated: {}\nTruncated: {}\nFinal status: {}\nReward: {}\n".format(
@@ -222,6 +233,7 @@ def main():
                         reward,
                     )
                 )
+                print_info(info)
                 env.close()
 
     # redundant - killing simulation upon object cleanup anyway
@@ -230,6 +242,39 @@ def main():
     #        env.unwrapped.kill_sim()
     #    except:
     #        pass
+
+
+def print_info(info):
+    for key in sorted(info):
+        print("- " + key + ": " + str(info[key]))
+
+
+class IsaacPolicyWrapper:
+    # based on https://github.com/louislelay/isaaclab_ur_reach_sim2real
+
+    def __init__(self, policy_file_path: str):
+        import torch
+
+        with open(policy_file_path, "rb") as f:
+            file = io.BytesIO(f.read())
+        self.policy = torch.jit.load(file)
+
+    def compute_action(self, obs: NDArray) -> NDArray:
+        """
+        Computes the action from the observation using the loaded policy.
+
+        Args:
+            obs (np.ndarray): The observation.
+
+        Returns:
+            np.ndarray: The action.
+        """
+        import torch
+
+        with torch.no_grad():
+            obs = torch.from_numpy(obs).view(1, -1).float()
+            action = self.policy(obs).detach().view(-1).numpy()
+        return action
 
 
 if __name__ == "__main__":

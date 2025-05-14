@@ -14,6 +14,12 @@ class ManagedClient(rs_client.Client):
     ):
         if not server_manager_host:
             raise Exception("ManagedClient: missing server manager host - cannot work!")
+        print(
+            "Command for new simulation robot server: "
+            + launch_cmd
+            + " gui:="
+            + ("true" if gui else "false")
+        )
         self.sm_client = sm_client.Client(
             server_manager_host, server_manager_port, server_manager_port + 1
         )

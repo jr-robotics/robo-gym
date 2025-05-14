@@ -105,3 +105,13 @@ register(
     id="EndEffectorPositioning2URRob-v0",
     entry_point="robo_gym.envs:EndEffectorPositioning2URRob",
 )
+
+register(
+    id="IsaacReachURSim-v0",
+    entry_point="robo_gym.envs:IsaacReachURSim",
+)
+
+register(
+    id="IsaacReachURRob-v0",
+    entry_point="robo_gym.envs:IsaacReachURRob",
+)

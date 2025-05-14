@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
-from typing import Any, SupportsFloat, Tuple, Callable
-from types import UnionType
-
 import gymnasium as gym
 import numpy as np
+from abc import ABC, abstractmethod
 from gymnasium.core import ObsType, ActType
 from numpy.typing import NDArray
+from types import UnionType
+from typing import Any, SupportsFloat, Tuple, Callable
 
 import robo_gym_server_modules.robot_server.client as rs_client
 from robo_gym.utils.exceptions import RobotServerError
@@ -37,6 +36,12 @@ class RoboGymEnv(gym.Env):
     KW_OBSERVATION_NODES = "observation_nodes"
 
     INFO_KW_RS_STATE = "rs_state"
+    INFO_KW_FINAL_STATUS = "final_status"
+    FINAL_STATUS_SUCCESS = "success"
+    FINAL_STATUS_COLLISION = "collision"
+
+    # max_steps_exceeded should be replaced by proper truncated mechanism
+    FINAL_STATUS_MAX_STEPS_EXCEEDED = "max_steps_exceeded"
 
     def __init__(self, **kwargs):
         self._config = kwargs
@@ -109,8 +114,8 @@ class RoboGymEnv(gym.Env):
         ]
         highs = [space_part.high for space_part in space_parts]
         lows = [space_part.low for space_part in space_parts]
-        all_highs = np.concatenate(highs)
-        all_lows = np.concatenate(lows)
+        all_highs = np.concatenate(highs).astype(np.float32)
+        all_lows = np.concatenate(lows).astype(np.float32)
         result = gym.spaces.Box(low=all_lows, high=all_highs, dtype=np.float32)
         return result
 
@@ -356,15 +361,6 @@ class RoboGymEnv(gym.Env):
     @property
     def elapsed_steps(self):
         return self._elapsed_steps
-
-    @staticmethod
-    def set_default(
-        kwargs: dict[str, Any], key: str, default_value: Any
-    ) -> dict[str, Any]:
-        if key not in kwargs:
-            kwargs[key] = default_value
-        # return value is redundant, since we manipulate the input dict
-        return kwargs
 
     @staticmethod
     def assure_instance_of_type_in_list(

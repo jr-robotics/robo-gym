@@ -5,6 +5,7 @@ import numpy as np
 from numpy.typing import NDArray
 import yaml
 import copy
+from robo_gym.utils import utils
 
 
 class ManipulatorModel:
@@ -157,9 +158,12 @@ class ManipulatorModel:
             #    result[i] = joints[i] / abs(self.max_joint_positions[i])
         return result
 
-    # TODO: provide version that returns 6D pose, we need that for reach tasks
-    def get_random_workspace_pose(
-        self, np_random: np.random.Generator | None = None
+    def get_random_workspace_pose_rpy(
+        self,
+        np_random: np.random.Generator | None = None,
+        roll_range: NDArray | None = None,
+        pitch_range: NDArray | None = None,
+        yaw_range: NDArray | None = None,
     ) -> NDArray:
         """Get pose of a random point in the robot workspace.
 
@@ -195,9 +199,28 @@ class ManipulatorModel:
             if (x**2 + y**2) > self.ws_min_r**2:
                 singularity_area = False
 
-        pose[0:3] = [x, y, z]
+        roll = utils.get_uniform_from_range(np_random, roll_range, 0.0)
+        pitch = utils.get_uniform_from_range(np_random, pitch_range, 0.0)
+        yaw = utils.get_uniform_from_range(np_random, yaw_range, 0.0)
+
+        pose[0:6] = [x, y, z, roll, pitch, yaw]
 
         return pose
+
+    def get_random_workspace_pose_quat(
+        self,
+        np_random: np.random.Generator | None = None,
+        roll_range: NDArray | None = None,
+        pitch_range: NDArray | None = None,
+        yaw_range: NDArray | None = None,
+        seq="xyz",
+        quat_unique: bool = False,
+    ) -> NDArray:
+        pose_rpy = self.get_random_workspace_pose_rpy(
+            np_random, roll_range, pitch_range, yaw_range
+        )
+        pose_quat = utils.quat_from_euler(pose_rpy[4], pose_rpy[5], pose_rpy[6], seq, quat_unique)
+        return pose_quat
 
     def get_random_offset_joint_positions(
         self,
@@ -217,10 +240,10 @@ class ManipulatorModel:
         )
         return joint_positions
 
-    def _ros_joint_list_to_ur_joint_list(self, ros_thetas: NDArray) -> NDArray:
+    def reorder_joints_from_rs(self, ros_thetas: NDArray) -> NDArray:
         return ros_thetas
 
-    def _ur_joint_list_to_ros_joint_list(self, thetas: NDArray) -> NDArray:
+    def reorder_joints_for_rs(self, thetas: NDArray) -> NDArray:
         return thetas
 
     @property

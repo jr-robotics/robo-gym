@@ -84,8 +84,8 @@ class ManipulatorActionNode(ActionNode):
     def get_action_space(self) -> gym.spaces.Box:
         length = len(self._controlled_joint_names)
         return gym.spaces.Box(
-            low=np.full(length, -1.0),
-            high=np.full(length, 1.0),
+            low=np.full(length, -1.0, dtype=np.float32),
+            high=np.full(length, 1.0, dtype=np.float32),
             dtype=np.float32,
         )
 
@@ -107,9 +107,9 @@ class ManipulatorActionNode(ActionNode):
         denormalized_full_action = self._robot_model.denormalize_joint_values(
             normalized_full_action
         )
-        result = self._robot_model._ur_joint_list_to_ros_joint_list(
+        result = self._robot_model.reorder_joints_for_rs(
             denormalized_full_action
-        )
+        ).astype(np.float32)
         return result
 
     def get_reset_state_part_state_dict(self) -> dict[str, float]:
@@ -161,21 +161,21 @@ class ManipulatorObservationNode(ObservationNode):
         self, rs_state_array: NDArray, rs_state_dict: dict[str, float], **kwargs
     ) -> NDArray:
         # from old impl, but why are only the joint positions normalized?
-        joint_positions = []
-
-        joint_positions_keys = [
-            joint_name + ManipulatorBaseEnv.RS_STATE_KEY_SUFFIX_JOINT_POSITION
-            for joint_name in self._robot_model.remote_joint_names
-        ]
-        for position in joint_positions_keys:
-            joint_positions.append(rs_state_dict[position])
-        joint_positions = np.array(joint_positions)
-        # Normalize joint position values
-        joint_positions = self._robot_model.normalize_joint_values(
-            joints=joint_positions
+        joint_positions = self.extract_normalized_joint_positions_from_rs_state_dict(
+            rs_state_dict
         )
 
         # Joint Velocities
+        joint_velocities = self.extract_joint_velocities_from_rs_state_dict(
+            rs_state_dict
+        )
+
+        # Compose environment state
+        state = np.concatenate((joint_positions, joint_velocities))
+
+        return state.astype(np.float32)
+
+    def extract_joint_velocities_from_rs_state_dict(self, rs_state_dict):
         joint_velocities = []
         joint_velocities_keys = [
             joint_name + ManipulatorBaseEnv.RS_STATE_KEY_SUFFIX_JOINT_VELOCITY
@@ -184,11 +184,26 @@ class ManipulatorObservationNode(ObservationNode):
         for velocity in joint_velocities_keys:
             joint_velocities.append(rs_state_dict[velocity])
         joint_velocities = np.array(joint_velocities)
+        return joint_velocities
 
-        # Compose environment state
-        state = np.concatenate((joint_positions, joint_velocities))
+    def extract_normalized_joint_positions_from_rs_state_dict(self, rs_state_dict):
+        joint_positions = self.extract_joint_positions_from_rs_state_dict(rs_state_dict)
+        # Normalize joint position values
+        joint_positions = self._robot_model.normalize_joint_values(
+            joints=joint_positions
+        )
+        return joint_positions
 
-        return state.astype(np.float32)
+    def extract_joint_positions_from_rs_state_dict(self, rs_state_dict):
+        joint_positions = []
+        joint_positions_keys = [
+            joint_name + ManipulatorBaseEnv.RS_STATE_KEY_SUFFIX_JOINT_POSITION
+            for joint_name in self._robot_model.remote_joint_names
+        ]
+        for position in joint_positions_keys:
+            joint_positions.append(rs_state_dict[position])
+        joint_positions = np.array(joint_positions)
+        return joint_positions
 
     @property
     def joint_position_tolerance_normalized(self) -> float:
@@ -217,13 +232,13 @@ class ManipulatorRewardNode(RewardNode):
         collision = rs_state_dict["in_collision"] == 1
         if collision:
             done = True
-            info["final_status"] = "collision"
+            info[RoboGymEnv.INFO_KW_FINAL_STATUS] = RoboGymEnv.FINAL_STATUS_COLLISION
 
         elif (
             self.max_episode_steps is not None
             and self.env.elapsed_steps >= self.max_episode_steps
         ):
             done = True
-            info["final_status"] = "success"
+            info[RoboGymEnv.INFO_KW_FINAL_STATUS] = RoboGymEnv.FINAL_STATUS_SUCCESS
 
         return 0.0, done, info
