@@ -87,11 +87,13 @@ class IsaacReachObservationNode(ManipulatorEePosObservationNode):
 
         obs_space_max = np.concatenate(
             (max_joint_positions, max_joint_velocities, ee_target_max)
-        )
+        ).astype(np.float32)
         obs_space_min = np.concatenate(
             (min_joint_positions, min_joint_velocities, ee_target_min)
+        ).astype(np.float32)
+        obs_space = gym.spaces.Box(
+            high=obs_space_max, low=obs_space_min, dtype=np.float32
         )
-        obs_space = gym.spaces.Box(high=obs_space_max, low=obs_space_min)
         return obs_space
 
     def rs_state_to_observation_part(
@@ -106,7 +108,9 @@ class IsaacReachObservationNode(ManipulatorEePosObservationNode):
             rs_state_dict
         )
         command = utils.pose_quat_wxyz_from_xyzw(np.array(self.get_target_pose()))
-        obs = np.concatenate((joint_positions, joint_velocities, command))
+        obs = np.concatenate(
+            (joint_positions, joint_velocities, command), dtype=np.float32
+        )
         return obs
 
 
@@ -121,15 +125,19 @@ class IsaacReachActionNode(ManipulatorActionNode):
 
     def env_action_to_rs_action(self, env_action: NDArray, **kwargs) -> NDArray:
         rs_action = self.default_joint_positions + env_action * self.scale
-        rs_action = self.robot_model.reorder_joints_for_rs(rs_action)
+        rs_action = self.robot_model.reorder_joints_for_rs(rs_action).astype(np.float32)
         return rs_action
 
     def get_action_space(self) -> gym.spaces.Box:
         max_joint_positions = self._robot_model.get_max_joint_positions()
         min_joint_positions = self._robot_model.get_min_joint_positions()
 
-        action_max = (max_joint_positions - self.default_joint_positions) / self.scale
-        action_min = (min_joint_positions - self.default_joint_positions) / self.scale
+        action_max = (
+            (max_joint_positions - self.default_joint_positions) / self.scale
+        ).astype(np.float32)
+        action_min = (
+            (min_joint_positions - self.default_joint_positions) / self.scale
+        ).astype(np.float32)
 
-        action_space = gym.spaces.Box(high=action_max, low=action_min)
+        action_space = gym.spaces.Box(high=action_max, low=action_min, dtype=np.float32)
         return action_space

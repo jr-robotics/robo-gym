@@ -233,10 +233,10 @@ class ManipulatorEePosObservationNode(ManipulatorObservationNode):
         # Definition of environment observation_space part
         max_obs = np.concatenate(
             (target_range, super_result.high, max_target_pose, max_ee_pose)
-        )
+        ).astype(np.float32)
         min_obs = np.concatenate(
             (-target_range, super_result.low, min_target_pose, min_ee_pose)
-        )
+        ).astype(np.float32)
 
         # vs legacy: action is added by separate LastActionObservationNode
         return gym.spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)

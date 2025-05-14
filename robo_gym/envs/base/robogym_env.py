@@ -114,8 +114,8 @@ class RoboGymEnv(gym.Env):
         ]
         highs = [space_part.high for space_part in space_parts]
         lows = [space_part.low for space_part in space_parts]
-        all_highs = np.concatenate(highs)
-        all_lows = np.concatenate(lows)
+        all_highs = np.concatenate(highs).astype(np.float32)
+        all_lows = np.concatenate(lows).astype(np.float32)
         result = gym.spaces.Box(low=all_lows, high=all_highs, dtype=np.float32)
         return result
 

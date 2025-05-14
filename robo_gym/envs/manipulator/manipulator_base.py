@@ -84,8 +84,8 @@ class ManipulatorActionNode(ActionNode):
     def get_action_space(self) -> gym.spaces.Box:
         length = len(self._controlled_joint_names)
         return gym.spaces.Box(
-            low=np.full(length, -1.0),
-            high=np.full(length, 1.0),
+            low=np.full(length, -1.0, dtype=np.float32),
+            high=np.full(length, 1.0, dtype=np.float32),
             dtype=np.float32,
         )
 
@@ -107,7 +107,9 @@ class ManipulatorActionNode(ActionNode):
         denormalized_full_action = self._robot_model.denormalize_joint_values(
             normalized_full_action
         )
-        result = self._robot_model.reorder_joints_for_rs(denormalized_full_action)
+        result = self._robot_model.reorder_joints_for_rs(
+            denormalized_full_action
+        ).astype(np.float32)
         return result
 
     def get_reset_state_part_state_dict(self) -> dict[str, float]:
