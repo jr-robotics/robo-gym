@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from robo_gym.envs.base.robogym_env import *
 from robo_gym.envs.manipulator.ee_pos_base import *
 from robo_gym.envs.manipulator.manipulator_base import *
 
@@ -18,33 +19,23 @@ class IsaacReachEnv(ManipulatorEePosEnv):
         # not too nice - repeated in super init
         self._config = kwargs
 
-        RoboGymEnv.set_default(kwargs, ManipulatorEePosEnv.KW_EE_ROTATION_MATTERS, True)
-        RoboGymEnv.set_default(
-            kwargs, ManipulatorEePosEnv.KW_EE_ROTATION_THRESHOLD, 0.05
-        )
-        RoboGymEnv.set_default(
-            kwargs, ManipulatorEePosEnv.KW_EE_DISTANCE_THRESHOLD, 0.02
-        )
+        kwargs.setdefault(ManipulatorEePosEnv.KW_EE_ROTATION_MATTERS, True)
+        kwargs.setdefault(ManipulatorEePosEnv.KW_EE_ROTATION_THRESHOLD, 0.05)
+        kwargs.setdefault(ManipulatorEePosEnv.KW_EE_DISTANCE_THRESHOLD, 0.02)
 
-        RoboGymEnv.set_default(
-            kwargs, ManipulatorEePosEnv.KW_EE_TARGET_VOLUME_BOUNDING_BOX, True
-        )
-        RoboGymEnv.set_default(
-            kwargs, ManipulatorEePosEnv.KW_EE_POSITION_X_RANGE, [0.35, 0.65]
-        )
-        RoboGymEnv.set_default(
-            kwargs, ManipulatorEePosEnv.KW_EE_POSITION_Y_RANGE, [-0.2, 0.2]
-        )
-        RoboGymEnv.set_default(
-            kwargs, ManipulatorEePosEnv.KW_EE_POSITION_Z_RANGE, [0.15, 0.5]
-        )
-        RoboGymEnv.set_default(kwargs, ManipulatorEePosEnv.KW_EE_ROTATION_ROLL_RANGE, 0)
+        kwargs.setdefault(ManipulatorEePosEnv.KW_EE_TARGET_VOLUME_BOUNDING_BOX, True)
+        value = [0.35, 0.65]
+        kwargs.setdefault(ManipulatorEePosEnv.KW_EE_POSITION_X_RANGE, value)
+        default_value = [-0.2, 0.2]
+        kwargs.setdefault(ManipulatorEePosEnv.KW_EE_POSITION_Y_RANGE, default_value)
+        value1 = [0.15, 0.5]
+        kwargs.setdefault(ManipulatorEePosEnv.KW_EE_POSITION_Z_RANGE, value1)
+        kwargs.setdefault(ManipulatorEePosEnv.KW_EE_ROTATION_ROLL_RANGE, 0)
 
-        RoboGymEnv.set_default(
-            kwargs, ManipulatorEePosEnv.KW_EE_ROTATION_YAW_RANGE, [-math.pi, math.pi]
-        )
+        value2 = [-math.pi, math.pi]
+        kwargs.setdefault(ManipulatorEePosEnv.KW_EE_ROTATION_YAW_RANGE, value2)
 
-        RoboGymEnv.set_default(kwargs, IsaacReachEnv.KW_ISAAC_SCALE, 0.5)
+        kwargs.setdefault(IsaacReachEnv.KW_ISAAC_SCALE, 0.5)
 
         # env nodes
         action_node: ActionNode | None = kwargs.get(RoboGymEnv.KW_ACTION_NODE)

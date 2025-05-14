@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
-from typing import Any, SupportsFloat, Tuple, Callable
-from types import UnionType
-
 import gymnasium as gym
 import numpy as np
+from abc import ABC, abstractmethod
 from gymnasium.core import ObsType, ActType
 from numpy.typing import NDArray
+from types import UnionType
+from typing import Any, SupportsFloat, Tuple, Callable
 
 import robo_gym_server_modules.robot_server.client as rs_client
 from robo_gym.utils.exceptions import RobotServerError
@@ -362,15 +361,6 @@ class RoboGymEnv(gym.Env):
     @property
     def elapsed_steps(self):
         return self._elapsed_steps
-
-    @staticmethod
-    def set_default(
-        kwargs: dict[str, Any], key: str, default_value: Any
-    ) -> dict[str, Any]:
-        if key not in kwargs:
-            kwargs[key] = default_value
-        # return value is redundant, since we manipulate the input dict
-        return kwargs
 
     @staticmethod
     def assure_instance_of_type_in_list(

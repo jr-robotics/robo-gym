@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
-
-from robo_gym.envs.base.robogym_env import RoboGymEnv, RewardNode
+from robo_gym.envs.base.robogym_env import *
 from robo_gym.envs.manipulator.manipulator_base import (
     ManipulatorBaseEnv,
     ManipulatorActionNode,
@@ -30,30 +28,27 @@ class URBaseEnv2(ManipulatorBaseEnv):
             kwargs[RoboGymEnv.KW_ROBOT_MODEL_OBJECT] = ur_model
 
         # default action rate
-        RoboGymEnv.set_default(kwargs, RoboGymEnv.KW_ACTION_RATE, 20.0)
+        kwargs.setdefault(RoboGymEnv.KW_ACTION_RATE, 20.0)
 
         # default max episode steps
-        RoboGymEnv.set_default(kwargs, RewardNode.KW_MAX_EPISODE_STEPS, 300)
+        kwargs.setdefault(RewardNode.KW_MAX_EPISODE_STEPS, 300)
 
         # default fixed joints: last joint
         prefix_fix = ManipulatorActionNode.KW_PREFIX_FIX_JOINT
         last_joint_name = ur_model.joint_names[-1]
         kw_fix_last_joint = prefix_fix + last_joint_name
-        RoboGymEnv.set_default(kwargs, kw_fix_last_joint, True)
+        kwargs.setdefault(kw_fix_last_joint, True)
 
         # default joint positions
-        RoboGymEnv.set_default(
-            kwargs,
-            ManipulatorBaseEnv.KW_JOINT_POSITIONS,
-            [
-                0.0,
-                -2.5,
-                1.5,
-                0.0,
-                -1.4,
-                0.0,
-            ],
-        )
+        value = [
+            0.0,
+            -2.5,
+            1.5,
+            0.0,
+            -1.4,
+            0.0,
+        ]
+        kwargs.setdefault(ManipulatorBaseEnv.KW_JOINT_POSITIONS, value)
 
     def get_launch_cmd(self) -> str:
         # TODO make string composition more dynamic

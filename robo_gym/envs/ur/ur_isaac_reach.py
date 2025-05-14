@@ -1,11 +1,8 @@
 from __future__ import annotations
 
-from robo_gym.envs.base.robogym_env import (
-    LastActionObservationNode,
-)
+from robo_gym.envs.base.robogym_env import *
 from robo_gym.envs.manipulator.isaac_reach import *
 from robo_gym.envs.ur.ur_base import URBaseEnv2
-
 from robo_gym.utils.ur_utils import UR
 
 
@@ -14,7 +11,7 @@ class IsaacReachUR(IsaacReachEnv):
         # not too nice - repeated in super init
         self._config = kwargs
 
-        RoboGymEnv.set_default(kwargs, URBaseEnv2.KW_UR_MODEL_KEY, "ur10")
+        kwargs.setdefault(URBaseEnv2.KW_UR_MODEL_KEY, "ur10")
         # TODO need matching initialization of target position range
         IsaacReachUR.set_robot_defaults(kwargs)
 
@@ -38,26 +35,18 @@ class IsaacReachUR(IsaacReachEnv):
             kwargs[RoboGymEnv.KW_ROBOT_MODEL_OBJECT] = ur_model
 
         # default action rate
-        RoboGymEnv.set_default(kwargs, RoboGymEnv.KW_ACTION_RATE, 30.0)
+        kwargs.setdefault(RoboGymEnv.KW_ACTION_RATE, 30.0)
 
         # default max episode steps
-        RoboGymEnv.set_default(kwargs, RewardNode.KW_MAX_EPISODE_STEPS, 600)
+        kwargs.setdefault(RewardNode.KW_MAX_EPISODE_STEPS, 600)
 
-        RoboGymEnv.set_default(
-            kwargs, ManipulatorEePosEnv.KW_CONTINUE_EXCEPT_COLLISION, True
-        )
+        kwargs.setdefault(ManipulatorEePosEnv.KW_CONTINUE_EXCEPT_COLLISION, True)
         # default joint positions
-        RoboGymEnv.set_default(
-            kwargs,
-            ManipulatorBaseEnv.KW_JOINT_POSITIONS,
-            [0, -1.7120, 1.7120, 0, 0, 0],
-        )
+        value = [0, -1.7120, 1.7120, 0, 0, 0]
+        kwargs.setdefault(ManipulatorBaseEnv.KW_JOINT_POSITIONS, value)
 
-        RoboGymEnv.set_default(
-            kwargs,
-            ManipulatorEePosEnv.KW_EE_ROTATION_PITCH_RANGE,
-            math.pi / 2,  # would be just math.pi for Franka
-        )
+        default_value = math.pi / 2
+        kwargs.setdefault(ManipulatorEePosEnv.KW_EE_ROTATION_PITCH_RANGE, default_value)
 
     def get_launch_cmd(self) -> str:
         # TODO make string composition more dynamic
