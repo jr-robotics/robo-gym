@@ -315,9 +315,9 @@ def create_random_bounding_box_pose_quat(
         np_random = np.random.default_rng()
     # sample new pose targets
     # -- position
-    x = np_random.uniform(low=pos_x_range[0], high=pos_x_range[1])
-    y = np_random.uniform(low=pos_y_range[0], high=pos_y_range[1])
-    z = np_random.uniform(low=pos_z_range[0], high=pos_z_range[1])
+    x = get_uniform_from_range(np_random, pos_x_range, 0.0)
+    y = get_uniform_from_range(np_random, pos_y_range, 0.0)
+    z = get_uniform_from_range(np_random, pos_z_range, 0.0)
 
     # -- orientation
     roll = get_uniform_from_range(np_random, roll_range, 0.0)
