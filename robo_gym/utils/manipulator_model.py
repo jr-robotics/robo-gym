@@ -219,7 +219,9 @@ class ManipulatorModel:
         pose_rpy = self.get_random_workspace_pose_rpy(
             np_random, roll_range, pitch_range, yaw_range
         )
-        pose_quat = utils.quat_from_euler(pose_rpy[4], pose_rpy[5], pose_rpy[6], seq, quat_unique)
+        pose_quat = utils.quat_from_euler(
+            pose_rpy[3], pose_rpy[4], pose_rpy[5], seq, quat_unique
+        )
         return pose_quat
 
     def get_random_offset_joint_positions(
