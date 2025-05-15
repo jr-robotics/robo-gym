@@ -136,6 +136,10 @@ def main():
     episode = 0
     all_done = False
 
+    action_sample = env.action_space.sample()
+    zero_action = np.zeros_like(action_sample)
+    action_length = len(action_sample)
+
     while not all_done:
         if time_count >= timesteps:
             break
@@ -157,12 +161,11 @@ def main():
 
                 if is_robot_type[ROBOT_TYPE_UR]:
                     normalized_joint_positions = observation[
-                        0 + joint_pos_obs_offset : 5 + joint_pos_obs_offset
+                        0 + joint_pos_obs_offset : action_length + joint_pos_obs_offset
                     ]
-                    delta_action = (
-                        np.array([param * 0.02, 0.0, 0.0, 0.0, 0.0], dtype=np.float32)
-                        * direction
-                    )
+                    delta_action = np.copy(zero_action)
+                    delta_action[0] = param * 0.02 * direction
+
                     action = normalized_joint_positions + delta_action
                     action = action.astype(dtype=np.float32)
                     if not env.action_space.contains(action):
@@ -174,7 +177,9 @@ def main():
                 elif is_robot_type[ROBOT_TYPE_PANDA]:
                     if action_mode == "abs_pos":
                         normalized_joint_positions = observation[
-                            0 + joint_pos_obs_offset : 6 + joint_pos_obs_offset
+                            0
+                            + joint_pos_obs_offset : action_length
+                            + joint_pos_obs_offset
                         ]
                         action = normalized_joint_positions
                         # assume that joint 0 has starting position 0, otherwise needs a different solution for the start
@@ -183,15 +188,13 @@ def main():
                         if not env.action_space.contains(action):
                             raise Exception("Fix the action math")
                     elif action_mode == "delta_pos":
-                        action = np.array(
-                            [param * 0.05, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float32
-                        )
+                        action = np.copy(zero_action)
+                        action[0] = param * 0.05
                     else:
-                        action = np.array(
-                            [param, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float32
-                        )
+                        action = np.copy(zero_action)
+                        action[0] = param
                 elif is_robot_type[ROBOT_TYPE_MIR100]:
-                    action = np.array([0.05, 1.0])
+                    action = np.array([0.05, 1.0], dtype=np.float32)
                 else:
                     if is_real_robot and rs_address:
                         print("Can't handle unknown real robots")

@@ -44,7 +44,8 @@ class ManipulatorBaseEnv(RoboGymEnv):
         self.action_mode = self._config.setdefault(
             self.KW_ACTION_MODE, self.ACTION_MODE_ABS_POS
         )
-        # TODO adapt action node to non-default value of action mode
+        # we only support this one action mode for now
+        assert self.action_mode == self.ACTION_MODE_ABS_POS
 
         # env nodes
         action_node: ActionNode | None = kwargs.get(RoboGymEnv.KW_ACTION_NODE)

@@ -24,12 +24,9 @@ class IsaacReachEnv(ManipulatorEePosEnv):
         kwargs.setdefault(ManipulatorEePosEnv.KW_EE_DISTANCE_THRESHOLD, 0.02)
 
         kwargs.setdefault(ManipulatorEePosEnv.KW_EE_TARGET_VOLUME_BOUNDING_BOX, True)
-        value = [0.35, 0.65]
-        kwargs.setdefault(ManipulatorEePosEnv.KW_EE_POSITION_X_RANGE, value)
-        default_value = [-0.2, 0.2]
-        kwargs.setdefault(ManipulatorEePosEnv.KW_EE_POSITION_Y_RANGE, default_value)
-        value1 = [0.15, 0.5]
-        kwargs.setdefault(ManipulatorEePosEnv.KW_EE_POSITION_Z_RANGE, value1)
+        kwargs.setdefault(ManipulatorEePosEnv.KW_EE_POSITION_X_RANGE, [0.35, 0.65])
+        kwargs.setdefault(ManipulatorEePosEnv.KW_EE_POSITION_Y_RANGE, [-0.2, 0.2])
+        kwargs.setdefault(ManipulatorEePosEnv.KW_EE_POSITION_Z_RANGE, [0.15, 0.5])
         kwargs.setdefault(ManipulatorEePosEnv.KW_EE_ROTATION_ROLL_RANGE, 0)
 
         value2 = [-math.pi, math.pi]

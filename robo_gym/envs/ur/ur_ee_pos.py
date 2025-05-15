@@ -18,8 +18,6 @@ class EndEffectorPositioningUR2(ManipulatorEePosEnv):
             obs_nodes = [LastActionObservationNode(**self.get_obs_node_setup_kwargs(1))]
             kwargs[RoboGymEnv.KW_OBSERVATION_NODES] = obs_nodes
 
-        # TODO allow restriction of joints
-
         URBaseEnv2.set_robot_defaults(kwargs)
         kwargs.setdefault(RoboGymEnv.KW_ACTION_RATE, 10.0)
         value = [1.5, 0.25, 0.5, 1.0, 0.4, 3.14]

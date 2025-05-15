@@ -162,7 +162,10 @@ class ManipulatorEePosEnv(ManipulatorBaseEnv):
                     quat_unique=quat_unique,
                     seq=rpy_seq,
                 )
-        # reward node will put it into params for new rs state to set
+        try:
+            new_ee_target = new_ee_target.tolist()
+        except TypeError:
+            pass
         self._reward_node.set_ee_target(new_ee_target)
 
     def step(

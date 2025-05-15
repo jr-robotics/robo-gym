@@ -38,3 +38,7 @@ from robo_gym.envs.panda.panda_base import (
     EmptyEnvironmentPandaSim,
     EmptyEnvironmentPandaRob,
 )
+from robo_gym.envs.panda.panda_ee_pos import (
+    EndEffectorPositioningPandaSim,
+    EndEffectorPositioningPandaRob,
+)

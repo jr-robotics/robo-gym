@@ -118,11 +118,22 @@ register(
 
 # Panda Environments
 register(
+    id="EmptyEnvironmentPandaSim-v0",
+    entry_point="robo_gym.envs:EmptyEnvironmentPandaSim",
+)
+
+register(
     id="EmptyEnvironmentPandaRob-v0",
     entry_point="robo_gym.envs:EmptyEnvironmentPandaRob",
 )
 
+
 register(
-    id="EmptyEnvironmentPandaSim-v0",
-    entry_point="robo_gym.envs:EmptyEnvironmentPandaSim",
+    id="EndEffectorPositioningPandaSim-v0",
+    entry_point="robo_gym.envs:EndEffectorPositioningPandaSim",
+)
+
+register(
+    id="EndEffectorPositioningPandaRob-v0",
+    entry_point="robo_gym.envs:EndEffectorPositioningPandaRob",
 )

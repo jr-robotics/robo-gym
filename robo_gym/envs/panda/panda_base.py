@@ -58,10 +58,6 @@ class PandaBaseEnv(ManipulatorBaseEnv):
         rs_mode:=only_robot \
         action_mode:={self.action_mode}"
 
-    @property
-    def panda_model_key(self) -> str:
-        return self._config.get(PandaBaseEnv.KW_PANDA_MODEL_KEY)
-
 
 class EmptyEnvironmentPandaSim(PandaBaseEnv):
 
