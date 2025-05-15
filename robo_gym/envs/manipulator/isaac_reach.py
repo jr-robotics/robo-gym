@@ -15,6 +15,10 @@ class IsaacReachEnv(ManipulatorEePosEnv):
 
     KW_ISAAC_SCALE = "isaac_scale"
 
+    # Add an NDArray to add static joints in the env observation that we don't get in the robot server state but we want in the env observation.
+    # 2-dimensional: for each joint: 3 floats: initial joint positions, min, max position. Velocity is always 0.
+    KW_ISAAC_OBS_EXTRA_STATIC_JOINTS = "isaac_extra_static_joints"
+
     def __init__(self, **kwargs):
         # not too nice - repeated in super init
         self._config = kwargs
@@ -55,6 +59,9 @@ class IsaacReachObservationNode(ManipulatorEePosObservationNode):
         self.default_joint_positions = np.array(
             self._config.get(ManipulatorBaseEnv.KW_JOINT_POSITIONS)
         )
+        self.obs_extra_static_joints = self._config.get(
+            IsaacReachEnv.KW_ISAAC_OBS_EXTRA_STATIC_JOINTS
+        )
 
     def get_observation_space_part(self) -> gym.spaces.Box:
         num_joints = len(self._robot_model.joint_names)
@@ -77,6 +84,21 @@ class IsaacReachObservationNode(ManipulatorEePosObservationNode):
         # velocities
         max_joint_velocities = np.array([np.inf] * num_joints)
         min_joint_velocities = -np.array([np.inf] * num_joints)
+
+        if self.obs_extra_static_joints is not None:
+            for joint_values in self.obs_extra_static_joints:
+                min_joint_positions = np.concatenate(
+                    (min_joint_positions, [joint_values[1]]), dtype=np.float32
+                )
+                max_joint_positions = np.concatenate(
+                    (max_joint_positions, [joint_values[2]]), dtype=np.float32
+                )
+                min_joint_velocities = np.concatenate(
+                    (min_joint_velocities, [-np.inf]), dtype=np.float32
+                )
+                max_joint_velocities = np.concatenate(
+                    (max_joint_velocities, [np.inf]), dtype=np.float32
+                )
 
         # ee target
         ee_target_max = np.concatenate((np.array([np.inf] * 3), np.array([1.0] * 4)))
@@ -104,6 +126,15 @@ class IsaacReachObservationNode(ManipulatorEePosObservationNode):
         joint_velocities = self.extract_joint_velocities_from_rs_state_dict(
             rs_state_dict
         )
+        if self.obs_extra_static_joints is not None:
+            for joint_values in self.obs_extra_static_joints:
+                joint_positions = np.concatenate(
+                    (joint_positions, [joint_values[0]]), dtype=np.float32
+                )
+                joint_velocities = np.concatenate(
+                    (joint_velocities, [0]), dtype=np.float32
+                )
+
         command = utils.pose_quat_wxyz_from_xyzw(np.array(self.get_target_pose()))
         obs = np.concatenate(
             (joint_positions, joint_velocities, command), dtype=np.float32

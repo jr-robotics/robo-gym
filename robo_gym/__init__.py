@@ -137,3 +137,12 @@ register(
     id="EndEffectorPositioningPandaRob-v0",
     entry_point="robo_gym.envs:EndEffectorPositioningPandaRob",
 )
+register(
+    id="IsaacReachPandaSim-v0",
+    entry_point="robo_gym.envs:IsaacReachPandaSim",
+)
+
+register(
+    id="IsaacReachPandaRob-v0",
+    entry_point="robo_gym.envs:IsaacReachPandaRob",
+)

@@ -42,3 +42,4 @@ from robo_gym.envs.panda.panda_ee_pos import (
     EndEffectorPositioningPandaSim,
     EndEffectorPositioningPandaRob,
 )
+from robo_gym.envs.panda.panda_isaac_reach import IsaacReachPandaSim, IsaacReachPandaRob

@@ -21,7 +21,7 @@ class PandaBaseEnv(ManipulatorBaseEnv):
     @staticmethod
     def set_robot_defaults(kwargs: dict[str, Any]):
 
-        # prepare UR model depending on panda_model and set it in the kwargs
+        # prepare robot model set it in the kwargs
         robot_model: Panda | None = kwargs.get(RoboGymEnv.KW_ROBOT_MODEL_OBJECT)
         if robot_model is None:
             robot_model = Panda(
