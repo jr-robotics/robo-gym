@@ -115,3 +115,14 @@ register(
     id="IsaacReachURRob-v0",
     entry_point="robo_gym.envs:IsaacReachURRob",
 )
+
+# Panda Environments
+register(
+    id="EmptyEnvironmentPandaRob-v0",
+    entry_point="robo_gym.envs:EmptyEnvironmentPandaRob",
+)
+
+register(
+    id="EmptyEnvironmentPandaSim-v0",
+    entry_point="robo_gym.envs:EmptyEnvironmentPandaSim",
+)

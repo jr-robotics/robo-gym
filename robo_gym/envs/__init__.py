@@ -33,3 +33,8 @@ from robo_gym.envs.ur.ur_ee_pos import (
     EndEffectorPositioning2URRob,
 )
 from robo_gym.envs.ur.ur_isaac_reach import IsaacReachURSim, IsaacReachURRob
+
+from robo_gym.envs.panda.panda_base import (
+    EmptyEnvironmentPandaSim,
+    EmptyEnvironmentPandaRob,
+)

@@ -22,6 +22,14 @@ class ManipulatorBaseEnv(RoboGymEnv):
     RS_STATE_KEY_SUFFIX_JOINT_POSITION = "_position"
     RS_STATE_KEY_SUFFIX_JOINT_VELOCITY = "_velocity"
 
+    KW_ACTION_MODE = "action_mode"
+    ACTION_MODE_ABS_POS = "abs_pos"
+    ACTION_MODE_DELTA_POS = "delta_pos"
+    ACTION_MODE_ABS_VEL = "abs_vel"
+    ACTION_MODE_DELTA_VEL = "delta_vel"
+
+    KW_MAX_VELOCITY_SCALE_FACTOR = "max_velocity_scale_factor"
+
     def __init__(self, **kwargs):
         # not too nice - repeated in super init
         self._config = kwargs
@@ -32,6 +40,11 @@ class ManipulatorBaseEnv(RoboGymEnv):
         if self.KW_JOINT_POSITIONS in kwargs:
             # TODO check values
             self._robot_model.joint_positions = kwargs[self.KW_JOINT_POSITIONS]
+
+        self.action_mode = self._config.setdefault(
+            self.KW_ACTION_MODE, self.ACTION_MODE_ABS_POS
+        )
+        # TODO adapt action node to non-default value of action mode
 
         # env nodes
         action_node: ActionNode | None = kwargs.get(RoboGymEnv.KW_ACTION_NODE)
@@ -95,7 +108,7 @@ class ManipulatorActionNode(ActionNode):
         # optimization potential, but more concise than it was:
         # start with default positions and overwrite non-fixed joints with values from env action
         normalized_full_action = self._robot_model.normalize_joint_values(
-            self._robot_model.joint_positions
+            np.array(self._robot_model.joint_positions, dtype=np.float32)
         )
         source_index = 0
         for joint_index in range(len(self._joint_names)):
@@ -152,8 +165,12 @@ class ManipulatorObservationNode(ObservationNode):
         max_joint_velocities = np.array([np.inf] * num_joints)
         min_joint_velocities = -np.array([np.inf] * num_joints)
         # Definition of environment observation_space
-        max_obs = np.concatenate((max_joint_positions, max_joint_velocities))
-        min_obs = np.concatenate((min_joint_positions, min_joint_velocities))
+        max_obs = np.concatenate(
+            (max_joint_positions, max_joint_velocities), dtype=np.float32
+        )
+        min_obs = np.concatenate(
+            (min_joint_positions, min_joint_velocities), dtype=np.float32
+        )
 
         return gym.spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
 
