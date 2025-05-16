@@ -14,6 +14,9 @@ import numpy as np
 from gymnasium.wrappers import TimeLimit
 from numpy.typing import NDArray
 
+from utils.table import Table, write_csv
+from utils.utils import flatten_to_dict
+
 ROBOT_TYPE_MIR100 = "Mir100"
 ROBOT_TYPE_UR = "UR"
 ROBOT_TYPE_PANDA = "Panda"
@@ -33,6 +36,11 @@ def str_to_bool(str_val) -> bool:
     return str_val not in ["", "0", "false", "no", "n"]
 
 
+def str_for_log(val: float) -> str:
+    val = round(val, 9)
+    return f"{val:10.9}"
+
+
 def main():
     global terminating
     signal.signal(signal.SIGINT, signal_handler)
@@ -43,6 +51,9 @@ def main():
         "--action_mode",
         help="Action mode (abs_pos, delta_pos, abs_vel, delta_vel)",
         default="abs_pos",
+    )
+    parser.add_argument(
+        "-c", "--csvlog", help="file to write CSV table log", default=""
     )
     parser.add_argument(
         "-e", "--env", help="RL environment", default="NoObstacleNavigationMir100Sim-v0"
@@ -113,8 +124,8 @@ def main():
         kwargs["randomize_start"] = False
     if is_robot_type[ROBOT_TYPE_PANDA]:
         action_mode = args.action_mode
-        kwargs["action_mode"] = action_mode
-        kwargs["action_cycle_rate"] = 25
+        # kwargs["action_mode"] = action_mode
+        # kwargs["action_cycle_rate"] = 25
 
     # Where in the observations do the joint position start?
     joint_pos_obs_offset = 0
@@ -136,9 +147,18 @@ def main():
     episode = 0
     all_done = False
 
-    action_sample = env.action_space.sample()
+    action_sample: NDArray = env.action_space.sample()
     zero_action = np.zeros_like(action_sample)
     action_length = len(action_sample)
+    obs_sample: NDArray = env.observation_space.sample()
+
+    log_table: Table | None = None
+    if args.csvlog:
+        columns = sorted(flatten_to_dict(obs_sample.tolist(), prefix="obs").keys())
+        columns.extend(
+            sorted(flatten_to_dict(action_sample.tolist(), prefix="action").keys())
+        )
+        log_table = Table(columns=columns)
 
     while not all_done:
         if time_count >= timesteps:
@@ -200,6 +220,11 @@ def main():
                         print("Can't handle unknown real robots")
                         break
                     action = env.action_space.sample()
+            if log_table:
+                row = flatten_to_dict(observation.tolist(), prefix="obs")
+                row.update(flatten_to_dict(action.tolist(), prefix="action"))
+                log_table.add_row(row)
+
             observation, reward, terminated, truncated, info = env.step(action)
             episode_time_count += 1
             time_count += 1
@@ -237,7 +262,11 @@ def main():
                     )
                 )
                 print_info(info)
+
+            if all_done:
                 env.close()
+                if log_table:
+                    write_csv(log_table, args.csvlog, value_formatters=str_for_log)
 
     # redundant - killing simulation upon object cleanup anyway
     # if not is_real_robot:

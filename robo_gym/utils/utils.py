@@ -384,3 +384,35 @@ def pose_quat_wxyz_from_xyzw(pose: NDArray) -> NDArray:
     q = pose[3:7]
     result = np.concatenate((pos, quat_wxyz_from_xyzw(q)))
     return result
+
+
+def flatten_to_dict(obj, prefix=""):
+    result = {}
+
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            new_key = f"{prefix}.{key}" if prefix else key
+            result.update(flatten_to_dict(value, new_key))
+
+    elif isinstance(obj, list):
+        # index all elements of this list object with the same number of digits
+        # to allow consistent sorting of the columns
+        max_index_digits = len(str(len(obj) - 1))
+        for index, value in enumerate(obj):
+            index_str = str(index).zfill(max_index_digits)
+            new_key = f"{prefix}[{index_str}]"
+            result.update(flatten_to_dict(value, new_key))
+
+    elif hasattr(obj, "__dict__"):
+        return flatten_to_dict(obj.__dict__, prefix)
+
+    elif hasattr(obj, "__slots__"):
+        for attr in obj.__slots__:
+            value = getattr(obj, attr)
+            new_key = f"{prefix}.{attr}" if prefix else attr
+            result.update(flatten_to_dict(value, new_key))
+
+    else:
+        result[prefix] = obj
+
+    return result
