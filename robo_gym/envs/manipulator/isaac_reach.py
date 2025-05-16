@@ -67,7 +67,7 @@ class IsaacReachObservationNode(ManipulatorEePosObservationNode):
         num_joints = len(self._robot_model.joint_names)
 
         # joint positions
-        tolerance_abs = self._robot_model.denormalize_joint_values(
+        tolerance_abs = self._robot_model.denormalize_joint_ranges(
             np.array([self.joint_position_tolerance_normalized] * num_joints)
         )
         max_joint_positions = (
@@ -128,9 +128,11 @@ class IsaacReachObservationNode(ManipulatorEePosObservationNode):
         )
         if self.obs_extra_static_joints is not None:
             for joint_values in self.obs_extra_static_joints:
+                # position 0 - it stays in initial pose
                 joint_positions = np.concatenate(
-                    (joint_positions, [joint_values[0]]), dtype=np.float32
+                    (joint_positions, [0]), dtype=np.float32
                 )
+                # velocity 0 - it does not move
                 joint_velocities = np.concatenate(
                     (joint_velocities, [0]), dtype=np.float32
                 )
@@ -139,6 +141,7 @@ class IsaacReachObservationNode(ManipulatorEePosObservationNode):
         obs = np.concatenate(
             (joint_positions, joint_velocities, command), dtype=np.float32
         )
+
         return obs
 
 
