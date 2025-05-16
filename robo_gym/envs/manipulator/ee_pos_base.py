@@ -166,6 +166,8 @@ class ManipulatorEePosEnv(ManipulatorBaseEnv):
             new_ee_target = new_ee_target.tolist()
         except TypeError:
             pass
+        except AttributeError:
+            pass
         self._reward_node.set_ee_target(new_ee_target)
 
     def step(
