@@ -66,6 +66,7 @@ class IsaacReachPanda(IsaacReachEnv):
             gazebo_gui:={self._config.get(self.KW_GAZEBO_GUI_FLAG, True)} \
             world_name:=isaactabletop_sphere50_no_collision.world \
             reference_frame:=world \
+            ee_frame:=tool1 \
             max_velocity_scale_factor:={self._config.get(self.KW_MAX_VELOCITY_SCALE_FACTOR, .2)} \
             action_cycle_rate:={self.action_rate} \
             objects_controller:=true \
