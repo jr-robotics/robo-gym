@@ -344,7 +344,7 @@ def pose_quat_from_pose_rpy(
 
 
 def pose_rpy_from_pose_quat(pose_quat: NDArray, seq="xyz") -> NDArray:
-    quat = pose_quat[3:6]
+    quat = pose_quat[3:7]
     rpy = euler_from_quat(quat, seq)
     result = np.array(
         [pose_quat[0], pose_quat[1], pose_quat[2], rpy[0], rpy[1], rpy[2]]
