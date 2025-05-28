@@ -176,9 +176,8 @@ class ManipulatorEePosEnv(ManipulatorBaseEnv):
         obs, reward, terminated, truncated, info = super().step(action)
 
         final_status = info.get(self.INFO_KW_FINAL_STATUS)
-        if (
-            terminated
-            and final_status == self.FINAL_STATUS_SUCCESS
+        if terminated and (
+            final_status == self.FINAL_STATUS_SUCCESS
             or self._config.get(self.KW_CONTINUE_EXCEPT_COLLISION)
             and final_status != self.FINAL_STATUS_COLLISION
         ):
