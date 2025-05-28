@@ -183,6 +183,16 @@ def test_quat_from_rpy():
     assert np.allclose(a=quat_scipy, b=quat_isaac, atol=0.000001)
 
 
+def test_quat_from_rpy_isaac_panda():
+    roll = 0.0
+    pitch = math.pi
+    for yaw in [-1.2807, -1.5201, 0.419, -0.6453, 2.2513]:
+
+        quat_scipy = utils.quat_from_euler_xyz(roll, pitch, yaw)
+        quat_isaac = utils.quat_from_euler_xyz_isaac(roll, pitch, yaw)
+        assert np.allclose(a=quat_scipy, b=quat_isaac, atol=0.0001)
+
+
 def test_rot_diff():
     r1 = utils.quat_from_euler_xyz(0.0, 0.0, 0.0)
     r2 = utils.quat_from_euler_xyz(0.0, 0.2, 0.0)
