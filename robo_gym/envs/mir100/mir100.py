@@ -433,7 +433,7 @@ class NoObstacleNavigationMir100Rob(NoObstacleNavigationMir100):
 class ObstacleAvoidanceMir100(Mir100Env):
     laser_len = 16
 
-    def reset(self, start_pose = None, target_pose = None):
+    def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None) -> tuple[np.ndarray, dict[str, Any]]:
         """Environment reset.
 
         Args:
@@ -442,8 +442,15 @@ class ObstacleAvoidanceMir100(Mir100Env):
 
         Returns:
             np.array: Environment state.
+            dict: info
 
         """
+        super().reset(seed=seed)
+        if options is None:
+            options = {}
+        start_pose = options["start_pose"] if "start_pose" in options else None
+        target_pose = options["target_pose"] if "target_pose" in options else None
+
         self.elapsed_steps = 0
 
         self.prev_base_reward = None
@@ -492,7 +499,7 @@ class ObstacleAvoidanceMir100(Mir100Env):
         if not self.observation_space.contains(self.state):
             raise InvalidStateError()
 
-        return self.state
+        return self.state, {}
 
     def _reward(self, rs_state, action):
         reward = 0
