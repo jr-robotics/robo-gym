@@ -42,7 +42,7 @@ class IsaacReachPanda(IsaacReachEnv):
         # default max episode steps
         kwargs.setdefault(RewardNode.KW_MAX_EPISODE_STEPS, 600)
 
-        kwargs.setdefault(ManipulatorEePosEnv.KW_CONTINUE_EXCEPT_COLLISION, True)
+        kwargs.setdefault(ManipulatorEePosEnv.KW_CONTINUE_EXCEPT_COLLISION, False)
         # default joint positions
         # panda_finger_joint.*: 0.04
         kwargs.setdefault(
@@ -73,7 +73,8 @@ class IsaacReachPanda(IsaacReachEnv):
             action_mode:={self.action_mode}\
             n_objects:=1.0 \
             object_0_model_name:=sphere50_no_collision \
-            object_0_frame:=target "
+            object_0_frame:=target \
+            z:=0.0 "
 
 
 class IsaacReachPandaSim(IsaacReachPanda):
