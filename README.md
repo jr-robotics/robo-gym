@@ -277,6 +277,10 @@ If you have general questions or ideas that you would like to share please [star
 ```
 # News
 [back to top](#robo-gym)
+- 2025-05-30 (v2.1.0)
+  * modular environment classes
+  * first Isaac Lab policy compatibility environments
+
 - 2024-09-06 (v2.0.0)
   * Added support for gymnasium, dropped support for gym
   * Added support for Python up to 3.11
