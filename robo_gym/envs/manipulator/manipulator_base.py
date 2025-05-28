@@ -104,8 +104,6 @@ class ManipulatorActionNode(ActionNode):
         )
 
     def env_action_to_rs_action(self, env_action: NDArray, **kwargs) -> NDArray:
-        # TODO: allow for custom normalization
-
         # optimization potential, but more concise than it was:
         # start with default positions and overwrite non-fixed joints with values from env action
         normalized_full_action = self._robot_model.normalize_joint_values(

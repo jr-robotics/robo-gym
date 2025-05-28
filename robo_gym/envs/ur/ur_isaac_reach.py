@@ -50,7 +50,7 @@ class IsaacReachUR(IsaacReachEnv):
 
     def get_launch_cmd(self) -> str:
         # TODO make string composition more dynamic
-        # TODO duplicated from EndEffectorPositioningUR2
+        # TODO duplicated from EndEffectorPositioning2UR
         return f"roslaunch ur_robot_server ur_robot_server.launch \
             rviz_gui:={self._config.get(self.KW_RVIZ_GUI_FLAG, True)} \
             gazebo_gui:={self._config.get(self.KW_GAZEBO_GUI_FLAG, True)} \

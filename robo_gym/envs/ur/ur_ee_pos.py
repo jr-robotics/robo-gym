@@ -5,7 +5,7 @@ from robo_gym.envs.manipulator.ee_pos_base import ManipulatorEePosEnv
 from robo_gym.envs.ur.ur_base import URBaseEnv2
 
 
-class EndEffectorPositioningUR2(ManipulatorEePosEnv):
+class EndEffectorPositioning2UR(ManipulatorEePosEnv):
     def __init__(self, **kwargs):
         # not too nice - repeated in super init
         self._config = kwargs
@@ -47,14 +47,14 @@ class EndEffectorPositioningUR2(ManipulatorEePosEnv):
         return self._config.get(URBaseEnv2.KW_UR_MODEL_KEY)
 
 
-class EndEffectorPositioning2URSim(EndEffectorPositioningUR2):
+class EndEffectorPositioning2URSim(EndEffectorPositioning2UR):
 
     def __init__(self, **kwargs):
         kwargs[self.KW_REAL_ROBOT] = False
         super().__init__(**kwargs)
 
 
-class EndEffectorPositioning2URRob(EndEffectorPositioningUR2):
+class EndEffectorPositioning2URRob(EndEffectorPositioning2UR):
 
     def __init__(self, **kwargs):
         kwargs[self.KW_REAL_ROBOT] = True
