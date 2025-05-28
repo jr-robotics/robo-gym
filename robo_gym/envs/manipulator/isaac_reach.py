@@ -33,8 +33,8 @@ class IsaacReachEnv(ManipulatorEePosEnv):
         kwargs.setdefault(ManipulatorEePosEnv.KW_EE_POSITION_Z_RANGE, [0.15, 0.5])
         kwargs.setdefault(ManipulatorEePosEnv.KW_EE_ROTATION_ROLL_RANGE, 0)
 
-        value2 = [-math.pi, math.pi]
-        kwargs.setdefault(ManipulatorEePosEnv.KW_EE_ROTATION_YAW_RANGE, value2)
+        # as in IsaacLab reach envs, pi only to the first two fractional digits
+        kwargs.setdefault(ManipulatorEePosEnv.KW_EE_ROTATION_YAW_RANGE, [-3.14, 3.14])
 
         kwargs.setdefault(IsaacReachEnv.KW_ISAAC_SCALE, 0.5)
 
