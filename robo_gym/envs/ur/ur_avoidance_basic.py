@@ -8,7 +8,7 @@ otherwise wait for the obstacle to move away before proceeding
 """
 from __future__ import annotations
 import numpy as np
-from typing import Tuple
+from typing import Tuple, Any
 from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
 from robo_gym.envs.simulation_wrapper import Simulation
 from robo_gym.envs.ur.ur_base_avoidance_env import URBaseAvoidanceEnv
@@ -64,18 +64,22 @@ class BasicAvoidanceUR(URBaseAvoidanceEnv):
         return state_msg
 
 
-    def reset(self, joint_positions = JOINT_POSITIONS, fixed_object_position = None) -> np.ndarray:
+    def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None) -> tuple[np.ndarray, dict[str, Any]]:
         """Environment reset.
 
-        Args:
+        options:
             joint_positions (list[6] or np.array[6]): robot joint positions in radians.
             fixed_object_position (list[3]): x,y,z fixed position of object
+
+        Returns:
+            np.array: Environment state.
+            dict: info
         """
         self.prev_action = np.zeros(6)
 
-        state = super().reset(joint_positions = joint_positions, fixed_object_position = fixed_object_position)   
+        initial_state, info = super().reset(seed=seed, options=options)
 
-        return state
+        return initial_state, info
 
     def reward(self, rs_state, action) -> Tuple[float, bool, dict]:
         env_state = self._robot_server_state_to_env_state(rs_state)
@@ -135,17 +139,17 @@ class BasicAvoidanceUR(URBaseAvoidanceEnv):
 
         return reward, done, info
 
-    def step(self, action) -> Tuple[np.array, float, bool, dict]:
+    def step(self, action) -> Tuple[np.array, float, bool, bool, dict]:
         if type(action) == list: action = np.array(action)
 
         action = action.astype(np.float32)
-        
-        state, reward, done, info = super().step(action)
+
+        state, reward, done, truncated, info = super().step(action)
 
         self.prev_action = self.add_fixed_joints(action)
 
-        return state, reward, done, info
-    
+        return state, reward, done, truncated, info
+
 class BasicAvoidanceURSim(BasicAvoidanceUR, Simulation):
     cmd = "roslaunch ur_robot_server ur_robot_server.launch \
         world_name:=tabletop_sphere50.world \

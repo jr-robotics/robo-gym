@@ -68,7 +68,7 @@ class URBaseAvoidanceEnv(URBaseEnv):
                 dict: info
 
         """
-        super(gym.Env).reset(seed=seed, options=options)
+        super(URBaseEnv, self).reset(seed=seed)
 
         self.elapsed_steps = 0
         if options is None:
