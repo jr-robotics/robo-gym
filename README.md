@@ -1,4 +1,4 @@
-<img align="left" width="60" height="60" src="https://user-images.githubusercontent.com/36470989/116858354-8668f380-abfe-11eb-81dc-629d9e8a9d4e.png" alt="robo-gym logo">
+<img align="left" width="60" height="60" src="docs/media/robo-gym-logo.png" alt="robo-gym logo">
 
 <!-- omit in toc -->
 # robo-gym 
@@ -151,30 +151,6 @@ The Simulation wrapper provides some extra functionalities to the Simulated Envi
 - `env.kill_sim()` kill the simulation 
 
 <!-- omit in toc -->
-### Exception Handling Wrapper
-
-The Exception Handling Wrapper comes in handy when training on simulated environments.
-The wrapper implements reaction strategies to common exceptions raised during training.
-If one of the know exceptions is raised it tries to restart the Robot Server and the Simulation
-to recover the system. If the exceptions happen during the reset of the environment the Robot Server
-is simply restarted in the background, whereas, if exceptions happen during the execution of an
-environment step the environment returns:
-
-```python
-return self.env.observation_space.sample(), 0, True, {"Exception":True, "ExceptionType": <Exception_type>}
-```
-Adding the wrapper to any simulated environment is very easy:
-
-```python
-import gymnasium as gym
-import robo_gym
-from robo_gym.wrappers.exception_handling import ExceptionHandling
-
-env = gym.make('EnvironmentNameSim-v0', ip='<server_manager_address>')
-env = ExceptionHandling(env)
-```
-
-<!-- omit in toc -->
 ## Real Robot Environments
 
 When making a real robot environment the Robot Server needs to be started manually, see [here](https://github.com/jr-robotics/robo-gym-robot-servers#how-to-use) how to do that.  
@@ -207,13 +183,11 @@ For information on creating your own environments, see [Creating your own Enviro
 ```python
 import gymnasium as gym
 import robo_gym
-from robo_gym.wrappers.exception_handling import ExceptionHandling
 
 target_machine_ip = '127.0.0.1' # or other machine 'xxx.xxx.xxx.xxx'
 
 # initialize environment
 env = gym.make('NoObstacleNavigationMir100Sim-v0', ip=target_machine_ip, gui=True)
-env = ExceptionHandling(env)
 
 num_episodes = 10
 
@@ -286,9 +260,16 @@ If you encounter troubles running robo-gym please take a look at the [existing i
 
 New environments and new robots and sensors implementations are welcome!
 
-More details and guides on how to contribute will be added soon!
-
 If you have general questions or ideas that you would like to share please [start a new discussion](https://github.com/jr-robotics/robo-gym/discussions/new).
+
+## External contributors
+
+This is an incomplete list of GitHub users that we thank for valuable contributions:
+
+* [f4rh4ng](https://github.com/f4rh4ng): Contributed to the development of the initial Panda robot integration.
+* [Tejas Shah](https://github.com/tejashah88): Fixed leftover problems from the upgrade to Gymnasium.
+* [Louis LE LAY](https://github.com/louislelay): Developed the [isaaclab_ur_reach_sim2real](https://github.com/louislelay/isaaclab_ur_reach_sim2real/) project, from which our example code for loading and using Isaac Lab policies originates.
+
 
 # Citation
 [back to top](#robo-gym)
@@ -303,6 +284,10 @@ If you have general questions or ideas that you would like to share please [star
 ```
 # News
 [back to top](#robo-gym)
+- 2025-05-30 (v2.1.0)
+  * modular environment classes
+  * first Isaac Lab policy compatibility environments
+
 - 2024-09-06 (v2.0.0)
   * Added support for gymnasium, dropped support for gym
   * Added support for Python up to 3.11
@@ -324,7 +309,6 @@ If you have general questions or ideas that you would like to share please [star
   + The robo-gym paper has been accepted for IROS 2020 !
 - 2020-06-02 (v0.1.7)
   + improved documentation
-  + added exception handling feature to simulated environments
 
 - 2020-04-27 (v0.1.1)
   + added Simplified Installation option for Robot Server Side

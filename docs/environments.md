@@ -3,7 +3,7 @@
 
 This is a list of the robo-gym environments. 
 
-For information on creating your own environment, see [Creating Environments](creating_environments.md).
+For information on creating your own environment, see [Creating Environments](creating_environments.md) and [Modular Environments](modular_environments.md).
 
 - [Universal Robots](#universal-robots)
   - [Empty Environment](#empty-environment)
@@ -28,6 +28,13 @@ To select the robot model use: `ur_model='<ur3, ur3e, ur5, ur5e, ur10, ur10e, ur
 env = gym.make('EmptyEnvironmentURSim-v0', ur_model='ur5', ip='<server_manager_address>')
 # real robot environment
 env = gym.make('EmptyEnvironmentURRob-v0', ur_model='ur5', rs_address='<robot_server_address>')
+
+# simulated robot environment - modular implementation
+env = gym.make('EmptyEnvironment2URSim-v0', ur_model='ur5', ip='<server_manager_address>')
+# simulated robot environment without server manager - modular implementation
+env = gym.make('EmptyEnvironment2URSim-v0', ur_model='ur5', rs_address='<robot_server_address>')
+# real robot environment - modular implementation
+env = gym.make('EmptyEnvironment2URRob-v0', ur_model='ur5', rs_address='<robot_server_address>')
 ```
 
 <img src="https://user-images.githubusercontent.com/36470989/118242650-dae15e00-b49d-11eb-832b-8a59c4fe3749.gif" width="200" height="200">
@@ -47,6 +54,13 @@ of six normalized joint position values.
 env = gym.make('EndEffectorPositioningURSim-v0', ur_model='ur10', ip='<server_manager_address>')
 # real robot environment
 env = gym.make('EndEffectorPositioningURRob-v0', ur_model='ur10', rs_address='<robot_server_address>')
+
+# simulated robot environment - modular implementation
+env = gym.make('EndEffectorPositioning2URSim-v0', ur_model='ur10', ip='<server_manager_address>')
+# simulated robot environment without server manager - modular implementation
+env = gym.make('EndEffectorPositioning2URSim-v0', ur_model='ur10', rs_address='<robot_server_address>')
+# real robot environment - modular implementation
+env = gym.make('EndEffectorPositioning2URRob-v0', ur_model='ur10', rs_address='<robot_server_address>')
 
 ```
 <img src="https://user-images.githubusercontent.com/36470989/118245173-c18de100-b4a0-11eb-9219-9949c70b0fef.gif" width="200" height="200">
