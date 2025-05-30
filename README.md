@@ -260,9 +260,16 @@ If you encounter troubles running robo-gym please take a look at the [existing i
 
 New environments and new robots and sensors implementations are welcome!
 
-More details and guides on how to contribute will be added soon!
-
 If you have general questions or ideas that you would like to share please [start a new discussion](https://github.com/jr-robotics/robo-gym/discussions/new).
+
+## External contributors
+
+This is an incomplete list of GitHub users that we thank for valuable contributions:
+
+* [f4rh4ng](https://github.com/f4rh4ng): Contributed to the development of the initial Panda robot integration.
+* [Tejas Shah](https://github.com/tejashah88): Fixed leftover problems from the upgrade to Gymnasium.
+* [Louis LE LAY](https://github.com/louislelay): Developed the [isaaclab_ur_reach_sim2real](https://github.com/louislelay/isaaclab_ur_reach_sim2real/) project, from which our example code for loading and using Isaac Lab policies originates.
+
 
 # Citation
 [back to top](#robo-gym)
