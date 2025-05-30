@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+from __future__ import annotations
+
 import argparse
 import io
 import math
@@ -6,6 +8,7 @@ import signal
 import sys
 import time
 
+# noinspection PyUnresolvedReferences
 import robo_gym
 
 import gymnasium as gym
