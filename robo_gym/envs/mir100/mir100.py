@@ -13,6 +13,7 @@ import robo_gym_server_modules.robot_server.client as rs_client
 from robo_gym.envs.simulation_wrapper import Simulation
 from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
 
+
 class Mir100Env(gym.Env):
     """Mobile Industrial Robots MiR100 base environment.
 
@@ -34,7 +35,7 @@ class Mir100Env(gym.Env):
 
     real_robot = False
     laser_len = 1022
-    max_episode_steps = 500 
+    max_episode_steps = 500
 
     def __init__(self, rs_address=None, **kwargs):
 
@@ -42,7 +43,9 @@ class Mir100Env(gym.Env):
         self.mir100 = mir100_utils.Mir100()
         self.elapsed_steps = 0
         self.observation_space = self._get_observation_space()
-        self.action_space = spaces.Box(low=np.full((2), -1.0), high=np.full((2), 1.0), dtype=np.float32)
+        self.action_space = spaces.Box(
+            low=np.full((2), -1.0), high=np.full((2), 1.0), dtype=np.float32
+        )
         self.seed()
         self.distance_threshold = 0.2
         self.min_target_dist = 1.0
@@ -64,7 +67,9 @@ class Mir100Env(gym.Env):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
-    def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None) -> tuple[np.ndarray, dict[str, Any]]:
+    def reset(
+        self, *, seed: int | None = None, options: dict[str, Any] | None = None
+    ) -> tuple[np.ndarray, dict[str, Any]]:
         """Environment reset.
 
         options:
@@ -76,7 +81,6 @@ class Mir100Env(gym.Env):
             dict: info
 
         """
-        super().reset(seed=seed)
         if options is None:
             options = {}
         start_pose = options["start_pose"] if "start_pose" in options else None
@@ -92,7 +96,7 @@ class Mir100Env(gym.Env):
 
         # Set Robot starting position
         if start_pose:
-            assert len(start_pose)==3
+            assert len(start_pose) == 3
         else:
             start_pose = self._get_start_pose()
 
@@ -100,21 +104,23 @@ class Mir100Env(gym.Env):
 
         # Set target position
         if target_pose:
-            assert len(target_pose)==3
+            assert len(target_pose) == 3
         else:
             target_pose = self._get_target(start_pose)
         rs_state[0:3] = target_pose
 
         # Set initial state of the Robot Server
-        state_msg = robot_server_pb2.State(state = rs_state.tolist())
+        state_msg = robot_server_pb2.State(state=rs_state.tolist())
         if not self.client.set_state_msg(state_msg):
             raise RobotServerError("set_state")
 
         # Get Robot Server state
-        rs_state = copy.deepcopy(np.nan_to_num(np.array(self.client.get_state_msg().state)))
+        rs_state = copy.deepcopy(
+            np.nan_to_num(np.array(self.client.get_state_msg().state))
+        )
 
         # Check if the length of the Robot Server state received is correct
-        if not len(rs_state)== self._get_robot_server_state_len():
+        if not len(rs_state) == self._get_robot_server_state_len():
             raise InvalidStateError("Robot Server state received has wrong length")
 
         # Convert the initial state from Robot Server format to environment format
@@ -130,13 +136,16 @@ class Mir100Env(gym.Env):
         return 0, False, {}
 
     def step(self, action):
-        
+
         action = action.astype(np.float32)
 
         self.elapsed_steps += 1
 
         # Check if the action is within the action space
-        assert self.action_space.contains(action), "%r (%s) invalid" % (action, type(action))
+        assert self.action_space.contains(action), "%r (%s) invalid" % (
+            action,
+            type(action),
+        )
 
         # Convert environment action to Robot Server action
         rs_action = copy.deepcopy(action)
@@ -182,7 +191,9 @@ class Mir100Env(gym.Env):
         b_scan = [0.0] * 511
         collision = False
         obstacles = [0.0] * 9
-        rs_state = target + mir_pose + mir_twist + f_scan + b_scan + [collision] + obstacles
+        rs_state = (
+            target + mir_pose + mir_twist + f_scan + b_scan + [collision] + obstacles
+        )
 
         return len(rs_state)
 
@@ -197,9 +208,9 @@ class Mir100Env(gym.Env):
 
         """
 
-        target_polar_coordinates = [0.0]*2
-        mir_twist = [0.0]*2
-        laser = [0.0]*self.laser_len
+        target_polar_coordinates = [0.0] * 2
+        mir_twist = [0.0] * 2
+        laser = [0.0] * self.laser_len
         env_state = target_polar_coordinates + mir_twist + laser
 
         return len(env_state)
@@ -221,10 +232,10 @@ class Mir100Env(gym.Env):
             start_pose = self.client.get_state_msg().state[3:6]
         else:
             # Create random starting position
-            x = self.np_random.uniform(low= -2.0, high= 2.0)
-            y = self.np_random.uniform(low= -2.0, high= 2.0)
-            yaw = self.np_random.uniform(low= -np.pi, high= np.pi)
-            start_pose = [x,y,yaw]
+            x = self.np_random.uniform(low=-2.0, high=2.0)
+            y = self.np_random.uniform(low=-2.0, high=2.0)
+            yaw = self.np_random.uniform(low=-np.pi, high=np.pi)
+            start_pose = [x, y, yaw]
 
         return start_pose
 
@@ -241,15 +252,17 @@ class Mir100Env(gym.Env):
 
         target_far_enough = False
         while not target_far_enough:
-            x_t = self.np_random.uniform(low= -1.0, high= 1.0)
-            y_t = self.np_random.uniform(low= -1.0, high= 1.0)
+            x_t = self.np_random.uniform(low=-1.0, high=1.0)
+            y_t = self.np_random.uniform(low=-1.0, high=1.0)
             yaw_t = 0.0
-            target_dist = np.linalg.norm(np.array([x_t,y_t]) - np.array(robot_coordinates[0:2]), axis=-1)
+            target_dist = np.linalg.norm(
+                np.array([x_t, y_t]) - np.array(robot_coordinates[0:2]), axis=-1
+            )
 
             if target_dist >= self.min_target_dist:
                 target_far_enough = True
 
-        return [x_t,y_t,yaw_t]
+        return [x_t, y_t, yaw_t]
 
     def _robot_server_state_to_env_state(self, rs_state):
         """Transform state from Robot Server to environment format.
@@ -265,10 +278,12 @@ class Mir100Env(gym.Env):
         rs_state = np.nan_to_num(np.array(rs_state))
 
         # Transform cartesian coordinates of target to polar coordinates
-        polar_r, polar_theta = utils.cartesian_to_polar_2d(x_target=rs_state[0],\
-                                                        y_target=rs_state[1],\
-                                                        x_origin=rs_state[3],\
-                                                        y_origin=rs_state[4])
+        polar_r, polar_theta = utils.cartesian_to_polar_2d(
+            x_target=rs_state[0],
+            y_target=rs_state[1],
+            x_origin=rs_state[3],
+            y_origin=rs_state[4],
+        )
         # Rotate origin of polar coordinates frame to be matching with robot frame and normalize to +/- pi
         polar_theta = utils.normalize_angle_rad(polar_theta - rs_state[5])
 
@@ -277,12 +292,14 @@ class Mir100Env(gym.Env):
 
         # Downsampling of laser values by picking every n-th value
         if self.laser_len > 0:
-            laser = utils.downsample_list_to_len(raw_laser_scan,self.laser_len)
+            laser = utils.downsample_list_to_len(raw_laser_scan, self.laser_len)
             # Compose environment state
-            state = np.concatenate((np.array([polar_r, polar_theta]),rs_state[6:8],laser))
+            state = np.concatenate(
+                (np.array([polar_r, polar_theta]), rs_state[6:8], laser)
+            )
         else:
             # Compose environment state
-            state = np.concatenate((np.array([polar_r, polar_theta]),rs_state[6:8]))
+            state = np.concatenate((np.array([polar_r, polar_theta]), rs_state[6:8]))
 
         return state.astype(np.float32)
 
@@ -295,8 +312,8 @@ class Mir100Env(gym.Env):
         """
 
         # Target coordinates range
-        max_target_coords = np.array([np.inf,np.pi])
-        min_target_coords = np.array([-np.inf,-np.pi])
+        max_target_coords = np.array([np.inf, np.pi])
+        min_target_coords = np.array([-np.inf, -np.pi])
         # Robot velocity range tolerance
         vel_tolerance = 0.1
         # Robot velocity range used to determine if there is an error in the sensor readings
@@ -304,14 +321,14 @@ class Mir100Env(gym.Env):
         min_lin_vel = self.mir100.get_min_lin_vel() - vel_tolerance
         max_ang_vel = self.mir100.get_max_ang_vel() + vel_tolerance
         min_ang_vel = self.mir100.get_min_ang_vel() - vel_tolerance
-        max_vel = np.array([max_lin_vel,max_ang_vel])
-        min_vel = np.array([min_lin_vel,min_ang_vel])
+        max_vel = np.array([max_lin_vel, max_ang_vel])
+        min_vel = np.array([min_lin_vel, min_ang_vel])
         # Laser readings range
         max_laser = np.full(self.laser_len, 29.0)
         min_laser = np.full(self.laser_len, 0.0)
         # Definition of environment observation_space
-        max_obs = np.concatenate((max_target_coords,max_vel,max_laser))
-        min_obs = np.concatenate((min_target_coords,min_vel,min_laser))
+        max_obs = np.concatenate((max_target_coords, max_vel, max_laser))
+        min_obs = np.concatenate((min_target_coords, min_vel, min_laser))
 
         return spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
 
@@ -333,8 +350,9 @@ class Mir100Env(gym.Env):
         width = 20
         height = 20
 
-        if np.absolute(robot_coordinates[0]) > (width/2) or \
-            np.absolute(robot_coordinates[1] > (height/2)):
+        if np.absolute(robot_coordinates[0]) > (width / 2) or np.absolute(
+            robot_coordinates[1] > (height / 2)
+        ):
             return True
         else:
             return False
@@ -374,6 +392,7 @@ class Mir100Env(gym.Env):
         else:
             return False
 
+
 class NoObstacleNavigationMir100(Mir100Env):
     laser_len = 0
 
@@ -386,18 +405,18 @@ class NoObstacleNavigationMir100(Mir100Env):
 
         # Calculate distance to the target
         target_coords = np.array([rs_state[0], rs_state[1]])
-        mir_coords = np.array([rs_state[3],rs_state[4]])
+        mir_coords = np.array([rs_state[3], rs_state[4]])
         euclidean_dist_2d = np.linalg.norm(target_coords - mir_coords, axis=-1)
 
         # Reward base
-        base_reward = -50*euclidean_dist_2d
+        base_reward = -50 * euclidean_dist_2d
         if self.prev_base_reward is not None:
             reward = base_reward - self.prev_base_reward
         self.prev_base_reward = base_reward
 
         # Power used by the motors
-        linear_power = abs(action[0] *0.30)
-        angular_power = abs(action[1] *0.03)
+        linear_power = abs(action[0] * 0.30)
+        angular_power = abs(action[1] * 0.03)
         reward -= linear_power
         reward -= angular_power
 
@@ -405,26 +424,35 @@ class NoObstacleNavigationMir100(Mir100Env):
         if self._robot_outside_of_boundary_box(rs_state[3:5]):
             reward = -200.0
             done = True
-            info['final_status'] = 'out of boundary'
+            info["final_status"] = "out of boundary"
 
         # The episode terminates with success if the distance between the robot
         # and the target is less than the distance threshold.
-        if (euclidean_dist_2d < self.distance_threshold):
+        if euclidean_dist_2d < self.distance_threshold:
             reward = 200.0
             done = True
-            info['final_status'] = 'success'
+            info["final_status"] = "success"
 
         if self.elapsed_steps >= self.max_episode_steps:
             done = True
-            info['final_status'] = 'max_steps_exceeded'
+            info["final_status"] = "max_steps_exceeded"
 
         return reward, done, info
 
+
 class NoObstacleNavigationMir100Sim(Simulation, NoObstacleNavigationMir100):
     cmd = "roslaunch mir100_robot_server sim_robot_server.launch"
-    def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
-        Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
-        NoObstacleNavigationMir100.__init__(self, rs_address=self.robot_server_ip, **kwargs)
+
+    def __init__(
+        self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs
+    ):
+        Simulation.__init__(
+            self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs
+        )
+        NoObstacleNavigationMir100.__init__(
+            self, rs_address=self.robot_server_ip, **kwargs
+        )
+
 
 class NoObstacleNavigationMir100Rob(NoObstacleNavigationMir100):
     real_robot = True
@@ -433,7 +461,9 @@ class NoObstacleNavigationMir100Rob(NoObstacleNavigationMir100):
 class ObstacleAvoidanceMir100(Mir100Env):
     laser_len = 16
 
-    def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None) -> tuple[np.ndarray, dict[str, Any]]:
+    def reset(
+        self, *, seed: int | None = None, options: dict[str, Any] | None = None
+    ) -> tuple[np.ndarray, dict[str, Any]]:
         """Environment reset.
 
         Args:
@@ -445,7 +475,6 @@ class ObstacleAvoidanceMir100(Mir100Env):
             dict: info
 
         """
-        super().reset(seed=seed)
         if options is None:
             options = {}
         start_pose = options["start_pose"] if "start_pose" in options else None
@@ -461,7 +490,7 @@ class ObstacleAvoidanceMir100(Mir100Env):
 
         # Set Robot starting position
         if start_pose:
-            assert len(start_pose)==3
+            assert len(start_pose) == 3
         else:
             start_pose = self._get_start_pose()
 
@@ -469,7 +498,7 @@ class ObstacleAvoidanceMir100(Mir100Env):
 
         # Set target position
         if target_pose:
-            assert len(target_pose)==3
+            assert len(target_pose) == 3
         else:
             target_pose = self._get_target(start_pose)
         rs_state[0:3] = target_pose
@@ -481,15 +510,17 @@ class ObstacleAvoidanceMir100(Mir100Env):
         rs_state[1027:1030] = self.sim_obstacles[2]
 
         # Set initial state of the Robot Server
-        state_msg = robot_server_pb2.State(state = rs_state.tolist())
+        state_msg = robot_server_pb2.State(state=rs_state.tolist())
         if not self.client.set_state_msg(state_msg):
             raise RobotServerError("set_state")
 
         # Get Robot Server state
-        rs_state = copy.deepcopy(np.nan_to_num(np.array(self.client.get_state_msg().state)))
+        rs_state = copy.deepcopy(
+            np.nan_to_num(np.array(self.client.get_state_msg().state))
+        )
 
         # Check if the length of the Robot Server state received is correct
-        if not len(rs_state)== self._get_robot_server_state_len():
+        if not len(rs_state) == self._get_robot_server_state_len():
             raise InvalidStateError("Robot Server state received has wrong length")
 
         # Convert the initial state from Robot Server format to environment format
@@ -510,40 +541,41 @@ class ObstacleAvoidanceMir100(Mir100Env):
 
         # Calculate distance to the target
         target_coords = np.array([rs_state[0], rs_state[1]])
-        mir_coords = np.array([rs_state[3],rs_state[4]])
+        mir_coords = np.array([rs_state[3], rs_state[4]])
         euclidean_dist_2d = np.linalg.norm(target_coords - mir_coords, axis=-1)
 
-        
         # Reward base
-        base_reward = -50*euclidean_dist_2d
+        base_reward = -50 * euclidean_dist_2d
         if self.prev_base_reward is not None:
             reward = base_reward - self.prev_base_reward
         self.prev_base_reward = base_reward
 
         # Power used by the motors
-        linear_power = abs(action[0] *0.30)
-        angular_power = abs(action[1] *0.03)
-        reward-= linear_power
-        reward-= angular_power
+        linear_power = abs(action[0] * 0.30)
+        angular_power = abs(action[1] * 0.03)
+        reward -= linear_power
+        reward -= angular_power
 
         # End episode if robot is collides with an object, if it is too close
         # to an object.
         if not self.real_robot:
-            if self._sim_robot_collision(rs_state) or \
-            self._min_laser_reading_below_threshold(rs_state) or \
-            self._robot_close_to_sim_obstacle(rs_state):
+            if (
+                self._sim_robot_collision(rs_state)
+                or self._min_laser_reading_below_threshold(rs_state)
+                or self._robot_close_to_sim_obstacle(rs_state)
+            ):
                 reward = -200.0
                 done = True
-                info['final_status'] = 'collision'
+                info["final_status"] = "collision"
 
-        if (euclidean_dist_2d < self.distance_threshold):
+        if euclidean_dist_2d < self.distance_threshold:
             reward = 100
             done = True
-            info['final_status'] = 'success'
+            info["final_status"] = "success"
 
         if self.elapsed_steps >= self.max_episode_steps:
             done = True
-            info['final_status'] = 'max_steps_exceeded'
+            info["final_status"] = "max_steps_exceeded"
 
         return reward, done, info
 
@@ -564,13 +596,13 @@ class ObstacleAvoidanceMir100(Mir100Env):
             start_pose = self.client.get_state_msg().state[3:6]
         else:
             # Create random starting position
-            x = self.np_random.uniform(low= -2.0, high= 2.0)
-            if np.random.choice(a=[True,False]):
-                y = self.np_random.uniform(low= -3.1, high= -2.1)
+            x = self.np_random.uniform(low=-2.0, high=2.0)
+            if np.random.choice(a=[True, False]):
+                y = self.np_random.uniform(low=-3.1, high=-2.1)
             else:
-                y = self.np_random.uniform(low= 2.1, high= 3.1)
-            yaw = self.np_random.uniform(low= -np.pi, high=np.pi)
-            start_pose = [x,y,yaw]
+                y = self.np_random.uniform(low=2.1, high=3.1)
+            yaw = self.np_random.uniform(low=-np.pi, high=np.pi)
+            start_pose = [x, y, yaw]
 
         return start_pose
 
@@ -587,17 +619,19 @@ class ObstacleAvoidanceMir100(Mir100Env):
 
         target_far_enough = False
         while not target_far_enough:
-            x_t = self.np_random.uniform(low= -2.0, high= 2.0)
-            if robot_coordinates[1]>0:
-                y_t = self.np_random.uniform(low= -3.1, high= -2.1)
+            x_t = self.np_random.uniform(low=-2.0, high=2.0)
+            if robot_coordinates[1] > 0:
+                y_t = self.np_random.uniform(low=-3.1, high=-2.1)
             else:
-                y_t = self.np_random.uniform(low= 2.1, high= 3.1)
+                y_t = self.np_random.uniform(low=2.1, high=3.1)
             yaw_t = 0.0
-            target_dist = np.linalg.norm(np.array([x_t,y_t]) - np.array(robot_coordinates[0:2]), axis=-1)
+            target_dist = np.linalg.norm(
+                np.array([x_t, y_t]) - np.array(robot_coordinates[0:2]), axis=-1
+            )
             if target_dist >= self.min_target_dist:
                 target_far_enough = True
 
-        return [x_t,y_t,yaw_t]
+        return [x_t, y_t, yaw_t]
 
     def _robot_close_to_sim_obstacle(self, rs_state):
         """Check if the robot is too close to one of the obstacles in simulation.
@@ -618,39 +652,58 @@ class ObstacleAvoidanceMir100(Mir100Env):
         safety_radius = 0.40
 
         robot_close_to_obstacle = False
-        robot_corners = self.mir100.get_corners_positions(rs_state[3], rs_state[4], rs_state[5])
+        robot_corners = self.mir100.get_corners_positions(
+            rs_state[3], rs_state[4], rs_state[5]
+        )
 
         for corner in robot_corners:
             for obstacle_coord in self.sim_obstacles:
-                if utils.point_inside_circle(corner[0],corner[1],obstacle_coord[0],obstacle_coord[1],safety_radius):
+                if utils.point_inside_circle(
+                    corner[0],
+                    corner[1],
+                    obstacle_coord[0],
+                    obstacle_coord[1],
+                    safety_radius,
+                ):
                     robot_close_to_obstacle = True
 
         return robot_close_to_obstacle
 
-    def _generate_obstacles_positions(self,):
+    def _generate_obstacles_positions(
+        self,
+    ):
         """Generate random positions for 3 obstacles.
 
         Used only for simulated Robot Server.
 
         """
 
-        x_0 = self.np_random.uniform(low= -2.4, high= -1.5)
-        y_0 = self.np_random.uniform(low= -1.0, high= 1.0)
-        yaw_0 = self.np_random.uniform(low= -np.pi, high=np.pi)
-        x_1 = self.np_random.uniform(low= -0.5, high= 0.5)
-        y_1 = self.np_random.uniform(low= -1.0, high= 1.0)
-        yaw_1 = self.np_random.uniform(low= -np.pi, high=np.pi)
-        x_2 = self.np_random.uniform(low= 1.5, high= 2.4)
-        y_2 = self.np_random.uniform(low= -1.0, high= 1.0)
-        yaw_2 = self.np_random.uniform(low= -np.pi, high=np.pi)
+        x_0 = self.np_random.uniform(low=-2.4, high=-1.5)
+        y_0 = self.np_random.uniform(low=-1.0, high=1.0)
+        yaw_0 = self.np_random.uniform(low=-np.pi, high=np.pi)
+        x_1 = self.np_random.uniform(low=-0.5, high=0.5)
+        y_1 = self.np_random.uniform(low=-1.0, high=1.0)
+        yaw_1 = self.np_random.uniform(low=-np.pi, high=np.pi)
+        x_2 = self.np_random.uniform(low=1.5, high=2.4)
+        y_2 = self.np_random.uniform(low=-1.0, high=1.0)
+        yaw_2 = self.np_random.uniform(low=-np.pi, high=np.pi)
 
-        self.sim_obstacles = [[x_0, y_0, yaw_0],[x_1, y_1, yaw_1],[x_2, y_2, yaw_2]]
+        self.sim_obstacles = [[x_0, y_0, yaw_0], [x_1, y_1, yaw_1], [x_2, y_2, yaw_2]]
+
 
 class ObstacleAvoidanceMir100Sim(Simulation, ObstacleAvoidanceMir100):
-    cmd = "roslaunch mir100_robot_server sim_robot_server.launch world_name:=lab_6x8.world"
-    def __init__(self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs):
-        Simulation.__init__(self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs)
-        ObstacleAvoidanceMir100.__init__(self, rs_address=self.robot_server_ip, **kwargs)
+    cmd = "roslaunch mir100_robot_server sim_robot_server.launch world_name:=lab_6x8.world gazebo_gui:=true"
+
+    def __init__(
+        self, ip=None, lower_bound_port=None, upper_bound_port=None, gui=False, **kwargs
+    ):
+        Simulation.__init__(
+            self, self.cmd, ip, lower_bound_port, upper_bound_port, gui, **kwargs
+        )
+        ObstacleAvoidanceMir100.__init__(
+            self, rs_address=self.robot_server_ip, **kwargs
+        )
+
 
 class ObstacleAvoidanceMir100Rob(ObstacleAvoidanceMir100):
     real_robot = True
