@@ -116,11 +116,6 @@ class ManipulatorModel:
             source_value = float(joints[joint_index])
             dest_value = self.normalize_joint_value(source_value, joint_index)
             result[joint_index] = dest_value
-            # old impl: would lead to irregular density if min != -max
-            # if joints[i] <= 0:
-            #    result[i] = joints[i] / abs(self.min_joint_positions[i])
-            # else:
-            #    result[i] = joints[i] / abs(self.max_joint_positions[i])
         return result
 
     def denormalize_joint_value(self, source_value: float, joint_index: int) -> float:
@@ -151,11 +146,30 @@ class ManipulatorModel:
             source_value = float(joints[joint_index])
             dest_value = self.denormalize_joint_value(source_value, joint_index)
             result[joint_index] = dest_value
-            # old impl: would lead to irregular density if min != -max
-            # if joints[i] <= 0:
-            #    result[i] = joints[i] / abs(self.min_joint_positions[i])
-            # else:
-            #    result[i] = joints[i] / abs(self.max_joint_positions[i])
+        return result
+
+    def denormalize_joint_range(self, source_range: float, joint_index: int) -> float:
+        dest_value = float(
+            np.interp(
+                source_range,
+                [0, 1],
+                [
+                    0,
+                    abs(
+                        self.max_joint_positions[joint_index]
+                        - self.min_joint_positions[joint_index]
+                    ),
+                ],
+            )
+        )
+        return dest_value
+
+    def denormalize_joint_ranges(self, joints: NDArray) -> NDArray:
+        result = np.zeros_like(joints)
+        for joint_index in range(len(joints)):
+            source_value = float(joints[joint_index])
+            dest_value = self.denormalize_joint_range(source_value, joint_index)
+            result[joint_index] = dest_value
         return result
 
     def get_random_workspace_pose_rpy(
@@ -219,7 +233,9 @@ class ManipulatorModel:
         pose_rpy = self.get_random_workspace_pose_rpy(
             np_random, roll_range, pitch_range, yaw_range
         )
-        pose_quat = utils.quat_from_euler(pose_rpy[4], pose_rpy[5], pose_rpy[6], seq, quat_unique)
+        pose_quat = utils.quat_from_euler(
+            pose_rpy[3], pose_rpy[4], pose_rpy[5], seq, quat_unique
+        )
         return pose_quat
 
     def get_random_offset_joint_positions(

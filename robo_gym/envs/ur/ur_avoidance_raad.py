@@ -8,18 +8,13 @@ This trajectory is sampled at a frequency of 20 Hz.
 """
 
 from __future__ import annotations
-
-import copy
-import json
-import os
-from typing import Tuple, Any
-
-import gymnasium as gym
+import os, copy, json
 import numpy as np
-
+import gymnasium as gym
+from typing import Tuple, Any
+from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
 from robo_gym.envs.simulation_wrapper import Simulation
 from robo_gym.envs.ur.ur_base_avoidance_env import URBaseAvoidanceEnv
-from robo_gym_server_modules.robot_server.grpc_msgs.python import robot_server_pb2
 
 DEBUG = True
 MINIMUM_DISTANCE = 0.45  # the distance [cm] the robot should keep to the obstacle
@@ -144,9 +139,9 @@ class AvoidanceRaad2022UR(URBaseAvoidanceEnv):
             options = {}
         options["joint_positions"] = joint_positions
 
-        super_result = super().reset(seed=seed, options=options)
+        initial_state = super().reset(seed=seed, options=options)
 
-        return super_result
+        return initial_state
 
     def step(self, action) -> Tuple[np.array, float, bool, bool, dict]:
         if type(action) == list:
@@ -156,7 +151,7 @@ class AvoidanceRaad2022UR(URBaseAvoidanceEnv):
 
         self.elapsed_steps_in_current_state += 1
 
-        state, reward, done, info = super().step(action)
+        state, reward, done, truncated, info = super().step(action)
 
         # Check if waypoint was reached
         joint_positions = []
@@ -186,7 +181,7 @@ class AvoidanceRaad2022UR(URBaseAvoidanceEnv):
 
         self.prev_action = self.add_fixed_joints(action)
 
-        return state, reward, done, False, info
+        return state, reward, done, truncated, info
 
     def reward(self, rs_state, action) -> Tuple[float, bool, dict]:
         env_state = self._robot_server_state_to_env_state(rs_state)
@@ -476,9 +471,9 @@ class AvoidanceRaad2022TestUR(AvoidanceRaad2022UR):
 
         self.ep_n += 1
 
-        super_result = super().reset(seed=seed, options=options)
+        initial_state, info = super().reset(seed=seed, options=options)
 
-        return super_result
+        return initial_state, info
 
 
 class AvoidanceRaad2022TestURSim(AvoidanceRaad2022TestUR, Simulation):

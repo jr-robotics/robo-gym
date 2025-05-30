@@ -11,13 +11,13 @@ joint_names:
   - panda_joint6
   - panda_joint7
 remote_joint_names:
-  - panda_joint1
-  - panda_joint2
-  - panda_joint3
-  - panda_joint4
-  - panda_joint5
-  - panda_joint6
-  - panda_joint7
+  - joint1
+  - joint2
+  - joint3
+  - joint4
+  - joint5
+  - joint6
+  - joint7
 workspace_area:
   # Values for the recommended workspace area
   r: 0.755

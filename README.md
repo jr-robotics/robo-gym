@@ -1,4 +1,4 @@
-<img align="left" width="60" height="60" src="https://user-images.githubusercontent.com/36470989/116858354-8668f380-abfe-11eb-81dc-629d9e8a9d4e.png" alt="robo-gym logo">
+<img align="left" width="60" height="60" src="docs/media/robo-gym-logo.png" alt="robo-gym logo">
 
 <!-- omit in toc -->
 # robo-gym 
@@ -277,6 +277,10 @@ If you have general questions or ideas that you would like to share please [star
 ```
 # News
 [back to top](#robo-gym)
+- 2025-05-30 (v2.1.0)
+  * modular environment classes
+  * first Isaac Lab policy compatibility environments
+
 - 2024-09-06 (v2.0.0)
   * Added support for gymnasium, dropped support for gym
   * Added support for Python up to 3.11

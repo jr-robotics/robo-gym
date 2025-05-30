@@ -315,9 +315,9 @@ def create_random_bounding_box_pose_quat(
         np_random = np.random.default_rng()
     # sample new pose targets
     # -- position
-    x = np_random.uniform(low=pos_x_range[0], high=pos_x_range[1])
-    y = np_random.uniform(low=pos_y_range[0], high=pos_y_range[1])
-    z = np_random.uniform(low=pos_z_range[0], high=pos_z_range[1])
+    x = get_uniform_from_range(np_random, pos_x_range, 0.0)
+    y = get_uniform_from_range(np_random, pos_y_range, 0.0)
+    z = get_uniform_from_range(np_random, pos_z_range, 0.0)
 
     # -- orientation
     roll = get_uniform_from_range(np_random, roll_range, 0.0)
@@ -344,7 +344,7 @@ def pose_quat_from_pose_rpy(
 
 
 def pose_rpy_from_pose_quat(pose_quat: NDArray, seq="xyz") -> NDArray:
-    quat = pose_quat[3:6]
+    quat = pose_quat[3:7]
     rpy = euler_from_quat(quat, seq)
     result = np.array(
         [pose_quat[0], pose_quat[1], pose_quat[2], rpy[0], rpy[1], rpy[2]]
@@ -383,4 +383,36 @@ def pose_quat_wxyz_from_xyzw(pose: NDArray) -> NDArray:
     pos = pose[0:3]
     q = pose[3:7]
     result = np.concatenate((pos, quat_wxyz_from_xyzw(q)))
+    return result
+
+
+def flatten_to_dict(obj, prefix=""):
+    result = {}
+
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            new_key = f"{prefix}.{key}" if prefix else key
+            result.update(flatten_to_dict(value, new_key))
+
+    elif isinstance(obj, list):
+        # index all elements of this list object with the same number of digits
+        # to allow consistent sorting of the columns
+        max_index_digits = len(str(len(obj) - 1))
+        for index, value in enumerate(obj):
+            index_str = str(index).zfill(max_index_digits)
+            new_key = f"{prefix}[{index_str}]"
+            result.update(flatten_to_dict(value, new_key))
+
+    elif hasattr(obj, "__dict__"):
+        return flatten_to_dict(obj.__dict__, prefix)
+
+    elif hasattr(obj, "__slots__"):
+        for attr in obj.__slots__:
+            value = getattr(obj, attr)
+            new_key = f"{prefix}.{attr}" if prefix else attr
+            result.update(flatten_to_dict(value, new_key))
+
+    else:
+        result[prefix] = obj
+
     return result

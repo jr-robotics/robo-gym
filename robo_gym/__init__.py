@@ -115,3 +115,34 @@ register(
     id="IsaacReachURRob-v0",
     entry_point="robo_gym.envs:IsaacReachURRob",
 )
+
+# Panda Environments
+register(
+    id="EmptyEnvironmentPandaSim-v0",
+    entry_point="robo_gym.envs:EmptyEnvironmentPandaSim",
+)
+
+register(
+    id="EmptyEnvironmentPandaRob-v0",
+    entry_point="robo_gym.envs:EmptyEnvironmentPandaRob",
+)
+
+
+register(
+    id="EndEffectorPositioningPandaSim-v0",
+    entry_point="robo_gym.envs:EndEffectorPositioningPandaSim",
+)
+
+register(
+    id="EndEffectorPositioningPandaRob-v0",
+    entry_point="robo_gym.envs:EndEffectorPositioningPandaRob",
+)
+register(
+    id="IsaacReachPandaSim-v0",
+    entry_point="robo_gym.envs:IsaacReachPandaSim",
+)
+
+register(
+    id="IsaacReachPandaRob-v0",
+    entry_point="robo_gym.envs:IsaacReachPandaRob",
+)
