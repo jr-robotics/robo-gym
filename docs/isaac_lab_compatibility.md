@@ -10,7 +10,7 @@ An overview of the robo-gym environments implemented for this feature is include
 
 #### Agent side
 
-Install robo-gym version 2.1.0 and its prerequisites, including robo-gym server modules version 0.3.0.1.
+Install robo-gym version >=2.1.0 and its prerequisites, including robo-gym server modules version 0.3.0.1.
 
 In addition, install Torch:
 
@@ -18,7 +18,7 @@ In addition, install Torch:
 
 #### Server side
 
-Install robo-gym-robot-servers 2.1.0 and its prerequisites, including robo-gym server modules version 0.3.0.1 and prerequisites for the robots you want to use in your ROS noetic PYthon environment.
+Install robo-gym-robot-servers >=2.1.1 and its prerequisites, including robo-gym server modules version 0.3.0.1 and prerequisites for the robots you want to use in your ROS noetic Python environment.
 
 ### Isaac Lab
 
@@ -106,4 +106,4 @@ Command to run the [env test script](robo_envtest.py):
 
 Note that, while similar results should be reachable for the Panda as for the UR10 (granted that significantly longer training time may be required), we have not yet achieved satisfactory performance with controlling the Panda robot via this approach.
 
-The environment identifier usable in the `gym.make` command is `IsaacReachURSim-v0`.
+The environment identifier usable in the `gym.make` command is `IsaacReachPandaSim-v0`.

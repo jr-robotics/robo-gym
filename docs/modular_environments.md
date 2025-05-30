@@ -4,21 +4,22 @@ We have started the creation of a new hierarchy of environment classes to improv
 
 The base environment class is called RoboGymEnv. 
 It lays out the common ground for robo-gym environments, such as the initialization of the client for the robot server and the functionality of the methods step and reset.
-In terms of structure, the RoboGymEnv has components that we call nodes and that take over elements of the environment's main functionality that are to be specialized for different subclasses or configurations of environments:
+In terms of structure, the RoboGymEnv has components that we call nodes to take over elements of the environment's main functionality and to be specialized for different subclasses or configurations of environments:
 
 * ActionNodes deal with the action from the agent and map it to the form that is understood by the robot server;
 * ObservationNodes build parts of the observation from the state reported by the robot server; and
-* RewardNodes provide the reward calculation and related data after a step.
+* RewardNodes provide the reward calculation and related data to be returned by  a step.
 
 In general, an environment has one ActionNode, one RewardNode, and any number of ObservationNodes (reasoning for this multiplicity: for any given task, adding extra observations should be a relatively small change of implementation, such as additional sensors).
 As for the environment itself, their initialization is largely driven by processing arguments. 
 By default, the arguments that the nodes receive are equal to the ones of the environment, but the environment implementation has the freedom of preparing each node's arguments as required.
-The functionality of the nodes is integrated into the environment's methods as needed and in a way that should minimize duplication of code as much as possible. 
+
+The functionality of the nodes is integrated into the environment's methods as needed and in a way that allows minimization duplicated code as much as possible. 
 For example, the node types for actions and observations provide the respective methods for mapping messages (in opposite directions) that are used in the base environment's step method, so a specialized environment should not need to (but might) override the base step method. 
 Also, the action space and observation space are calculated by the respective nodes. Nodes of all three types can contribute to the state data that is sent to the robot server in the course of a reset. This is useful in scenarios such as delegating the management of a target pose to the reward node, which can still provide the target data for the robot server.  
 
 This new environment structure is used in a few concrete environments so far, some of which are designed to be direct replacements of our original environments.
-The examples provided so far highlight a key benefit of the class hierarchy: Creating a variation of an environment should be possible with small additions and using as much of existing code as possible, without duplicating it. An example would be performing the same task with a different robot. We realize this with new environment implementations for the UR robots and corresponding environments for the same tasks with the Panda robot.
+The examples provided so far highlight a key benefit of the class hierarchy: Creating a variation of an environment should be possible with small additions and using as much of existing code as possible, without duplicating it. An example would be performing the same task with a different robot. We are already exploiting this potential with new environment implementations for the UR robots and corresponding environments for the same tasks with the Panda robot.
 The environment classes that add specifics for a robot type are relatively short and simple, limited to configuring functionality provided by their base classes.
 
 # Modular environment classes
@@ -77,7 +78,7 @@ This environment class adds logic to control and observe a manipulator robot. It
 
 ## ManipulatorEePosEnv
 
-The End-effector-positioning environment also correspond to the similarly named UR environment in our pre-existing set of classes, again with a robot-type-agnostic base class and subclasses for UR and Panda. As a new feature, the rotation of the end effector can be chosen to be considered in the reward calculation. Consequently, the tradition-based class name is accurate only if disabling this feature. There are richer options for determining the robot's starting pose (and whether it should return to it in reset) and for obtaining the target pose.
+The end-effector-positioning environment also correspond to the similarly named UR environment in our pre-existing set of classes, again with a robot-type-agnostic base class and subclasses for UR and Panda. As a new feature, the rotation of the end effector can be chosen to be considered in the reward calculation. Consequently, the tradition-based class name is accurate only if disabling this feature. There are richer options for determining the robot's starting pose (and whether the robot should return to it in reset) and for obtaining the target pose.
 
 ## IsaacReachEnv
 
@@ -87,7 +88,7 @@ In order to avoid a general dependency on Torch for robo-gym, the short code to 
 
 # Open Issues (not comprehensive)
 
-In general, it is intended to replace all of our old robo-gym environment implementations to the modular structure. Parts of this effort that are outside of the initial spearhead that ranges from the base environment down to the Isaac Reach task for UR and Panda remain to be done. While the process in ongoing, legacy implementations prevail (causing potentally confusing situations with environment names and mixed directories).
+In general, it is intended to replace all of our old robo-gym environment implementations to the modular structure. Parts of this effort that are outside of the initial vertical slice implementation that ranges from the base environment down to the Isaac Reach task for UR and Panda remain to be done. While the process in ongoing, legacy implementations prevail (causing potentally confusing situations with environment names and mixed directories).
 
 In some parts, the side goal of eliminating hardcoded values or other deficiencies is not yet reached. In particular, the construction of the roslaunch command in the robot-specific environment classes leaves a few things to be desired.
 
