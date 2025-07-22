@@ -255,18 +255,21 @@ If you encounter troubles running robo-gym please take a look at the [existing i
 [Troubleshooting robo-gym-robot-servers](https://github.com/jr-robotics/robo-gym-robot-servers#troubleshooting)
 [Troubleshooting robo-gym-server-modules](https://github.com/jr-robotics/robo-gym-server-modules#troubleshooting)
 
-# Contributing
-[back to top](#robo-gym)
+# Acknowledgements 
 
-New environments and new robots and sensors implementations are welcome!
+![euROBIN logo](docs/media/eurobin.png)
 
-If you have general questions or ideas that you would like to share please [start a new discussion](https://github.com/jr-robotics/robo-gym/discussions/new).
+Partially developed in the course of the 1st Open Call of [euROBIN](https://www.eurobin-project.eu/).
+
+![Funded by the European Union](docs/media/funded_by_the_eu.png)
+
+Funded by the European Union. Views and opinions expressed are however those of the author(s) only and do not necessarily reflect those of the European Union or European Commission. Neither the European Union nor the granting authority can be held responsible for them.
 
 ## External contributors
 
 This is an incomplete list of GitHub users that we thank for valuable contributions:
 
-* [f4rh4ng](https://github.com/f4rh4ng): Contributed to the development of the initial Panda robot integration.
+* [Farhang Fadaei](https://github.com/f4rh4ng): Contributed to the development of the initial Panda robot integration.
 * [Tejas Shah](https://github.com/tejashah88): Fixed leftover problems from the upgrade to Gymnasium.
 * [Louis LE LAY](https://github.com/louislelay): Developed the [isaaclab_ur_reach_sim2real](https://github.com/louislelay/isaaclab_ur_reach_sim2real/) project, from which our example code for loading and using Isaac Lab policies originates.
 
